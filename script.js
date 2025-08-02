@@ -34,7 +34,7 @@ function gisLoaded() {
 function maybeEnableButtons() {
     if (gapiInited && gisInited) {
         // Habilita o botão de login aqui se desejar
-        // document.getElementById('google-login-button').style.display = 'block';
+        document.getElementById('google-login-button').style.display = 'block';
     }
 }
 // --- SEÇÃO GOOGLE DRIVE --- (continue adicionando aqui)
