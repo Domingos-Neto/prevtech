@@ -80,7 +80,7 @@ function atualizarDashboardView() {
 // --- AUTENTICAÇÃO E INICIALIZAÇÃO ---
 document.addEventListener("DOMContentLoaded", () => { initAuthDB(); });
 function initAuthDB(){ 
-    const req = indexedDB.open("UsuariosRPPS", 1); 
+    const req = indexedDB.open("UsuariosRPPS", 2); 
     req.onerror = () => console.error("Erro ao abrir IndexedDB"); 
     req.onsuccess = (e) => { db = e.target.result; }; 
     req.onupgradeneeded = (e) => { 
