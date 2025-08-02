@@ -43,9 +43,6 @@
         <input type="password" id="senha" placeholder="Senha" value="senha123">
       </div>
       <button onclick="login()"><span class="button-text">Entrar</span><span class="spinner"></span></button>
-      </div>
-      <button id="google-login-button" onclick="handleAuthClick()">Login com Google</button>
-      <button id="google-logout-button" onclick="handleSignoutClick()" style="display:none;">Sair do Google</button>
       <p id="mensagem"></p>
     </div>
   </div>
@@ -89,6 +86,8 @@
                 <div class="user-info">
                     <b id="usuarioLogado"></b>
                 </div>
+                <button id="google-login-button" onclick="handleAuthClick()">Login com Google</button>
+                <button id="google-logout-button" onclick="handleSignoutClick()" style="display:none;">Sair do Google</button>
                 <button id="toggleTheme" onclick="alternarTema()" title="Alternar Tema"><i class="ri-moon-line"></i></button>
                 <button onclick="logout()" title="Sair do Sistema"><i class="ri-logout-box-r-line"></i></button>
             </div>
