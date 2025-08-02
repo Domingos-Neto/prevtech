@@ -1,3 +1,320 @@
+// --- INÍCIO: SEÇÃO GOOGLE DRIVE ---
+
+// Substitua com o seu ID de Cliente obtido no Google Cloud Console
+const CLIENT_ID = '300539499706-i91plbhours71tqasbiv9mcl2cjp8qv6.apps.googleusercontent.com'; 
+const SCOPES = 'https://www.googleapis.com/auth/drive.file';
+
+let tokenClient;
+let gapiInited = false;
+let gisInited = false;
+
+// Funções de inicialização chamadas pelo HTML
+function gapiLoaded() {
+    gapi.load('client', initializeGapiClient);
+}
+
+async function initializeGapiClient() {
+    await gapi.client.init({
+        discoveryDocs: ["https://www.googleapis.com/discovery/v1/apis/drive/v3/rest"],
+    });
+    gapiInited = true;
+    maybeEnableButtons();
+}
+
+function gisLoaded() {
+    tokenClient = google.accounts.oauth2.initTokenClient({
+        client_id: CLIENT_ID,
+        scope: SCOPES,
+        callback: '', // Callback será definido dinamicamente
+    });
+    gisInited = true;
+    maybeEnableButtons();
+}
+
+function maybeEnableButtons() {
+    if (gapiInited && gisInited) {
+        // Habilita o botão de login aqui se desejar
+        // document.getElementById('google-login-button').style.display = 'block';
+    }
+}
+// --- SEÇÃO GOOGLE DRIVE --- (continue adicionando aqui)
+
+// Função para encontrar ou criar a pasta "PrevTech Dados"
+async function getPrevTechFolderId() {
+    try {
+        const response = await gapi.client.drive.files.list({
+            q: "mimeType='application/vnd.google-apps.folder' and name='PrevTech Dados' and trashed=false",
+            fields: 'files(id, name)',
+        });
+        if (response.result.files.length > 0) {
+            return response.result.files[0].id;
+        } else {
+            const fileMetadata = {
+                'name': 'PrevTech Dados',
+                'mimeType': 'application/vnd.google-apps.folder'
+            };
+            const folder = await gapi.client.drive.files.create({
+                resource: fileMetadata,
+                fields: 'id'
+            });
+            return folder.result.id;
+        }
+    } catch (e) {
+        console.error("Erro ao obter a pasta no Drive: ", e);
+        showToast("Erro ao acessar o Google Drive.");
+        return null;
+    }
+}
+
+
+// Nova função para salvar no Drive
+async function salvarSimulacaoNoDrive(dados, tipo) { // tipo pode ser 'simulacao' ou 'ctc'
+    if (!gapi.client.getToken()) {
+        showToast("Faça o login com o Google para salvar no Drive.");
+        handleAuthClick(); // Pede login
+        return;
+    }
+
+    const folderId = await getPrevTechFolderId();
+    if (!folderId) return;
+
+    const fileContent = JSON.stringify(dados, null, 2);
+    const file = new Blob([fileContent], {type: 'application/json'});
+    const fileName = tipo === 'ctc' 
+        ? `${dados.nome}_${dados.id}.json` 
+        : `${dados.dados.passo1.nomeServidor || 'simulacao'}_${dados.id}.json`;
+        
+    const metadata = {
+        'name': fileName,
+        'mimeType': 'application/json',
+        'parents': [folderId]
+    };
+
+    const form = new FormData();
+    form.append('metadata', new Blob([JSON.stringify(metadata)], {type: 'application/json'}));
+    form.append('file', file);
+
+    try {
+        const res = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+            method: 'POST',
+            headers: new Headers({'Authorization': 'Bearer ' + gapi.client.getToken().access_token}),
+            body: form,
+        });
+        const val = await res.json();
+        console.log("Arquivo salvo no Drive:", val);
+        showToast("💾 Salvo com sucesso no Google Drive!", true);
+        // Atualiza a lista correspondente
+        if (tipo === 'ctc') {
+            listarCTCsSalvas();
+        } else {
+            listarHistorico();
+        }
+    } catch (e) {
+        console.error("Erro ao salvar no Drive: ", e);
+        showToast("Erro ao salvar no Google Drive.");
+    }
+}
+
+
+// *** MODIFIQUE SUAS FUNÇÕES ORIGINAIS ***
+
+// Modifique salvarSimulacaoHistorico
+function salvarSimulacaoHistorico(nomeFornecido) {
+    let nome = (typeof nomeFornecido === "string") ? nomeFornecido : document.getElementById("nomeSimulacao").value.trim();
+    if (!nome) { return showToast("Digite um nome para a simulação."); }
+    const dados = { id: crypto.randomUUID(), nome, dados: coletarDadosSimulacao(), data: new Date().toISOString() };
+    
+    // Chama a nova função do Drive
+    salvarSimulacaoNoDrive(dados, 'simulacao');
+
+    // Você pode remover a parte do localStorage se quiser usar apenas o Drive
+    /* const chave = "historicoSimulacoes_" + usuarioAtual;
+    const historico = JSON.parse(localStorage.getItem(chave) || "[]");
+    historico.unshift(dados);
+    localStorage.setItem(chave, JSON.stringify(historico));
+    listarHistorico(); 
+    */
+}
+
+// Modifique salvarCTC (adapte conforme sua lógica original)
+function salvarCTC() {
+    const nomeCtc = document.getElementById("nomeCtc").value.trim();
+    if (!nomeCtc) { return showToast("Digite um nome para a CTC."); }
+    
+    // Colete os dados da CTC da mesma forma que você coleta os da simulação
+    const dadosCTC = {
+        id: crypto.randomUUID(),
+        nome: nomeCtc,
+        // ... adicione aqui os outros dados da CTC que você coleta
+        dados: coletarDadosCTC(), // Supondo que exista uma função para isso
+        data: new Date().toISOString()
+    };
+    
+    salvarSimulacaoNoDrive(dadosCTC, 'ctc');
+}
+// --- SEÇÃO GOOGLE DRIVE --- (continue adicionando aqui)
+
+// Função genérica para listar arquivos de um tipo
+async function listarArquivosDoDrive(tipo, elementoListaId) {
+    const elementoLista = document.getElementById(elementoListaId);
+    elementoLista.innerHTML = 'Carregando do Google Drive...';
+    
+    if (!gapi.client.getToken()) {
+        elementoLista.innerHTML = 'Faça o login com o Google para ver seus dados salvos.';
+        return [];
+    }
+    
+    const folderId = await getPrevTechFolderId();
+    if (!folderId) {
+        elementoLista.innerHTML = 'Pasta "PrevTech Dados" não encontrada.';
+        return [];
+    }
+
+    try {
+        const response = await gapi.client.drive.files.list({
+            parentId: folderId,
+            q: `'${folderId}' in parents and trashed=false`,
+            fields: 'files(id, name, createdTime)',
+            orderBy: 'createdTime desc'
+        });
+
+        const files = response.result.files;
+        elementoLista.innerHTML = ''; // Limpa a lista antes de adicionar os itens
+
+        if (!files || files.length === 0) {
+            elementoLista.innerHTML = 'Nenhum item encontrado no Google Drive.';
+            return [];
+        }
+
+        // Você precisará adaptar a forma como exibe os itens
+        // baseado na sua função original de listagem.
+        // O exemplo abaixo é uma sugestão.
+        for (const file of files) {
+            // Filtra para exibir apenas simulações ou CTCs
+            // Você pode precisar de uma lógica melhor para diferenciar os arquivos
+            if ((tipo === 'simulacao' && file.name.includes('simulacao')) || 
+                (tipo === 'ctc' && !file.name.includes('simulacao'))) { // Exemplo simples
+                
+                const itemEl = document.createElement("li");
+                itemEl.innerHTML = `
+                    <span>${file.name.split('_')[0]}</span>
+                    <div>
+                        <button onclick="carregarDoDrive('${file.id}')">Carregar</button>
+                        <button onclick="excluirDoDrive('${file.id}', '${tipo}')">Excluir</button>
+                    </div>
+                `;
+                elementoLista.appendChild(itemEl);
+            }
+        }
+
+        return files; // Retorna os arquivos para uso futuro se necessário
+    } catch (e) {
+        console.error("Erro ao listar arquivos do Drive: ", e);
+        elementoLista.innerHTML = 'Erro ao carregar dados do Google Drive.';
+        return [];
+    }
+}
+
+// Função para carregar o conteúdo de um arquivo específico
+async function carregarDoDrive(fileId) {
+    try {
+        const res = await gapi.client.drive.files.get({
+            fileId: fileId,
+            alt: 'media'
+        });
+        
+        const dados = res.result;
+        // Agora, use a sua função existente para preencher os campos do formulário
+        // Por exemplo:
+        preencherFormularioComDados(dados); // Você precisa ter essa função
+        
+        showToast("Dados carregados com sucesso!", true);
+        
+    } catch (e) {
+        console.error("Erro ao carregar arquivo do Drive: ", e);
+        showToast("Erro ao carregar o arquivo do Google Drive.");
+    }
+}
+
+
+// *** MODIFIQUE SUAS FUNÇÕES DE LISTAGEM ***
+
+function listarHistorico() {
+    // Se o usuário não estiver logado, tente listar do localStorage como fallback
+    if (!gapi.client.getToken()) {
+        console.log("Usuário não logado no Google, tentando localStorage...");
+        // Mantenha sua lógica antiga de localStorage aqui como fallback
+        return; 
+    }
+    listarArquivosDoDrive('simulacao', 'listaHistorico');
+}
+
+function listarCTCsSalvas() {
+    if (!gapi.client.getToken()) {
+        // Fallback para localStorage
+        return;
+    }
+    listarArquivosDoDrive('ctc', 'listaCtc');
+}
+// --- SEÇÃO GOOGLE DRIVE --- (continue adicionando aqui)
+
+async function excluirDoDrive(fileId, tipo) {
+    if (!confirm("Tem certeza que deseja excluir este item do Google Drive?")) {
+        return;
+    }
+
+    try {
+        await gapi.client.drive.files.delete({
+            fileId: fileId
+        });
+        showToast("Item excluído com sucesso do Google Drive!", true);
+        // Atualiza a lista
+        if (tipo === 'ctc') {
+            listarCTCsSalvas();
+        } else {
+            listarHistorico();
+        }
+    } catch (e) {
+        console.error("Erro ao excluir arquivo do Drive: ", e);
+        showToast("Erro ao excluir o item do Google Drive.");
+    }
+}
+function handleAuthClick() {
+    tokenClient.callback = async (resp) => {
+        if (resp.error !== undefined) {
+            throw (resp);
+        }
+        document.getElementById('google-logout-button').style.display = 'block';
+        document.getElementById('google-login-button').style.display = 'none';
+        showToast("Login com Google realizado com sucesso!", true);
+        
+        // Após o login, liste os arquivos do Drive
+        listarHistorico(); 
+        listarCTCsSalvas();
+    };
+
+    if (gapi.client.getToken() === null) {
+        tokenClient.requestAccessToken({prompt: 'consent'});
+    } else {
+        tokenClient.requestAccessToken({prompt: ''});
+    }
+}
+
+function handleSignoutClick() {
+    const token = gapi.client.getToken();
+    if (token !== null) {
+        google.accounts.oauth2.revoke(token.access_token);
+        gapi.client.setToken('');
+        document.getElementById('google-logout-button').style.display = 'none';
+        document.getElementById('google-login-button').style.display = 'block';
+        showToast("Você saiu da sua conta Google.", true);
+        // Limpe as listas da tela após o logout
+        document.getElementById("listaHistorico").innerHTML = "";
+        document.getElementById("listaCtc").innerHTML = "";
+    }
+}
+// --- FIM: SEÇÃO GOOGLE DRIVE ---
+
 // --- VARIÁVEIS GLOBAIS ---
 let db, usuarioAtual = "", usuarioAtualTipo = "comum", currentStep = 1, salarioChart, simulacaoResultados = {};
 let dashboardViewMode = 'meus_registros';
