@@ -5,10 +5,6 @@
   <title>Prevtech - Simulador RPPS</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 
-  <!-- Firebase compat SDK (para usar firebase.initializeApp etc) -->
-  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
-
   <!-- jsPDF para exportar PDF -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
@@ -43,7 +39,7 @@
       width: 100%;
     }
     .google-btn {
-      background-color: #1f4e9e;
+      background-color: var(--primary-color);
       color: white;
       border: none;
       padding: 14px 20px;
@@ -111,7 +107,7 @@
       border-radius: 6px;
       border: none;
       cursor: pointer;
-      background: #1f4e9e;
+      background: var(--primary-color);
       color: white;
     }
   </style>
@@ -167,64 +163,80 @@
   </section>
 </div>
 
-<script>
-  // --- FIREBASE AUTH (Google Login) ---
+<!-- Firebase Modular SDK -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
+  import {
+    getAuth,
+    GoogleAuthProvider,
+    signInWithPopup,
+    onAuthStateChanged,
+    signOut
+  } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js";
+
+  // Configuração exata do seu projeto (verifique no console do Firebase)
   const firebaseConfig = {
     apiKey: "AIzaSyA7JbEr8qG6f4m6BHHUjfU6GzKbO8L9W0Y",
     authDomain: "prevtech-ca050.firebaseapp.com",
     projectId: "prevtech-ca050",
-    storageBucket: "prevtech-ca050.firebasestorage.app",
+    storageBucket: "prevtech-ca050.appspot.com",
     messagingSenderId: "300539499706",
     appId: "1:300539499706:web:i91plbhours71tqasbiv9mcl2cjp8qv6"
   };
 
-  // Inicializa Firebase compat
-  firebase.initializeApp(firebaseConfig);
-  const auth = firebase.auth();
-  const provider = new firebase.auth.GoogleAuthProvider();
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const provider = new GoogleAuthProvider();
 
-  // Emails permitidos (comparação em lowercase)
   const emailsAutorizados = [
     "domingosbarroson@gmail.com",
     "setordebeneficiositaprev@gmail.com"
   ].map(e => e.toLowerCase());
 
-  function loginGoogle() {
-    auth.signInWithPopup(provider)
-      .then(result => showSystem(result.user))
-      .catch(error => {
-        console.error("Erro no login:", error);
-        document.getElementById("login-error").textContent = "Erro ao fazer login: " + (error.message || "");
-      });
-  }
-
-  function logout() {
-    auth.signOut().then(() => {
-      document.getElementById("main-system").style.display = "none";
-      document.getElementById("login-screen").style.display = "flex";
-    });
-  }
-
-  function showSystem(user) {
-    const email = (user.email || "").toLowerCase();
-    if (!emailsAutorizados.includes(email)) {
-      alert("⚠️ Este e-mail não tem permissão para acessar o sistema.");
-      logout();
-      return;
+  window.loginGoogle = async () => {
+    try {
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
+      const email = (user.email || "").toLowerCase();
+      if (!emailsAutorizados.includes(email)) {
+        alert("⚠️ Este e-mail não tem permissão para acessar o sistema.");
+        await signOut(auth);
+        return;
+      }
+      document.getElementById("login-screen").style.display = "none";
+      document.getElementById("main-system").style.display = "block";
+      document.getElementById("user-info").innerHTML = `
+        <strong>Usuário:</strong> ${user.displayName}<br>
+        <strong>Email:</strong> ${user.email}`;
+    } catch (err) {
+      console.error("Erro ao fazer login:", err);
+      document.getElementById("login-error").textContent = "Erro ao fazer login: " + (err.message || "");
     }
-    document.getElementById("login-screen").style.display = "none";
-    document.getElementById("main-system").style.display = "block";
-    document.getElementById("user-info").innerHTML = `
-      <strong>Usuário:</strong> ${user.displayName}<br>
-      <strong>Email:</strong> ${user.email}`;
-  }
+  };
 
-  auth.onAuthStateChanged(user => {
-    if (user) showSystem(user);
+  window.logout = async () => {
+    await signOut(auth);
+    document.getElementById("main-system").style.display = "none";
+    document.getElementById("login-screen").style.display = "flex";
+  };
+
+  onAuthStateChanged(auth, user => {
+    if (user) {
+      const email = (user.email || "").toLowerCase();
+      if (!emailsAutorizados.includes(email)) {
+        signOut(auth);
+        return;
+      }
+      document.getElementById("login-screen").style.display = "none";
+      document.getElementById("main-system").style.display = "block";
+      document.getElementById("user-info").innerHTML = `
+        <strong>Usuário:</strong> ${user.displayName}<br>
+        <strong>Email:</strong> ${user.email}`;
+    }
   });
 
-  // --- SIMULAÇÃO BÁSICA ---
-  function calcularBeneficio() {
+  // Funções de simulação permanecem globais para acesso dos botões
+  window.calcularBeneficio = () => {
     const nome = document.getElementById("nome").value;
     const idade = parseInt(document.getElementById("idade").value);
     const tempo = parseInt(document.getElementById("tempoContribuicao").value);
@@ -245,23 +257,19 @@
         <td>R$ ${media.toFixed(2)}</td>
         <td><strong>R$ ${beneficio.toFixed(2)}</strong></td>
       </tr>`;
-
     document.getElementById("resultadoTabela").style.display = "table";
 
     const user = auth.currentUser;
     if (user) {
-      salvarSimulacao(user, { nome, idade, tempo, media, beneficio, data: new Date().toLocaleString() });
+      const dados = { nome, idade, tempo, media, beneficio, data: new Date().toLocaleString() };
+      const chave = "simulacoes_" + user.email;
+      const simulacoes = JSON.parse(localStorage.getItem(chave)) || [];
+      simulacoes.push(dados);
+      localStorage.setItem(chave, JSON.stringify(simulacoes));
     }
-  }
+  };
 
-  function salvarSimulacao(user, dados) {
-    const chave = "simulacoes_" + user.email;
-    const simulacoes = JSON.parse(localStorage.getItem(chave)) || [];
-    simulacoes.push(dados);
-    localStorage.setItem(chave, JSON.stringify(simulacoes));
-  }
-
-  function mostrarSimulacoesSalvas() {
+  window.mostrarSimulacoesSalvas = () => {
     const user = auth.currentUser;
     if (!user) return;
     const chave = "simulacoes_" + user.email;
@@ -276,17 +284,17 @@
     });
     html += "</ul><button class='small-btn' onclick='limparSimulacoes()'>🗑️ Limpar todas</button>";
     document.getElementById("simulacoesSalvas").innerHTML = html;
-  }
+  };
 
-  function limparSimulacoes() {
+  window.limparSimulacoes = () => {
     const user = auth.currentUser;
     if (!user) return;
     const chave = "simulacoes_" + user.email;
     localStorage.removeItem(chave);
-    mostrarSimulacoesSalvas();
-  }
+    window.mostrarSimulacoesSalvas();
+  };
 
-  async function gerarPDF() {
+  window.gerarPDF = () => {
     const user = auth.currentUser;
     if (!user) return alert("Você precisa estar logado para gerar o PDF.");
     const nome = document.getElementById("nome").value;
@@ -312,7 +320,7 @@
     doc.text(`Média Salarial: R$ ${parseFloat(media).toFixed(2)}`, 20, 105);
     doc.text(`💰 Benefício Estimado: R$ ${beneficio}`, 20, 115);
     doc.save(`Simulacao_Prevtech_${user.displayName}.pdf`);
-  }
+  };
 </script>
 </body>
 </html>
