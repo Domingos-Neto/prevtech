@@ -176,18 +176,29 @@
       });
     }
 
-    function showSystem(user) {
-      document.getElementById("login-screen").style.display = "none";
-      document.getElementById("main-system").style.display = "block";
-      document.getElementById("user-info").innerHTML = `
-        <strong>Usuário:</strong> ${user.displayName}<br>
-        <strong>Email:</strong> ${user.email}
-      `;
+    <script>
+  const emailsAutorizados = [
+    "domingosbarroson@gmail.com",
+    "setordebeneficiositaprev@gmail.com"
+  ];
+
+  function showSystem(user) {
+    const email = user.email;
+
+    if (!emailsAutorizados.includes(email)) {
+      alert("⚠️ Este e-mail não tem permissão para acessar o sistema.");
+      logout();
+      return;
     }
 
-    auth.onAuthStateChanged(user => {
-      if (user) showSystem(user);
-    });
+    document.getElementById("login-screen").style.display = "none";
+    document.getElementById("main-system").style.display = "block";
+    document.getElementById("user-info").innerHTML = `
+      <strong>Usuário:</strong> ${user.displayName}<br>
+      <strong>Email:</strong> ${user.email}
+    `;
+  }
+</script>
 
     // Lógica do simulador
     function calcularBeneficio() {
