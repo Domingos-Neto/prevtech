@@ -1,11 +1,11 @@
 // --- FIREBASE AUTH (Google Login) ---
 const firebaseConfig = {
-  apiKey: "AIzaSyA7JbEr8qG6f4m6BHHUjfU6GzKbO8L9W0Y",
+  apiKey: "AIzaSyCkzX_5GuNjizbbgzWNgYx3hvEhj2Hr3pM",
   authDomain: "prevtech-ca050.firebaseapp.com",
   projectId: "prevtech-ca050",
   storageBucket: "prevtech-ca050.firebasestorage.app",
-  messagingSenderId: "300539499706",
-  appId: "1:300539499706:web:i91plbhours71tqasbiv9mcl2cjp8qv6"
+  messagingSenderId: "847747677288",
+  appId: "1:847747677288:web:f1efa50e9e8b93e60bcfdd"
 };
 
 firebase.initializeApp(firebaseConfig);
