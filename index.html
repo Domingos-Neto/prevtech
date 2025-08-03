@@ -232,6 +232,92 @@
 
       document.getElementById("resultadoTabela").style.display = "table";
     }
-  </script>
+<script>
+  // Salvar simulação no localStorage
+  function salvarSimulacao(usuario, dadosSimulacao) {
+    const email = usuario.email;
+    const chave = "simulacoes_" + email;
+
+    const simulacoes = JSON.parse(localStorage.getItem(chave)) || [];
+    simulacoes.push(dadosSimulacao);
+    localStorage.setItem(chave, JSON.stringify(simulacoes));
+  }
+
+  // Mostrar simulações salvas
+  function mostrarSimulacoesSalvas() {
+    const user = auth.currentUser;
+    if (!user) return;
+
+    const email = user.email;
+    const chave = "simulacoes_" + email;
+    const simulacoes = JSON.parse(localStorage.getItem(chave)) || [];
+
+    if (simulacoes.length === 0) {
+      document.getElementById("simulacoesSalvas").innerHTML = "<p>Nenhuma simulação salva.</p>";
+      return;
+    }
+
+    let html = "<h3>Simulações anteriores:</h3><ul>";
+    simulacoes.forEach((sim, i) => {
+      html += `<li>
+        <strong>${sim.nome}</strong> (${sim.idade} anos, ${sim.tempo} anos de contribuição) – 
+        Benefício: R$ ${sim.beneficio.toFixed(2)}
+      </li>`;
+    });
+    html += "</ul><button onclick='limparSimulacoes()'>🗑️ Limpar todas</button>";
+
+    document.getElementById("simulacoesSalvas").innerHTML = html;
+  }
+
+  function limparSimulacoes() {
+    const user = auth.currentUser;
+    if (!user) return;
+    const chave = "simulacoes_" + user.email;
+    localStorage.removeItem(chave);
+    mostrarSimulacoesSalvas();
+  }
+
+  // Atualize a função calcularBeneficio para salvar simulação
+  function calcularBeneficio() {
+    const nome = document.getElementById("nome").value;
+    const idade = parseInt(document.getElementById("idade").value);
+    const tempo = parseInt(document.getElementById("tempoContribuicao").value);
+    const media = parseFloat(document.getElementById("mediaSalarial").value);
+
+    if (!nome || isNaN(idade) || isNaN(tempo) || isNaN(media)) {
+      alert("Preencha todos os campos corretamente.");
+      return;
+    }
+
+    let fator = tempo / 35;
+    if (fator > 1) fator = 1;
+    const beneficio = media * fator;
+
+    const tbody = document.getElementById("resultadoCorpo");
+    tbody.innerHTML = `
+      <tr>
+        <td>${nome}</td>
+        <td>${idade}</td>
+        <td>${tempo} anos</td>
+        <td>R$ ${media.toFixed(2)}</td>
+        <td><strong>R$ ${beneficio.toFixed(2)}</strong></td>
+      </tr>
+    `;
+
+    document.getElementById("resultadoTabela").style.display = "table";
+
+    const usuario = auth.currentUser;
+    if (usuario) {
+      salvarSimulacao(usuario, {
+        nome,
+        idade,
+        tempo,
+        media,
+        beneficio,
+        data: new Date().toLocaleString()
+      });
+    }
+  }
+</script>
 </body>
 </html>
