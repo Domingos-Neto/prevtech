@@ -25,6 +25,7 @@ a{text-decoration:none;color:inherit}
 @media (max-width: 800px) {.login-container {flex-direction: column;} .login-branding {display: none;}}
 #mensagem{min-height:20px;font-size:.9em}
 .status-message { font-size: 0.8em; padding-left: 5px; height: 14px; display: block; }
+.error-message { color: var(--danger-color); font-weight: bold; }
 
 
 /* --- ESTILOS DA TABELA DE USUÁRIOS (Simplificado) --- */
@@ -183,9 +184,53 @@ body.dark-mode #admin-dashboard-controls { background-color: #2c2c2c; }
 .accordion-toggle.active::after { transform: translateY(-50%) rotate(-90deg); }
 .accordion-content { max-height: 0; overflow: hidden; transition: max-height 0.4s ease-out, padding 0.4s ease-out; padding: 0 10px; }
 
-.g_id_signin {
-  margin: 10px auto;
-  display: block;
-  max-width: 300px;
-  border-radius: 12px;
+
+/* --- NOVOS ESTILOS ADICIONADOS --- */
+.input-label {
+    font-weight: 600;
+    margin-bottom: 5px;
+    font-size: 0.9em;
+    color: var(--text-secondary-color);
+}
+.input-group input {
+    margin-top: 0; /* Remover margem superior do input */
+}
+.login-divider {
+    display: flex;
+    align-items: center;
+    text-align: center;
+    margin: 20px 0;
+    color: #aaa;
+}
+.login-divider::before,
+.login-divider::after {
+    content: '';
+    flex: 1;
+    border-bottom: 1px solid var(--border-color);
+}
+.login-divider span {
+    padding: 0 15px;
+}
+.google-login-btn {
+    background-color: #fff;
+    color: #444;
+    border: 1px solid var(--border-color);
+    width: 100%;
+    padding: 12px;
+    font-size: 1rem;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    cursor: pointer;
+    transition: background-color 0.3s, box-shadow 0.3s;
+}
+.google-login-btn:hover {
+    background-color: #f8f8f8;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+.google-login-btn i {
+    font-size: 1.2rem;
+    color: #DB4437; /* Cor do Google */
 }
