@@ -6,9 +6,7 @@
     <title>PrevTech - Simulador RPPS</title>
     
     <link rel="stylesheet" href="style (1).css">
-    
     <link href="https://cdn.jsdelivr.net/npm/remixicon@2.5.0/fonts/remixicon.css" rel="stylesheet">
-    
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
 
     <script src="https://apis.google.com/js/api.js?onload=gapiLoaded" async defer></script>
@@ -16,7 +14,7 @@
 </head>
 <body>
 
-    <div id="telaLogin">
+    <div id="telaLogin" style="display: flex;">
         <div class="login-container">
             <div class="login-branding">
                 <h2>PrevTech</h2>
@@ -53,8 +51,8 @@
             </div>
 
             <div style="padding: 15px 20px; border-bottom: 1px solid var(--border-color);">
-                 <p style="margin: 0 0 10px 0; font-size: 0.9em; color: var(--text-secondary-color);">Salve e carregue seus dados na nuvem.</p>
-                 <button id="google-login-button" class="success" style="display: none; width: 100%;"><i class="ri-google-fill"></i> Conectar ao Google Drive</button>
+                 <p style="margin: 0 0 10px 0; font-size: 0.9em; color: var(--text-secondary-color);">Salve e carregue na nuvem.</p>
+                 <button id="google-login-button" class="success" style="display: none; width: 100%;"><i class="ri-google-fill"></i> Conectar Google Drive</button>
                  <button id="google-logout-button" class="danger" style="display: none; width: 100%;"><i class="ri-google-fill"></i> Desconectar Google</button>
             </div>
 
@@ -67,6 +65,9 @@
                 <li id="admin-section-title" style="display: none;" class="sidebar-section-title">Administração</li>
                 <li id="admin-nav-item" style="display: none;"><a href="#" onclick="handleNavClick(event, 'usuarios')"><i class="ri-group-line"></i> Gerenciar Usuários</a></li>
             </ul>
+             <div class="sidebar-footer" style="padding: 20px; text-align: center; font-size: 0.8em; color: var(--text-secondary-color);">
+                <p>PrevTech &copy; 2025</p>
+            </div>
         </aside>
 
         <main class="main-content">
@@ -79,27 +80,53 @@
             </header>
 
             <div class="page-content">
-                <div id="dashboard" class="content-wrapper" style="display: block;">
+                
+                <div id="dashboard" class="content-wrapper" style="display: none;">
                     <h2>Painel Inicial</h2>
-                    <div id="admin-dashboard-controls" style="display: none;">
-                        </div>
-                    <div class="dashboard-grid">
+                    <div class="dashboard-grid" style="grid-template-columns: 1fr 1fr; gap: 30px;">
                         <section>
-                           <h4>Minhas Simulações</h4>
-                           <ul id="listaHistorico"></ul>
+                           <h3>Simulações Salvas</h3>
+                           <ul id="listaHistorico"><li>Faça o login com o Google para ver os dados.</li></ul>
                         </section>
                          <section>
-                           <h4>Minhas CTCs</h4>
-                           <ul id="listaCtc"></ul>
+                           <h3>CTCs Salvas</h3>
+                           <ul id="listaCtc"><li>Faça o login com o Google para ver os dados.</li></ul>
                         </section>
                     </div>
                 </div>
 
                 <div id="calculadora" class="content-wrapper" style="display: none;">
+                    <h2>Simulador de Benefícios</h2>
+                    <div id="passo1">Passo 1: Dados do Servidor (Conteúdo gerado pelo JS)</div>
+                    <div id="passo2" style="display: none;">Passo 2: Salários (Conteúdo gerado pelo JS)</div>
+                    <div id="passo3" style="display: none;">
+                        <h3>Resultado da Simulação</h3>
+                        <div id="resultado"></div>
+                        <div id="resultadoLiquido"></div>
+                        <div id="resultadoProjecao"></div>
+                        <div id="resultadoAbono"></div>
                     </div>
+                    <div class="wizard-nav">
+                        <button onclick="irParaPasso(currentStep - 1)">Voltar</button>
+                        <button onclick="irParaPasso(currentStep + 1)">Avançar</button>
+                    </div>
+                </div>
 
                 <div id="geradorCTC" class="content-wrapper" style="display: none;">
-                    </div>
+                    <h2>Gerador de Certidão de Tempo de Contribuição (CTC)</h2>
+                    <form id="form-ctc">
+                        <div id="ctc-cpf-status"></div>
+                    </form>
+                    <table id="tabela-periodos-ctc">
+                        <thead>
+                            <tr>
+                                <th>Início</th><th>Fim</th><th>Bruto</th><th>Deduções</th><th>Líquido</th><th>Fonte</th><th>Ação</th>
+                            </tr>
+                        </thead>
+                        <tbody id="corpo-tabela-periodos-ctc"></tbody>
+                    </table>
+                    <div id="total-tempo-ctc"></div>
+                </div>
                 
                 <div id="telaLegislacao" class="content-wrapper" style="display: none;">
                     <h2>Legislação</h2>
@@ -111,16 +138,7 @@
                      <form id="form-novo-usuario" onsubmit="cadastrarUsuario(event)">
                         </form>
                      <table id="tabela-usuarios">
-                        <thead>
-                            <tr>
-                                <th>Usuário</th>
-                                <th>Nome Completo</th>
-                                <th>Cargo/Função</th>
-                                <th>Tipo</th>
-                                <th>Status</th>
-                                <th>Ações</th>
-                            </tr>
-                        </thead>
+                        <thead><tr><th>Usuário</th><th>Nome Completo</th><th>Cargo/Função</th><th>Tipo</th><th>Status</th><th>Ações</th></tr></thead>
                         <tbody id="corpo-tabela-usuarios"></tbody>
                     </table>
                 </div>
@@ -130,11 +148,11 @@
         </main>
     </div>
 
-    <div id="floating-buttons-container" style="display: none;">
-        </div>
+    <div id="floating-buttons-container" style="display: none;"></div>
 
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     
