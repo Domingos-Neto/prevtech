@@ -1,7 +1,7 @@
 // --- INÍCIO: SEÇÃO GOOGLE DRIVE ---
 
 // Substitua com o seu ID de Cliente obtido no Google Cloud Console
-const CLIENT_ID = 'i91plbhours71tqasbiv9mcl2cjp8qv6'; 
+const CLIENT_ID = '300539499706-i91plbhours71tqasbiv9mcl2cjp8qv6.apps.googleusercontent.com'; 
 const SCOPES = 'https://www.googleapis.com/auth/drive.file';
 
 let tokenClient;
