@@ -145,7 +145,7 @@ async function gerarPDF() {
 
 // --- GOOGLE DRIVE OAUTH SECTION ---
 // Substitua pelo seu OAuth 2.0 Client ID do Google Cloud Console
-const CLIENT_ID = 'GOOGLE_OAUTH_CLIENT_ID.apps.googleusercontent.com'; 
+const CLIENT_ID = '300539499706-i91plbhours71tqasbiv9mcl2cjp8qv6.apps.googleusercontent.com'; 
 const SCOPES = 'https://www.googleapis.com/auth/drive.file';
 
 let tokenClient;
@@ -176,7 +176,7 @@ function gisLoaded() {
 
 function maybeEnableButtons() {
   // Exemplo: habilitar botão de salvar no Drive se quiser
-  // document.getElementById('btn-drive-save').disabled = !(gapiInited && gisInited);
+document.getElementById('btn-drive-save').disabled = !(gapiInited && gisInited);
 }
 
 function handleAuthClick() {
