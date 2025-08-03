@@ -2,266 +2,55 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <title>Prevtech - Simulador RPPS</title>
+  <title>Login Google Teste</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
-      margin: 0;
-      background: #f5f6fa;
-    }
-    .login-container {
       display: flex;
-      flex-direction: column;
-      justify-content: center;
       align-items: center;
+      justify-content: center;
       height: 100vh;
-      text-align: center;
     }
-    .login-box {
-      background: #fff;
-      padding: 40px;
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-      max-width: 400px;
-      width: 90%;
-    }
-    .google-btn {
+    button {
+      padding: 12px 20px;
+      font-size: 16px;
       background-color: #4285F4;
       color: white;
       border: none;
-      padding: 14px 20px;
-      font-size: 16px;
-      border-radius: 8px;
+      border-radius: 6px;
       cursor: pointer;
-      width: 100%;
-      margin-top: 20px;
-    }
-    .google-btn:hover {
-      background-color: #3367D6;
-    }
-    .logout-btn {
-      background-color: #e74c3c;
-      margin-top: 20px;
-    }
-    .user-info {
-      margin-top: 10px;
-      color: #555;
-    }
-    #main-system {
-      display: none;
-      padding: 20px;
-    }
-    input, select {
-      padding: 6px;
-      margin-bottom: 6px;
-      width: 100%;
-      max-width: 300px;
-    }
-    table {
-      border-collapse: collapse;
-      width: 100%;
-      margin-top: 20px;
-    }
-    table, th, td {
-      border: 1px solid #ccc;
-    }
-    th, td {
-      padding: 8px;
-      text-align: center;
-    }
-    h1, h2 {
-      color: #2c3e50;
     }
   </style>
 </head>
 <body>
+  <button onclick="loginGoogle()">Entrar com Google</button>
 
-<div class="login-container" id="login-screen">
-  <div class="login-box">
-    <h2>Bem-vindo ao Prevtech</h2>
-    <p>Acesse com sua conta Google</p>
-    <button class="google-btn" onclick="loginGoogle()">Entrar com Google</button>
-  </div>
-</div>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyCkzX_5GuNjizbbgzWNgYx3hvEhj2Hr3pM",
+      authDomain: "prevtech-ca050.firebaseapp.com",
+      projectId: "prevtech-ca050",
+      storageBucket: "prevtech-ca050.appspot.com",
+      messagingSenderId: "847747677288",
+      appId: "1:847747677288:web:f1efa50e9e8b93e60bcfdd"
+    };
 
-<div id="main-system">
-  <h1>Simulador de Benefícios RPPS</h1>
-  <div class="user-info" id="user-info"></div>
-  <button class="google-btn logout-btn" onclick="logout()">Sair</button>
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const provider = new firebase.auth.GoogleAuthProvider();
 
-  <form id="simuladorForm">
-    <label for="nome">Nome:</label><br>
-    <input type="text" id="nome" required><br>
-    <label for="idade">Idade:</label><br>
-    <input type="number" id="idade" required><br>
-    <label for="tempoContribuicao">Tempo de Contribuição (anos):</label><br>
-    <input type="number" id="tempoContribuicao" required><br>
-    <label for="mediaSalarial">Média Salarial (R$):</label><br>
-    <input type="number" id="mediaSalarial" required><br><br>
-    <button type="button" onclick="calcularBeneficio()">Calcular Benefício</button>
-  </form>
-
-  <h2>Resultado:</h2>
-  <table id="resultadoTabela" style="display:none;">
-    <thead>
-      <tr>
-        <th>Nome</th>
-        <th>Idade</th>
-        <th>Tempo de Contribuição</th>
-        <th>Média Salarial</th>
-        <th>Valor Estimado</th>
-      </tr>
-    </thead>
-    <tbody id="resultadoCorpo"></tbody>
-  </table>
-
-  <button onclick="gerarPDF()">📄 Exportar PDF</button>
-  <button onclick="mostrarSimulacoesSalvas()">📁 Ver Simulações Salvas</button>
-  <div id="simulacoesSalvas" style="margin-top: 20px;"></div>
-</div>
-
-<script>
-  const firebaseConfig = {
-    apiKey: "AIzaSyCkzX_5GuNjizbbgzWNgYx3hvEhj2Hr3pM",
-    authDomain: "prevtech-ca050.firebaseapp.com",
-    projectId: "prevtech-ca050",
-    storageBucket: "prevtech-ca050.firebasestorage.app",
-    messagingSenderId: "847747677288",
-    appId: "1:847747677288:web:f1efa50e9e8b93e60bcfdd"
-  };
-
-  firebase.initializeApp(firebaseConfig);
-  const auth = firebase.auth();
-  const provider = new firebase.auth.GoogleAuthProvider();
-
-  const emailsAutorizados = [
-    "domingosbarroson@gmail.com",
-    "setordebeneficiositaprev@gmail.com"
-  ];
-
-  function loginGoogle() {
-    auth.signInWithPopup(provider)
-      .then(result => showSystem(result.user))
-      .catch(error => {
-        console.error("Erro no login:", error);
-        alert("Erro ao fazer login.");
-      });
-  }
-
-  function logout() {
-    auth.signOut().then(() => {
-      document.getElementById("main-system").style.display = "none";
-      document.getElementById("login-screen").style.display = "flex";
-    });
-  }
-
-  function showSystem(user) {
-    const email = user.email;
-    if (!emailsAutorizados.includes(email)) {
-      alert("⚠️ Este e-mail não tem permissão para acessar o sistema.");
-      logout();
-      return;
+    function loginGoogle() {
+      auth.signInWithPopup(provider)
+        .then(result => {
+          alert("Login bem-sucedido como: " + result.user.email);
+        })
+        .catch(error => {
+          alert("Erro no login: " + error.message);
+        });
     }
-    document.getElementById("login-screen").style.display = "none";
-    document.getElementById("main-system").style.display = "block";
-    document.getElementById("user-info").innerHTML = `
-      <strong>Usuário:</strong> ${user.displayName}<br>
-      <strong>Email:</strong> ${user.email}`;
-  }
-
-  auth.onAuthStateChanged(user => { if (user) showSystem(user); });
-
-  function calcularBeneficio() {
-    const nome = document.getElementById("nome").value;
-    const idade = parseInt(document.getElementById("idade").value);
-    const tempo = parseInt(document.getElementById("tempoContribuicao").value);
-    const media = parseFloat(document.getElementById("mediaSalarial").value);
-    if (!nome || isNaN(idade) || isNaN(tempo) || isNaN(media)) {
-      alert("Preencha todos os campos corretamente.");
-      return;
-    }
-    let fator = tempo / 35;
-    if (fator > 1) fator = 1;
-    const beneficio = media * fator;
-
-    document.getElementById("resultadoCorpo").innerHTML = `
-      <tr>
-        <td>${nome}</td>
-        <td>${idade}</td>
-        <td>${tempo} anos</td>
-        <td>R$ ${media.toFixed(2)}</td>
-        <td><strong>R$ ${beneficio.toFixed(2)}</strong></td>
-      </tr>`;
-
-    document.getElementById("resultadoTabela").style.display = "table";
-
-    const user = auth.currentUser;
-    if (user) {
-      salvarSimulacao(user, { nome, idade, tempo, media, beneficio, data: new Date().toLocaleString() });
-    }
-  }
-
-  function salvarSimulacao(user, dados) {
-    const chave = "simulacoes_" + user.email;
-    const simulacoes = JSON.parse(localStorage.getItem(chave)) || [];
-    simulacoes.push(dados);
-    localStorage.setItem(chave, JSON.stringify(simulacoes));
-  }
-
-  function mostrarSimulacoesSalvas() {
-    const user = auth.currentUser;
-    const chave = "simulacoes_" + user.email;
-    const simulacoes = JSON.parse(localStorage.getItem(chave)) || [];
-    if (simulacoes.length === 0) {
-      document.getElementById("simulacoesSalvas").innerHTML = "<p>Nenhuma simulação salva.</p>";
-      return;
-    }
-    let html = "<h3>Simulações anteriores:</h3><ul>";
-    simulacoes.forEach(sim => {
-      html += `<li><strong>${sim.nome}</strong> (${sim.idade} anos, ${sim.tempo} anos de contribuição) – R$ ${sim.beneficio.toFixed(2)}<br><small>${sim.data}</small></li>`;
-    });
-    html += "</ul><button onclick='limparSimulacoes()'>🗑️ Limpar todas</button>";
-    document.getElementById("simulacoesSalvas").innerHTML = html;
-  }
-
-  function limparSimulacoes() {
-    const user = auth.currentUser;
-    const chave = "simulacoes_" + user.email;
-    localStorage.removeItem(chave);
-    mostrarSimulacoesSalvas();
-  }
-
-  async function gerarPDF() {
-    const user = auth.currentUser;
-    if (!user) return alert("Você precisa estar logado para gerar o PDF.");
-    const nome = document.getElementById("nome").value;
-    const idade = document.getElementById("idade").value;
-    const tempo = document.getElementById("tempoContribuicao").value;
-    const media = document.getElementById("mediaSalarial").value;
-    const beneficio = (parseFloat(media) * (tempo / 35)).toFixed(2);
-    const dataHora = new Date().toLocaleString();
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(14);
-    doc.text("📄 Simulação de Benefício - Prevtech", 20, 20);
-    doc.setFontSize(12);
-    doc.text(`Data: ${dataHora}`, 20, 30);
-    doc.text(`Usuário: ${user.displayName}`, 20, 40);
-    doc.text(`E-mail: ${user.email}`, 20, 50);
-    doc.line(20, 55, 190, 55);
-    doc.text("📌 Dados da Simulação:", 20, 65);
-    doc.text(`Nome: ${nome}`, 20, 75);
-    doc.text(`Idade: ${idade} anos`, 20, 85);
-    doc.text(`Tempo de Contribuição: ${tempo} anos`, 20, 95);
-    doc.text(`Média Salarial: R$ ${parseFloat(media).toFixed(2)}`, 20, 105);
-    doc.text(`💰 Benefício Estimado: R$ ${beneficio}`, 20, 115);
-    doc.save(`Simulacao_Prevtech_${user.displayName}.pdf`);
-  }
-</script>
+  </script>
 </body>
 </html>
