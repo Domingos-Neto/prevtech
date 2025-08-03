@@ -431,7 +431,8 @@ function login(){
                 usuarioAtual = u;
                 usuarioAtualTipo = usuario.tipo || 'comum'; 
 
-                document.getElementById("usuarioLogado").innerText = u;
+                // A linha que causava o erro foi removida daqui.
+
                 document.getElementById("usuarioLogadoSidebar").innerText = usuario.nomeCompleto || u;
                 document.getElementById("usuarioTipoSidebar").innerText = usuario.tipo === 'admin' ? 'Administrador' : 'Usuário Comum';
                 document.getElementById("user-avatar").innerText = u.substring(0, 2).toUpperCase();
