@@ -377,65 +377,65 @@ body.dark-mode #admin-dashboard-controls { background-color: #2c2c2c; }
             <div class="content-wrapper">
 
                 <div id="dashboard" style="display:none;">
-                    <h2>Painel de Controle</h2>
+    <h2>Painel de Controle</h2>
+    
+    <div id="admin-dashboard-controls" style="display:none;">
+        <label for="view-selector"><i class="ri-eye-line"></i> Visão do Painel:</label>
+        <select id="view-selector" onchange="atualizarDashboardView()">
+            <option value="meus_registros">Meus Registros</option>
+            <option value="todos_usuarios">Todos os Usuários</option>
+        </select>
+    </div>
 
-                  </ul> </div> <div id="calculadora" style="display:none;">
-                    <h2><i class="ri-calendar-2-line"></i> Calculadora de Tempo de Contribuição</h2>
-                    <p>Calcule o período exato (anos, meses, dias) e o total de dias entre duas datas.</p>
-
-                    <div class="form-group">
-                        <label for="startDate">Data de Início:</label>
-                        <input type="date" id="startDate" class="form-control">
-                    </div>
-
-                    <div class="form-group">
-                        <label for="endDate">Data Final:</label>
-                        <input type="date" id="endDate" class="form-control">
-                    </div>
-
-                    <button id="calculateBtn" class="btn btn-primary mt-2">Calcular</button>
-
-                    <div id="result" class="mt-3">
-                        </div>
-                    
-                    <hr>
-                    <button class="btn btn-secondary" onclick="handleNavClick(event, 'dashboard')">
-                        <i class="ri-arrow-left-line"></i> Voltar ao Painel
-                    </button>
-                </div>
-                </div>
-          
-                    <div id="admin-dashboard-controls" style="display:none;">
-                        <label for="view-selector"><i class="ri-eye-line"></i> Visão do Painel:</label>
-                        <select id="view-selector" onchange="atualizarDashboardView()">
-                            <option value="meus_registros">Meus Registros</option>
-                            <option value="todos_usuarios">Todos os Usuários</option>
-                        </select>
-                    </div>
-                  
-                    <div class="dashboard-grid">
-                        <div class="dashboard-card" onclick="handleNavClick(event, 'simulacao')">
-                            <i class="ri-add-circle-line" style="color: #0d47a1;"></i>
-                            <span>Nova Simulação de Benefício</span>
-                        </div>
-                        <div class="dashboard-card" onclick="handleNavClick(event, 'ctc')">
-                            <i class="ri-file-text-line" style="color: #17a2b8;"></i>
-                            <span>Gerar Certidão (CTC)</span>
-                        </div>
-                        <div class="dashboard-card" onclick="handleNavClick(event, 'legislacao')">
-                            <i class="ri-book-open-line" style="color: #6f42c1;"></i>
-                            <span>Acessar Legislação</span>
-                        </div>
-                      <div class="dashboard-card" onclick="handleNavClick(event, 'calculadora')">
-    <i class="ri-calendar-2-line" style="color: #ff6f00;"></i>
-    <span>Calcular Tempo de Contribuição</span>
+    <div class="dashboard-grid">
+        <div class="dashboard-card" onclick="handleNavClick(event, 'simulacao')">
+            <i class="ri-add-circle-line" style="color: #0d47a1;"></i>
+            <span>Nova Simulação de Benefício</span>
+        </div>
+        <div class="dashboard-card" onclick="handleNavClick(event, 'ctc')">
+            <i class="ri-file-text-line" style="color: #17a2b8;"></i>
+            <span>Gerar Certidão (CTC)</span>
+        </div>
+        <div class="dashboard-card" onclick="handleNavClick(event, 'legislacao')">
+            <i class="ri-book-open-line" style="color: #6f42c1;"></i>
+            <span>Acessar Legislação</span>
+        </div>
+        <div class="dashboard-card" onclick="handleNavClick(event, 'calculadora')">
+            <i class="ri-calendar-2-line" style="color: #ff6f00;"></i>
+            <span>Calcular Tempo de Contribuição</span>
+        </div>
+    </div>
+    
+    <h3><i class="ri-folder-history-fill"></i> Histórico de Simulações Salvas</h3>
+    <ul id="listaHistorico"></ul>
+    
+    <h3><i class="ri-file-copy-2-fill"></i> CTCs Salvas</h3>
+    <ul id="listaCTCsSalvas"></ul>
 </div>
-                   <h3><i class="ri-folder-history-fill"></i> Histórico de Simulações Salvas</h3>
-                    <ul id="listaHistorico"></ul>
-                    
-                    <h3><i class="ri-file-copy-2-fill"></i> CTCs Salvas</h3>
-                    <ul id="listaCTCsSalvas"></ul>
-                </div>
+<div id="calculadora" style="display:none;">
+    <h2><i class="ri-calendar-2-line"></i> Calculadora de Tempo de Contribuição</h2>
+    <p>Calcule o período exato (anos, meses, dias) e o total de dias entre duas datas.</p>
+
+    <div class="form-group">
+        <label for="startDate">Data de Início:</label>
+        <input type="date" id="startDate" class="form-control">
+    </div>
+
+    <div class="form-group">
+        <label for="endDate">Data Final:</label>
+        <input type="date" id="endDate" class="form-control">
+    </div>
+
+    <button id="calculateBtn" class="btn btn-primary mt-2">Calcular</button>
+
+    <div id="result" class="mt-3">
+        </div>
+    
+    <hr>
+    <button class="btn btn-secondary" onclick="handleNavClick(event, 'dashboard')">
+        <i class="ri-arrow-left-line"></i> Voltar ao Painel
+    </button>
+</div>
 
                 <div id="calculadora" style="display:none;">
                     <div id="passo1" class="wizard-step">
@@ -1654,6 +1654,7 @@ function exportarTudoZIP(btn){ toggleSpinner(btn, true); setTimeout(() => { try 
 </body>
 
 </html>
+
 
 
 
