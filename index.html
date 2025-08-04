@@ -411,33 +411,9 @@ body.dark-mode #admin-dashboard-controls { background-color: #2c2c2c; }
     
     <h3><i class="ri-file-copy-2-fill"></i> CTCs Salvas</h3>
     <ul id="listaCTCsSalvas"></ul>
-</div>
-<div id="calculadora" style="display:none;">
-    <h2><i class="ri-calendar-2-line"></i> Calculadora de Tempo de Contribuição</h2>
-    <p>Calcule o período exato (anos, meses, dias) e o total de dias entre duas datas.</p>
+   </div>
 
-    <div class="form-group">
-        <label for="startDate">Data de Início:</label>
-        <input type="date" id="startDate" class="form-control">
-    </div>
-
-    <div class="form-group">
-        <label for="endDate">Data Final:</label>
-        <input type="date" id="endDate" class="form-control">
-    </div>
-
-    <button id="calculateBtn" class="btn btn-primary mt-2">Calcular</button>
-
-    <div id="result" class="mt-3">
-        </div>
-    
-    <hr>
-    <button class="btn btn-secondary" onclick="handleNavClick(event, 'dashboard')">
-        <i class="ri-arrow-left-line"></i> Voltar ao Painel
-    </button>
-</div>
-
-                <div id="calculadora" style="display:none;">
+              <div id="calculadora" style="display:none;">
                     <div id="passo1" class="wizard-step">
                         <h2>Passo 1: Dados e Tipo de Benefício</h2>
                         <div class="form-grid">
@@ -1654,6 +1630,7 @@ function exportarTudoZIP(btn){ toggleSpinner(btn, true); setTimeout(() => { try 
 </body>
 
 </html>
+
 
 
 
