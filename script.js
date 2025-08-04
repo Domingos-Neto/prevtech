@@ -671,6 +671,71 @@ function alternarCamposBeneficio(){
     }
 }
 
+// Adicione este código ao seu arquivo .js
+
+document.addEventListener('DOMContentLoaded', () => {
+    // Pega os elementos do DOM
+    const startDateInput = document.getElementById('startDate');
+    const endDateInput = document.getElementById('endDate');
+    const calculateBtn = document.getElementById('calculateBtn');
+    const resultDiv = document.getElementById('result');
+
+    // Adiciona o evento de clique ao botão
+    calculateBtn.addEventListener('click', () => {
+        const startDate = new Date(startDateInput.value);
+        const endDate = new Date(endDateInput.value);
+
+        // Validação das datas
+        if (!startDateInput.value || !endDateInput.value) {
+            resultDiv.innerHTML = `<div class="alert alert-danger">Por favor, preencha ambas as datas.</div>`;
+            return;
+        }
+        
+        // Adiciona 1 dia à data final para incluir o último dia no cálculo, comum em contagem de tempo de serviço.
+        // Se a contagem for exclusiva (não incluir o último dia), remova a linha abaixo.
+        endDate.setDate(endDate.getDate() + 1);
+
+        if (endDate < startDate) {
+            resultDiv.innerHTML = `<div class="alert alert-danger">A data final deve ser maior ou igual à data de início.</div>`;
+            return;
+        }
+
+        let years = endDate.getFullYear() - startDate.getFullYear();
+        let months = endDate.getMonth() - startDate.getMonth();
+        let days = endDate.getDate() - startDate.getDate();
+
+        // Ajustes para dias e meses negativos
+        if (days < 0) {
+            months--;
+            // Pega o último dia do mês anterior ao da data final
+            const lastDayOfPreviousMonth = new Date(endDate.getFullYear(), endDate.getMonth(), 0).getDate();
+            days += lastDayOfPreviousMonth;
+        }
+
+        if (months < 0) {
+            years--;
+            months += 12;
+        }
+
+        // Cálculo do total de dias
+        // A diferença em milissegundos é convertida para dias
+        // Usamos as datas originais para este cálculo específico
+        const originalStartDate = new Date(startDateInput.value);
+        const originalEndDate = new Date(endDateInput.value);
+        const timeDiff = originalEndDate.getTime() - originalStartDate.getTime();
+        const totalDays = Math.ceil(timeDiff / (1000 * 3600 * 24)) + 1; // +1 para incluir o dia final
+
+        // Exibe o resultado
+        resultDiv.innerHTML = `
+            <div class="alert alert-success">
+                <h4>Resultado do Cálculo:</h4>
+                <p><strong>Período:</strong> ${years} ano(s), ${months} mes(es) e ${days} dia(s).</p>
+                <p><strong>Total de Dias:</strong> ${totalDays} dias.</p>
+            </div>
+        `;
+    });
+});
+
 function limparFormularioCompleto(){ 
     document.querySelectorAll('#calculadora input[type="text"],#calculadora input[type="date"],#calculadora input[type="number"], #calculadora textarea').forEach(i=>i.value=''); 
     document.getElementById('corpo-tabela').innerHTML='';
@@ -1131,5 +1196,6 @@ function diasParaAnosMesesDias(totalDias) { if (isNaN(totalDias) || totalDias < 
 
 
 function exportarTudoZIP(btn){ toggleSpinner(btn, true); setTimeout(() => { try { const zip = new JSZip(), dados = coletarDadosSimulacao(), nomeBase = (dados.passo1.nomeServidor || "simulacao").replace(/\s+/g,'_'); zip.file(`${nomeBase}.json`, JSON.stringify(dados,null,2)); let csv = "MES_ANO;FATOR;SALARIO\n"; dados.tabela.forEach(l=>{csv += `${l[0]};${l[1]};${l[2]}\n`;}); zip.file(`${nomeBase}-salarios.csv`, csv); zip.file(`${nomeBase}-relatorio.html`, getPrintableHTML()); zip.generateAsync({type:"blob"}).then(content=>{ const a = document.createElement("a"); a.href = URL.createObjectURL(content); a.download = `${nomeBase}-pack.zip`; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(a.href); showToast("Arquivo ZIP exportado!", true); }); } catch (e) { showToast("Erro ao exportar o arquivo ZIP."); console.error(e); } finally { toggleSpinner(btn, false); } }, 50); }
+
 
 
