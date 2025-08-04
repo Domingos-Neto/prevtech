@@ -1197,5 +1197,66 @@ function diasParaAnosMesesDias(totalDias) { if (isNaN(totalDias) || totalDias < 
 
 function exportarTudoZIP(btn){ toggleSpinner(btn, true); setTimeout(() => { try { const zip = new JSZip(), dados = coletarDadosSimulacao(), nomeBase = (dados.passo1.nomeServidor || "simulacao").replace(/\s+/g,'_'); zip.file(`${nomeBase}.json`, JSON.stringify(dados,null,2)); let csv = "MES_ANO;FATOR;SALARIO\n"; dados.tabela.forEach(l=>{csv += `${l[0]};${l[1]};${l[2]}\n`;}); zip.file(`${nomeBase}-salarios.csv`, csv); zip.file(`${nomeBase}-relatorio.html`, getPrintableHTML()); zip.generateAsync({type:"blob"}).then(content=>{ const a = document.createElement("a"); a.href = URL.createObjectURL(content); a.download = `${nomeBase}-pack.zip`; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(a.href); showToast("Arquivo ZIP exportado!", true); }); } catch (e) { showToast("Erro ao exportar o arquivo ZIP."); console.error(e); } finally { toggleSpinner(btn, false); } }, 50); }
 
+// ======================================================= //
+//           LÓGICA DA CALCULADORA DE DATAS                //
+// ======================================================= //
+const calculateBtn = document.getElementById('calculateBtn');
+
+if (calculateBtn) {
+    calculateBtn.addEventListener('click', () => {
+        const startDateInput = document.getElementById('startDate');
+        const endDateInput = document.getElementById('endDate');
+        const resultDiv = document.getElementById('result');
+
+        if (!startDateInput.value || !endDateInput.value) {
+            resultDiv.innerHTML = `<div class="alert alert-danger">Por favor, preencha ambas as datas.</div>`;
+            return;
+        }
+
+        const startDate = new Date(startDateInput.value);
+        const endDate = new Date(endDateInput.value);
+        
+        // Corrige o problema de fuso horário ao pegar valor do input type="date"
+        startDate.setMinutes(startDate.getMinutes() + startDate.getTimezoneOffset());
+        endDate.setMinutes(endDate.getMinutes() + endDate.getTimezoneOffset());
+
+        if (endDate < startDate) {
+            resultDiv.innerHTML = `<div class="alert alert-danger">A data final deve ser maior ou igual à data de início.</div>`;
+            return;
+        }
+
+        // Adiciona 1 dia para contagem inclusiva
+        const inclusiveEndDate = new Date(endDate);
+        inclusiveEndDate.setDate(inclusiveEndDate.getDate() + 1);
+
+        let years = inclusiveEndDate.getFullYear() - startDate.getFullYear();
+        let months = inclusiveEndDate.getMonth() - startDate.getMonth();
+        let days = inclusiveEndDate.getDate() - startDate.getDate();
+
+        if (days < 0) {
+            months--;
+            // Pega o último dia do mês anterior ao da data final
+            const lastDayOfPreviousMonth = new Date(inclusiveEndDate.getFullYear(), inclusiveEndDate.getMonth(), 0).getDate();
+            days += lastDayOfPreviousMonth;
+        }
+
+        if (months < 0) {
+            years--;
+            months += 12;
+        }
+
+        // Cálculo do total de dias corridos
+        const timeDiff = endDate.getTime() - startDate.getTime();
+        const totalDays = Math.ceil(timeDiff / (1000 * 3600 * 24)) + 1;
+
+        resultDiv.innerHTML = `
+            <div class="alert alert-success">
+                <h4>Resultado do Cálculo:</h4>
+                <p><strong>Tempo de Contribuição:</strong> ${years} ano(s), ${months} mes(es) e ${days} dia(s).</p>
+                <p><strong>Total de Dias Corridos:</strong> ${totalDays} dias.</p>
+            </div>
+        `;
+    });
+}
 
 
