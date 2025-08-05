@@ -148,7 +148,6 @@ function initSistemaPosLogin() {
     handleNavClick(null, 'dashboard');
 }
 
-// *** CORREÇÃO: Adicionada a lógica do botão da calculadora aqui ***
 function setupEventListeners() {
     const accToggle = document.querySelector("#passo2 .accordion-toggle");
     if (accToggle) accToggle.addEventListener("click", () => {
@@ -162,10 +161,15 @@ function setupEventListeners() {
     const ctcCpfInput = document.getElementById('ctc-cpf');
     if(ctcCpfInput) ctcCpfInput.addEventListener('input', (e) => validaCPF(e.target, document.getElementById('ctc-cpf-status')));
 
-    // Adiciona o evento de clique para o novo botão da calculadora
+    // Eventos para a calculadora de tempo
     const btnCalcTempo = document.getElementById('btn-calcular-tempo');
     if (btnCalcTempo) {
         btnCalcTempo.addEventListener('click', calcularTempoEntreDatas);
+    }
+    // *** NOVO: Evento para o botão de limpar ***
+    const btnLimparTempo = document.getElementById('btn-limpar-tempo');
+    if (btnLimparTempo) {
+        btnLimparTempo.addEventListener('click', limparCalculoTempo);
     }
 }
 
@@ -1164,7 +1168,7 @@ function exportarTudoZIP(b) {
 }
 
 // =================================================================================
-// NOVA FUNÇÃO DA CALCULADORA DE TEMPO
+// FUNÇÕES DA CALCULADORA DE TEMPO
 // =================================================================================
 function calcularTempoEntreDatas() {
     const dataInicioStr = document.getElementById('calc-data-inicio').value;
@@ -1186,10 +1190,8 @@ function calcularTempoEntreDatas() {
         return;
     }
 
-    // Lógica consistente com a contagem da CTC (inclusiva)
     const diffTime = Math.abs(dataFim - dataInicio);
     const totalDias = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
-
     const { anos, meses, dias } = diasParaAnosMesesDias(totalDias);
 
     resultadoContainer.innerHTML = `
@@ -1199,11 +1201,17 @@ function calcularTempoEntreDatas() {
     `;
 }
 
+// *** NOVA FUNÇÃO PARA LIMPAR A CALCULADORA ***
+function limparCalculoTempo() {
+    document.getElementById('calc-data-inicio').value = '';
+    document.getElementById('calc-data-fim').value = '';
+    document.getElementById('resultado-calculo-tempo').innerHTML = '';
+}
+
 
 // =================================================================================
 // Expondo funções para o escopo global (para uso no HTML onclick)
 // =================================================================================
-// *** CORREÇÃO: Removida a função 'calcularTempoEntreDatas' daqui, pois agora é chamada por EventListener ***
 Object.assign(window, {
     auth, ui, handleNavClick, atualizarDashboardView, irParaPasso, alternarCamposBeneficio,
     adicionarLinha, limparTabela, exportarExcel, importarExcel, atualizarSalarioLinha, excluirLinha,
