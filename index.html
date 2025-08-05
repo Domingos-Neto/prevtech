@@ -106,7 +106,10 @@
                             <div style="width:100%; display:grid; gap:10px;">
                                 <label style="font-size:0.9em;">Data Início: <input type="date" id="calc-data-inicio" style="padding:8px;"></label>
                                 <label style="font-size:0.9em;">Data Fim: <input type="date" id="calc-data-fim" style="padding:8px;"></label>
-                                <button id="btn-calcular-tempo" style="margin-top:5px; background-color: #dc3545;">Calcular</button>
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                                    <button id="btn-limpar-tempo" class="secondary" style="margin-top:0;">Limpar</button>
+                                    <button id="btn-calcular-tempo" class="danger" style="margin-top:0;">Calcular</button>
+                                </div>
                             </div>
                             <div id="resultado-calculo-tempo" style="margin-top:15px; background: var(--secondary-color); padding:10px; border-radius:6px; width:100%; min-height:75px; font-size: 0.9em;">
                                 </div>
@@ -307,7 +310,7 @@
             </div> 
             <footer>
                 <p>ITAPREV - Sistema de Gestão Previdenciária. Itapipoca-CE, 2025.</p>
-                <p><small>Desenvolvido por Domingos Barroso Neto (V 1.0)</small></p>
+                <p><small>Desenvolvido por Domingos Barroso Neto  v.1.2</small></p>
             </footer>
         </div>
 
