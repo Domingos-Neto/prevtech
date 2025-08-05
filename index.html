@@ -53,18 +53,18 @@
         <ul id="main-nav" class="sidebar-nav">
             <li class="sidebar-section-title">Principal</li>
             <li><a href="#" class="active" onclick="handleNavClick(event, 'dashboard')"><i class="ri-home-4-line"></i> Painel Inicial</a></li>
-            <li><a href="#" onclick="handleNavClick(event, 'simulacao')"><i class="ri-calculator-line"></i> Nova Simulação</a></li>
-            <li><a href="#" onclick="handleNavClick(event, 'ctc')"><i class="ri-file-text-line"></i> Gerar CTC</a></li>
-            <li><a href="#" onclick="handleNavClick(event, 'legislacao')"><i class="ri-book-open-line"></i> Legislação</a></li>
+            <li><a href="#" onclick="handleNavClick(event, 'calculadora')"><i class="ri-calculator-line"></i> Nova Simulação</a></li>
+            <li><a href="#" onclick="handleNavClick(event, 'geradorCTC')"><i class="ri-file-text-line"></i> Gerar CTC</a></li>
+            <li><a href="#" onclick="handleNavClick(event, 'telaLegislacao')"><i class="ri-book-open-line"></i> Legislação</a></li>
             
             <li class="sidebar-section-title">Módulos de Gestão</li>
-            <li><a href="#" onclick="handleNavClick(event, 'cadastro')"><i class="ri-user-settings-line"></i> Gestão Cadastral</a></li>
-            <li><a href="#" onclick="handleNavClick(event, 'processos')"><i class="ri-node-tree"></i> Acomp. de Processos</a></li>
-            <li><a href="#" onclick="handleNavClick(event, 'financeiro')"><i class="ri-line-chart-line"></i> Financeiro</a></li>
-            <li><a href="#" onclick="handleNavClick(event, 'relatorios')"><i class="ri-file-chart-line"></i> Relatórios e BI</a></li>
+            <li><a href="#" onclick="handleNavClick(event, 'telaCadastro')"><i class="ri-user-settings-line"></i> Gestão Cadastral</a></li>
+            <li><a href="#" onclick="handleNavClick(event, 'telaProcessos')"><i class="ri-node-tree"></i> Acomp. de Processos</a></li>
+            <li><a href="#" onclick="handleNavClick(event, 'telaFinanceiro')"><i class="ri-line-chart-line"></i> Financeiro</a></li>
+            <li><a href="#" onclick="handleNavClick(event, 'telaRelatorios')"><i class="ri-file-chart-line"></i> Relatórios e BI</a></li>
 
             <li id="admin-section-title" class="sidebar-section-title" style="display:none;">Administração</li>
-            <li id="admin-nav-item" style="display:none;"><a href="#" onclick="handleNavClick(event, 'usuarios')"><i class="ri-shield-user-line"></i> Gerenciar Usuários</a></li>
+            <li id="admin-nav-item" style="display:none;"><a href="#" onclick="handleNavClick(event, 'telaUsuarios')"><i class="ri-shield-user-line"></i> Gerenciar Usuários</a></li>
         </ul>
     </aside>
 
@@ -93,9 +93,9 @@
                         </select>
                     </div>
                     <div class="dashboard-grid">
-                        <div class="dashboard-card" onclick="handleNavClick(event, 'simulacao')"><i class="ri-add-circle-line" style="color: #0d47a1;"></i><span>Nova Simulação de Benefício</span></div>
-                        <div class="dashboard-card" onclick="handleNavClick(event, 'ctc')"><i class="ri-file-text-line" style="color: #17a2b8;"></i><span>Gerar Certidão (CTC)</span></div>
-                        <div class="dashboard-card" onclick="handleNavClick(event, 'legislacao')"><i class="ri-book-open-line" style="color: #6f42c1;"></i><span>Acessar Legislação</span></div>
+                        <div class="dashboard-card" onclick="handleNavClick(event, 'calculadora')"><i class="ri-add-circle-line" style="color: #0d47a1;"></i><span>Nova Simulação de Benefício</span></div>
+                        <div class="dashboard-card" onclick="handleNavClick(event, 'geradorCTC')"><i class="ri-file-text-line" style="color: #17a2b8;"></i><span>Gerar Certidão (CTC)</span></div>
+                        <div class="dashboard-card" onclick="handleNavClick(event, 'telaLegislacao')"><i class="ri-book-open-line" style="color: #6f42c1;"></i><span>Acessar Legislação</span></div>
                     </div>
                     <h3><i class="ri-folder-history-fill"></i> Histórico de Simulações Salvas</h3>
                     <ul id="listaHistorico"></ul>
