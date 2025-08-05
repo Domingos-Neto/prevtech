@@ -350,20 +350,57 @@ function atualizarDataHora() {
 // --- NAVEGAÇÃO E CONTROLE DE UI ---
 function handleNavClick(event, targetView) {
     if (event) event.preventDefault();
+
+    // Remove 'active' de todos os links
     document.querySelectorAll('#main-nav a').forEach(a => a.classList.remove('active'));
-    document.querySelector(`#main-nav a[onclick*="'${targetView}'"]`).classList.add('active');
-    
-    switch(targetView) {
-        case 'dashboard': voltarDashboard(); break;
-        case 'simulacao': iniciarNovaSimulacao(); break;
-        case 'ctc': iniciarGeracaoCTC(); break;
-        case 'legislacao': mostrarLegislacao(); break;
-        case 'cadastro': mostrarCadastro(); break;
-        case 'processos': mostrarProcessos(); break;
-        case 'financeiro': mostrarFinanceiro(); break;
-        case 'relatorios': mostrarRelatorios(); break;
-        case 'usuarios': mostrarGerenciamentoUsuarios(); break;
+
+    // Marca como ativo o link correspondente, se existir
+    const selector = `#main-nav a[onclick*="'${targetView}'"]`;
+    const link = document.querySelector(selector);
+    if (link) {
+        link.classList.add('active');
+    } else {
+        console.warn("handleNavClick: link de navegação não encontrado para", targetView, "com selector", selector);
     }
+
+    // Ações para cada view
+    switch (targetView) {
+        case 'dashboard':
+            voltarDashboard();
+            break;
+        case 'simulacao':
+            iniciarNovaSimulacao();
+            break;
+        case 'calculadora':
+            mostrarCalculadora();
+            break;
+        case 'ctc':
+            iniciarGeracaoCTC();
+            break;
+        case 'legislacao':
+            mostrarLegislacao();
+            break;
+        case 'cadastro':
+            mostrarCadastro();
+            break;
+        case 'processos':
+            mostrarProcessos();
+            break;
+        case 'financeiro':
+            mostrarFinanceiro();
+            break;
+        case 'relatorios':
+            mostrarRelatorios();
+            break;
+        case 'usuarios':
+            mostrarGerenciamentoUsuarios();
+            break;
+    }
+}
+
+function mostrarCalculadora() {
+    // Mostra a view da calculadora
+    showView('calculadora');
 }
 
 function showView(viewId) {
@@ -1258,5 +1295,6 @@ if (calculateBtn) {
         `;
     });
 }
+
 
 
