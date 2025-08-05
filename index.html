@@ -115,6 +115,20 @@
                                 </div>
                         </div>
 
+                        <div class="dashboard-card" style="grid-column: span 2; grid-row: span 2; align-items: flex-start; text-align: left;">
+                            <h4 style="margin-top:0; display:flex; align-items:center; gap:8px; border:none; font-size: 1.1em;">
+                                <i class="ri-rocket-line" style="font-size: 1.5rem; margin-bottom:0; color: #ffc107;"></i>
+                                <span style="color: var(--text-color);">Acesso Rápido aos Módulos</span>
+                            </h4>
+                            <p style="font-size:0.9em; margin-top: 5px; margin-bottom:15px; color: var(--text-secondary-color);">Navegue diretamente para os principais módulos de gestão do sistema.</p>
+                            <div style="width: 100%; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-items: stretch;">
+                                <button onclick="handleNavClick(event, 'telaCadastro')" class="secondary" style="margin-top:0; padding: 12px; text-align:left; display:flex; align-items:center; gap:8px;"><i class="ri-user-settings-line"></i> Gestão Cadastral</button>
+                                <button onclick="handleNavClick(event, 'telaProcessos')" class="secondary" style="margin-top:0; padding: 12px; text-align:left; display:flex; align-items:center; gap:8px;"><i class="ri-node-tree"></i> Acomp. de Processos</button>
+                                <button onclick="handleNavClick(event, 'telaFinanceiro')" class="secondary" style="margin-top:0; padding: 12px; text-align:left; display:flex; align-items:center; gap:8px;"><i class="ri-line-chart-line"></i> Financeiro</button>
+                                <button onclick="handleNavClick(event, 'telaRelatorios')" class="secondary" style="margin-top:0; padding: 12px; text-align:left; display:flex; align-items:center; gap:8px;"><i class="ri-file-chart-line"></i> Relatórios e BI</button>
+                            </div>
+                        </div>
+
                     </div>
                     <h3><i class="ri-folder-history-fill"></i> Histórico de Simulações Salvas</h3>
                     <ul id="listaHistorico"></ul>
@@ -310,7 +324,7 @@
             </div> 
             <footer>
                 <p>ITAPREV - Sistema de Gestão Previdenciária. Itapipoca-CE, 2025.</p>
-                <p><small>Desenvolvido por Domingos Barroso Neto  v.1.2</small></p>
+                <p><small>Desenvolvido por Domingos Barroso Neto (V 1.0)</small></p>
             </footer>
         </div>
 
