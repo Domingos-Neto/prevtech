@@ -148,6 +148,7 @@ function initSistemaPosLogin() {
     handleNavClick(null, 'dashboard');
 }
 
+// *** CORREÇÃO: Adicionada a lógica do botão da calculadora aqui ***
 function setupEventListeners() {
     const accToggle = document.querySelector("#passo2 .accordion-toggle");
     if (accToggle) accToggle.addEventListener("click", () => {
@@ -157,8 +158,15 @@ function setupEventListeners() {
     });
     const cpfInput = document.getElementById('cpfServidor');
     if (cpfInput) cpfInput.addEventListener('input', (e) => validaCPF(e.target, document.getElementById('cpf-status')));
+    
     const ctcCpfInput = document.getElementById('ctc-cpf');
     if(ctcCpfInput) ctcCpfInput.addEventListener('input', (e) => validaCPF(e.target, document.getElementById('ctc-cpf-status')));
+
+    // Adiciona o evento de clique para o novo botão da calculadora
+    const btnCalcTempo = document.getElementById('btn-calcular-tempo');
+    if (btnCalcTempo) {
+        btnCalcTempo.addEventListener('click', calcularTempoEntreDatas);
+    }
 }
 
 function handleNavClick(event, targetView) {
@@ -1195,6 +1203,7 @@ function calcularTempoEntreDatas() {
 // =================================================================================
 // Expondo funções para o escopo global (para uso no HTML onclick)
 // =================================================================================
+// *** CORREÇÃO: Removida a função 'calcularTempoEntreDatas' daqui, pois agora é chamada por EventListener ***
 Object.assign(window, {
     auth, ui, handleNavClick, atualizarDashboardView, irParaPasso, alternarCamposBeneficio,
     adicionarLinha, limparTabela, exportarExcel, importarExcel, atualizarSalarioLinha, excluirLinha,
@@ -1202,5 +1211,5 @@ Object.assign(window, {
     adicionarLinhaDependente, removerLinhaDependente, salvarSimulacaoHistorico, imprimirSimulacao,
     exportarTudoZIP, gerarAtoDeAposentadoria, gerarAtoDePensao, carregarDoHistorico, excluirDoHistorico,
     adicionarLinhaPeriodoCTC, calcularTempoPeriodosCTC, removerLinhaPeriodoCTC, salvarCTC, gerarDocumentoCTC,
-    carregarCTC, excluirCTC, alternarTema, calcularTempoEntreDatas
+    carregarCTC, excluirCTC, alternarTema
 });
