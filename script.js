@@ -444,76 +444,179 @@ function removerLinhaDependente(b) {
 }
 
 function calcularMediaSalarial() {
-    const sI = document.querySelectorAll("#corpo-tabela .salario"),
-        fI = document.querySelectorAll("#corpo-tabela .fator"),
-        aO = document.querySelectorAll("#corpo-tabela .atualizado");
-    let sM = [];
-    for (let i = 0; i < sI.length; i++) {
-        const s = parseFloat(sI[i].value),
-            f = parseFloat(fI[i].value),
-            m = document.querySelectorAll("#corpo-tabela tr")[i].querySelectorAll("input[type='text']")[0].value;
-        if (f > 0 && s > 0 && /^\d{2}\/\d{4}$/.test(m)) {
-            const a = s * f;
-            aO[i].value = a.toFixed(2);
-            sM.push({ label: m, value: a });
-        } else aO[i].value = '';
+    // Coleta todos os salários atualizados da tabela
+    const salariosAtualizadosInputs = document.querySelectorAll("#corpo-tabela .atualizado");
+    let salariosValidos = [];
+
+    document.querySelectorAll("#corpo-tabela tr").forEach(tr => {
+        const mesAnoInput = tr.querySelector("input[type='text']");
+        const salarioAtualizadoInput = tr.querySelector(".atualizado");
+        
+        const mesAno = mesAnoInput ? mesAnoInput.value : '';
+        const valorAtualizado = salarioAtualizadoInput ? parseFloat(salarioAtualizadoInput.value) : 0;
+
+        if (valorAtualizado > 0 && /^\d{2}\/\d{4}$/.test(mesAno)) {
+            salariosValidos.push({ label: mesAno, value: valorAtualizado });
+        }
+    });
+
+    if (salariosValidos.length === 0) {
+        return { media: 0, somaMaiores: 0, totalSalarios: 0, qtdMaiores: 0, salarios: [] };
     }
-    if (sM.length === 0) return { media: 0, salarios: [] };
-    const med = sM.reduce((a, s) => a + s.value, 0) / sM.length;
-    return { media: med, salarios: sM };
+
+    // Ordena os salários do maior para o menor
+    salariosValidos.sort((a, b) => b.value - a.value);
+
+    // Calcula a quantidade correspondente a 80% dos maiores salários
+    const quantidadeTotal = salariosValidos.length;
+    const quantidade80 = Math.ceil(quantidadeTotal * 0.8);
+
+    // Pega apenas os 80% maiores salários
+    const maioresSalarios = salariosValidos.slice(0, quantidade80);
+
+    // Soma os 80% maiores salários
+    const somaMaiores = maioresSalarios.reduce((acc, s) => acc + s.value, 0);
+    
+    // Calcula a média
+    const media = maioresSalarios.length > 0 ? somaMaiores / maioresSalarios.length : 0;
+    
+    // Retorna todos os dados calculados
+    return { 
+        media: media, 
+        somaMaiores: somaMaiores,
+        totalSalarios: quantidadeTotal,
+        qtdMaiores: maioresSalarios.length,
+        salarios: salariosValidos // Retorna todos para o gráfico
+    };
 }
 
-function calcularBeneficio(n = true, b = null) {
-    const t = document.getElementById('tipoBeneficio').value;
-    if (t === 'voluntaria') {
-        if (!document.getElementById('dataNascimento').value || !document.getElementById('dataAdmissao').value)
+function calcularBeneficio(navegar = true, botao = null) {
+    const tipoBeneficio = document.getElementById('tipoBeneficio').value;
+    if (tipoBeneficio === 'voluntaria') {
+        if (!document.getElementById('dataNascimento').value || !document.getElementById('dataAdmissao').value) {
             return ui.showToast("Data de Nascimento e Admissão são obrigatórias.", false);
+        }
     }
-    ui.toggleSpinner(b, true);
+
+    ui.toggleSpinner(botao, true);
+    
     setTimeout(() => {
         try {
-            const rD = document.getElementById('resultado');
-            let vB = 0,
-                dC = '',
-                m = 0,
-                s = [];
+            const resultadoDiv = document.getElementById('resultado');
+            const resumoMediaDiv = document.getElementById('resultado-resumo-media');
+            const resumoTempoDiv = document.getElementById('resultado-resumo-tempo');
+            
+            let valorBeneficioFinal = 0;
+            let descricaoCalculo = '';
+            let mediaResultados = { media: 0 };
+            
             AppState.simulacaoResultados = {};
-            if (t !== 'pensao_aposentado') {
-                const mR = calcularMediaSalarial();
-                m = mR.media;
-                s = mR.salarios;
-                AppState.simulacaoResultados.salariosParaGrafico = s;
+
+            // Limpa resultados anteriores
+            resultadoDiv.innerHTML = '';
+            resumoMediaDiv.innerHTML = '';
+            resumoTempoDiv.innerHTML = '';
+
+            if (tipoBeneficio !== 'pensao_aposentado') {
+                mediaResultados = calcularMediaSalarial();
+                AppState.simulacaoResultados.salariosParaGrafico = mediaResultados.salarios;
+
+                // Exibe o resumo do cálculo da média
+                resumoMediaDiv.innerHTML = `
+                    <h4>Resumo do Cálculo da Média</h4>
+                    <p>Total de salários de contribuição encontrados: <strong>${mediaResultados.totalSalarios}</strong></p>
+                    <p>Quantidade de salários para cálculo (80% maiores): <strong>${mediaResultados.qtdMaiores}</strong></p>
+                    <p>Soma dos 80% maiores salários: <strong>${formatarDinheiro(mediaResultados.somaMaiores)}</strong></p>
+                    <p style="font-weight:bold;">Média apurada: ${formatarDinheiro(mediaResultados.media)}</p>
+                `;
             }
-            const isA = t === 'voluntaria' || t === 'incapacidade',
-                isP = t === 'pensao_ativo' || t === 'pensao_aposentado';
-            if (isA) {
-                vB = calculateTotalProventos();
-                dC = `O valor do benefício é composto pelo somatório dos proventos detalhados. A média salarial (${formatarDinheiro(m)}) serve como base.`;
-                if (t === 'voluntaria') {
-                    projetarAposentadoria(m);
+
+            const isAposentadoria = tipoBeneficio === 'voluntaria' || tipoBeneficio === 'incapacidade';
+            const isPensao = tipoBeneficio === 'pensao_ativo' || tipoBeneficio === 'pensao_aposentado';
+
+            if (isAposentadoria) {
+                // Cálculo do tempo de contribuição para o percentual
+                const dataAdmissao = new Date(document.getElementById('dataAdmissao').value + 'T00:00:00');
+                const dataCalculo = new Date(document.getElementById('dataCalculo').value + 'T00:00:00');
+                const tempoExternoDias = parseInt(document.getElementById('tempoExterno').value) || 0;
+                const tempoEspecialDias = parseInt(document.getElementById('tempoEspecial').value) || 0;
+                const sexo = document.getElementById('sexo').value;
+
+                const tempoServicoMs = dataCalculo - dataAdmissao;
+                const tempoServicoDias = Math.ceil(tempoServicoMs / (1000 * 60 * 60 * 24)) + 1;
+                const tempoContribuicaoTotalDias = tempoServicoDias + tempoExternoDias + tempoEspecialDias;
+                const { anos, meses, dias } = diasParaAnosMesesDias(tempoContribuicaoTotalDias);
+
+                const tempoRequeridoAnos = (sexo === 'M' ? 35 : 30);
+                const tempoRequeridoDias = tempoRequeridoAnos * 365.25;
+
+                const percentualTC = Math.min(tempoContribuicaoTotalDias / tempoRequeridoDias, 1.0); // Limita a 100%
+                
+                const diasFaltantes = Math.max(0, tempoRequeridoDias - tempoContribuicaoTotalDias);
+                const dataFutura = new Date();
+                dataFutura.setDate(dataCalculo.getDate() + diasFaltantes);
+
+                // Exibe o resumo do tempo de contribuição
+                resumoTempoDiv.innerHTML = `
+                    <h4>Resumo do Tempo de Contribuição</h4>
+                    <p>Tempo de Contribuição Total: <strong>${tempoContribuicaoTotalDias.toLocaleString('pt-BR')} dias</strong> (${anos}a, ${meses}m, ${dias}d)</p>
+                    <p>Percentual do Tempo de Serviço Atingido: <strong>${(percentualTC * 100).toFixed(2)}%</strong></p>
+                    <p>Data projetada para atingir o tempo total: <strong>${formatarDataBR(dataFutura.toISOString().split('T')[0], false)}</strong></p>
+                `;
+
+                valorBeneficioFinal = mediaResultados.media * percentualTC;
+                descricaoCalculo = `Benefício proporcional ao tempo de contribuição (${(percentualTC * 100).toFixed(2)}%) sobre a média dos 80% maiores salários.`;
+
+                if (tipoBeneficio === 'voluntaria') {
+                    projetarAposentadoria(mediaResultados.media);
                     verificarAbonoPermanencia();
+                } else { // Incapacidade
+                     document.getElementById('containerDetalhamentoProventos').style.display = 'block';
+                     valorBeneficioFinal = calculateTotalProventos(); // Usa a tabela de proventos para incapacidade
+                     descricaoCalculo = `O valor do benefício é composto pelo somatório dos proventos detalhados.`;
                 }
-            } else {
-                const nD = document.getElementById('corpo-tabela-dependentes').rows.length,
-                    p = Math.min(0.5 + nD * 0.1, 1.0);
-                if (t === 'pensao_ativo') {
-                    vB = m * p;
-                    dC = `Cota de ${(p*100).toFixed(0)}% (50% + ${nD*10}% por dependente) sobre a média salarial.`;
-                } else if (t === 'pensao_aposentado') {
-                    const pB = parseFloat(document.getElementById('proventoAposentado').value) || 0;
-                    vB = pB * p;
-                    dC = `Cota de ${(p*100).toFixed(0)}% sobre o provento de ${formatarDinheiro(pB)}.`;
+
+            } else { // Pensão
+                const numDependentes = document.getElementById('corpo-tabela-dependentes').rows.length;
+                const cotaPensao = Math.min(0.5 + numDependentes * 0.1, 1.0);
+
+                if (tipoBeneficio === 'pensao_ativo') {
+                    valorBeneficioFinal = mediaResultados.media * cotaPensao;
+                    descricaoCalculo = `Cota de ${(cotaPensao * 100).toFixed(0)}% (50% + ${numDependentes * 10}% por dependente) sobre a média salarial.`;
+                } else if (tipoBeneficio === 'pensao_aposentado') {
+                    const proventoBruto = parseFloat(document.getElementById('proventoAposentado').value) || 0;
+                    valorBeneficioFinal = proventoBruto * cotaPensao;
+                    descricaoCalculo = `Cota de ${(cotaPensao * 100).toFixed(0)}% sobre o provento de ${formatarDinheiro(proventoBruto)}.`;
                 }
             }
-            AppState.simulacaoResultados = { ...AppState.simulacaoResultados, mediaSalarial: m, valorBeneficioFinal: vB, tipo: document.querySelector("#tipoBeneficio option:checked").text, descricao: dC };
-            rD.innerHTML = `<h3>Resultado do Cálculo (Bruto)</h3><p><b>Tipo:</b> ${AppState.simulacaoResultados.tipo}</p>${m>0?`<p><b>Média Salarial:</b> ${formatarDinheiro(AppState.simulacaoResultados.mediaSalarial)}</p>`:''}<p><b>Cálculo:</b> ${AppState.simulacaoResultados.descricao}</p><p style="font-size:1.2em;font-weight:bold;">💰 Valor Bruto: ${formatarDinheiro(AppState.simulacaoResultados.valorBeneficioFinal)}</p>`;
-            calculateValorLiquido(vB);
-            document.getElementById('containerAtoAposentadoriaBtn').style.display = isA ? 'block' : 'none';
-            document.getElementById('containerAtoPensaoBtn').style.display = isP ? 'block' : 'none';
-            if (s.length > 0) desenharGrafico(s, m);
-            if (n) irParaPasso(3);
+
+            AppState.simulacaoResultados = {
+                ...AppState.simulacaoResultados,
+                mediaSalarial: mediaResultados.media,
+                valorBeneficioFinal: valorBeneficioFinal,
+                tipo: document.querySelector("#tipoBeneficio option:checked").text,
+                descricao: descricaoCalculo
+            };
+            
+            resultadoDiv.innerHTML = `
+                <h3>Resultado do Cálculo (Bruto)</h3>
+                <p><b>Tipo de Benefício:</b> ${AppState.simulacaoResultados.tipo}</p>
+                <p><b>Descrição do Cálculo:</b> ${AppState.simulacaoResultados.descricao}</p>
+                <p style="font-size:1.2em;font-weight:bold;">💰 Valor Bruto do Benefício: ${formatarDinheiro(AppState.simulacaoResultados.valorBeneficioFinal)}</p>
+            `;
+
+            calculateValorLiquido(valorBeneficioFinal);
+            document.getElementById('containerAtoAposentadoriaBtn').style.display = isAposentadoria ? 'block' : 'none';
+            document.getElementById('containerAtoPensaoBtn').style.display = isPensao ? 'block' : 'none';
+            if (mediaResultados.salarios && mediaResultados.salarios.length > 0) {
+                desenharGrafico(mediaResultados.salarios, mediaResultados.media);
+            }
+            if (navegar) irParaPasso(3);
+        } catch (error) {
+            console.error("Erro ao calcular benefício:", error);
+            ui.showToast("Ocorreu um erro inesperado durante o cálculo.", false);
         } finally {
-            ui.toggleSpinner(b, false);
+            ui.toggleSpinner(botao, false);
         }
     }, 50);
 }
@@ -1221,3 +1324,4 @@ Object.assign(window, {
     adicionarLinhaPeriodoCTC, calcularTempoPeriodosCTC, removerLinhaPeriodoCTC, salvarCTC, gerarDocumentoCTC,
     carregarCTC, excluirCTC, alternarTema
 });
+
