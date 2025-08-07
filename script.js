@@ -534,26 +534,35 @@ function calcularBeneficio(navegar = true, botao = null) {
             const isPensao = tipoBeneficio === 'pensao_ativo' || tipoBeneficio === 'pensao_aposentado';
 
             if (isAposentadoria) {
-                // --- LÓGICA DE TEMPO DE CONTRIBUIÇÃO APRIMORADA ---
-                const dataAdmissao = new Date(document.getElementById('dataAdmissao').value + 'T00:00:00');
-                const dataRequerimento = new Date(document.getElementById('dataRequerimento').value + 'T00:00:00');
+                // --- LÓGICA DE TEMPO DE CONTRIBUIÇÃO APRIMORADA E CORRIGIDA ---
+                const dataAdmissaoStr = document.getElementById('dataAdmissao').value;
+                const dataRequerimentoStr = document.getElementById('dataRequerimento').value;
+
+                // Criar datas em UTC para evitar problemas com fuso horário e horário de verão
+                const dataAdmissao = new Date(Date.UTC(
+                    parseInt(dataAdmissaoStr.substring(0, 4)),
+                    parseInt(dataAdmissaoStr.substring(5, 7)) - 1, // Mês em JS é 0-11
+                    parseInt(dataAdmissaoStr.substring(8, 10))
+                ));
+                const dataRequerimento = new Date(Date.UTC(
+                    parseInt(dataRequerimentoStr.substring(0, 4)),
+                    parseInt(dataRequerimentoStr.substring(5, 7)) - 1,
+                    parseInt(dataRequerimentoStr.substring(8, 10))
+                ));
+
                 const tempoExternoDias = parseInt(document.getElementById('tempoExterno').value) || 0;
                 const tempoEspecialDias = parseInt(document.getElementById('tempoEspecial').value) || 0;
                 const sexo = document.getElementById('sexo').value;
 
-                // NOVO: Verifica se é professor para aplicar o redutor
                 const isProfessor = document.getElementById('isProfessor').checked;
-                const tempoRequeridoAnos = isProfessor 
-                    ? (sexo === 'M' ? 30 : 25) 
-                    : (sexo === 'M' ? 35 : 30);
-                
-                const regraAplicada = isProfessor 
-                    ? `Regra de Professor (${tempoRequeridoAnos} anos)` 
-                    : `Regra Geral (${tempoRequeridoAnos} anos)`;
+                const tempoRequeridoAnos = isProfessor ? (sexo === 'M' ? 30 : 25) : (sexo === 'M' ? 35 : 30);
+                const regraAplicada = isProfessor ? `Regra de Professor (${tempoRequeridoAnos} anos)` : `Regra Geral (${tempoRequeridoAnos} anos)`;
 
-                // 1. Cálculo do tempo trabalhado (Numerador)
-                const tempoServicoMs = dataRequerimento - dataAdmissao;
-                const tempoServicoDias = Math.ceil(tempoServicoMs / (1000 * 60 * 60 * 24)) + 1;
+                // 1. Cálculo do tempo trabalhado (Numerador) - Corrigido
+                const MS_POR_DIA = 1000 * 60 * 60 * 24;
+                // Usamos Math.round para compensar pequenas imprecisões e +1 para cálculo inclusivo.
+                const tempoServicoDias = Math.round((dataRequerimento - dataAdmissao) / MS_POR_DIA) + 1;
+                
                 const tempoContribuicaoTotalDias = tempoServicoDias + tempoExternoDias + tempoEspecialDias;
                 const { anos, meses, dias } = diasParaAnosMesesDias(tempoContribuicaoTotalDias);
                 
@@ -1335,5 +1344,3 @@ Object.assign(window, {
     adicionarLinhaPeriodoCTC, calcularTempoPeriodosCTC, removerLinhaPeriodoCTC, salvarCTC, gerarDocumentoCTC,
     carregarCTC, excluirCTC, alternarTema
 });
-
-
