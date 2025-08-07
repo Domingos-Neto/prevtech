@@ -493,8 +493,8 @@ function calcularMediaSalarial() {
 function calcularBeneficio(navegar = true, botao = null) {
     const tipoBeneficio = document.getElementById('tipoBeneficio').value;
     if (tipoBeneficio === 'voluntaria') {
-        if (!document.getElementById('dataNascimento').value || !document.getElementById('dataAdmissao').value) {
-            return ui.showToast("Data de Nascimento e Admissão são obrigatórias.", false);
+        if (!document.getElementById('dataNascimento').value || !document.getElementById('dataAdmissao').value || !document.getElementById('dataRequerimento').value) {
+            return ui.showToast("Preencha Data de Nascimento, Admissão e Requerimento.", false);
         }
     }
 
@@ -521,13 +521,12 @@ function calcularBeneficio(navegar = true, botao = null) {
                 mediaResultados = calcularMediaSalarial();
                 AppState.simulacaoResultados.salariosParaGrafico = mediaResultados.salarios;
 
-                // Exibe o resumo do cálculo da média
                 resumoMediaDiv.innerHTML = `
-                    <h4>Resumo do Cálculo da Média</h4>
-                    <p>Total de salários de contribuição encontrados: <strong>${mediaResultados.totalSalarios}</strong></p>
-                    <p>Quantidade de salários para cálculo (80% maiores): <strong>${mediaResultados.qtdMaiores}</strong></p>
+                    <h4>Resumo do Cálculo da Média (80% Maiores Salários)</h4>
+                    <p>Total de salários de contribuição: <strong>${mediaResultados.totalSalarios}</strong></p>
+                    <p>Salários usados no cálculo (80%): <strong>${mediaResultados.qtdMaiores}</strong></p>
                     <p>Soma dos 80% maiores salários: <strong>${formatarDinheiro(mediaResultados.somaMaiores)}</strong></p>
-                    <p style="font-weight:bold;">Média apurada: ${formatarDinheiro(mediaResultados.media)}</p>
+                    <p style="font-weight:bold;">Média Apurada: ${formatarDinheiro(mediaResultados.media)}</p>
                 `;
             }
 
@@ -535,45 +534,57 @@ function calcularBeneficio(navegar = true, botao = null) {
             const isPensao = tipoBeneficio === 'pensao_ativo' || tipoBeneficio === 'pensao_aposentado';
 
             if (isAposentadoria) {
-                // Cálculo do tempo de contribuição para o percentual
+                // --- LÓGICA DE TEMPO DE CONTRIBUIÇÃO APRIMORADA ---
                 const dataAdmissao = new Date(document.getElementById('dataAdmissao').value + 'T00:00:00');
-                const dataCalculo = new Date(document.getElementById('dataCalculo').value + 'T00:00:00');
+                const dataRequerimento = new Date(document.getElementById('dataRequerimento').value + 'T00:00:00');
                 const tempoExternoDias = parseInt(document.getElementById('tempoExterno').value) || 0;
                 const tempoEspecialDias = parseInt(document.getElementById('tempoEspecial').value) || 0;
                 const sexo = document.getElementById('sexo').value;
 
-                const tempoServicoMs = dataCalculo - dataAdmissao;
+                // NOVO: Verifica se é professor para aplicar o redutor
+                const isProfessor = document.getElementById('isProfessor').checked;
+                const tempoRequeridoAnos = isProfessor 
+                    ? (sexo === 'M' ? 30 : 25) 
+                    : (sexo === 'M' ? 35 : 30);
+                
+                const regraAplicada = isProfessor 
+                    ? `Regra de Professor (${tempoRequeridoAnos} anos)` 
+                    : `Regra Geral (${tempoRequeridoAnos} anos)`;
+
+                // 1. Cálculo do tempo trabalhado (Numerador)
+                const tempoServicoMs = dataRequerimento - dataAdmissao;
                 const tempoServicoDias = Math.ceil(tempoServicoMs / (1000 * 60 * 60 * 24)) + 1;
                 const tempoContribuicaoTotalDias = tempoServicoDias + tempoExternoDias + tempoEspecialDias;
                 const { anos, meses, dias } = diasParaAnosMesesDias(tempoContribuicaoTotalDias);
-
-                const tempoRequeridoAnos = (sexo === 'M' ? 35 : 30);
+                
+                // 2. Tempo total exigido (Denominador)
                 const tempoRequeridoDias = tempoRequeridoAnos * 365.25;
 
-                const percentualTC = Math.min(tempoContribuicaoTotalDias / tempoRequeridoDias, 1.0); // Limita a 100%
+                // 3. Cálculo do Percentual
+                const percentualTC = Math.min(tempoContribuicaoTotalDias / tempoRequeridoDias, 1.0);
                 
                 const diasFaltantes = Math.max(0, tempoRequeridoDias - tempoContribuicaoTotalDias);
-                const dataFutura = new Date();
-                dataFutura.setDate(dataCalculo.getDate() + diasFaltantes);
+                const dataFutura = new Date(dataRequerimento);
+                dataFutura.setDate(dataFutura.getDate() + diasFaltantes);
 
-                // Exibe o resumo do tempo de contribuição
                 resumoTempoDiv.innerHTML = `
                     <h4>Resumo do Tempo de Contribuição</h4>
-                    <p>Tempo de Contribuição Total: <strong>${tempoContribuicaoTotalDias.toLocaleString('pt-BR')} dias</strong> (${anos}a, ${meses}m, ${dias}d)</p>
-                    <p>Percentual do Tempo de Serviço Atingido: <strong>${(percentualTC * 100).toFixed(2)}%</strong></p>
-                    <p>Data projetada para atingir o tempo total: <strong>${formatarDataBR(dataFutura.toISOString().split('T')[0], false)}</strong></p>
+                    <p>Tempo de Contribuição até o Requerimento: <strong>${tempoContribuicaoTotalDias.toLocaleString('pt-BR')} dias</strong> (${anos}a, ${meses}m, ${dias}d)</p>
+                    <p>Regra de Tempo de Contribuição Aplicada: <strong>${regraAplicada}</strong></p>
+                    <p style="font-weight:bold;">Percentual do Tempo de Serviço Atingido: <strong>${(percentualTC * 100).toFixed(2)}%</strong></p>
+                    <p>Data projetada para atingir 100% do tempo: <strong>${formatarDataBR(dataFutura.toISOString().split('T')[0], false)}</strong></p>
                 `;
-
-                valorBeneficioFinal = mediaResultados.media * percentualTC;
-                descricaoCalculo = `Benefício proporcional ao tempo de contribuição (${(percentualTC * 100).toFixed(2)}%) sobre a média dos 80% maiores salários.`;
+                // --- FIM DA LÓGICA APRIMORADA ---
 
                 if (tipoBeneficio === 'voluntaria') {
+                    valorBeneficioFinal = mediaResultados.media * percentualTC;
+                    descricaoCalculo = `Benefício proporcional ao tempo de contribuição (${(percentualTC * 100).toFixed(2)}%) sobre a média dos 80% maiores salários.`;
                     projetarAposentadoria(mediaResultados.media);
                     verificarAbonoPermanencia();
                 } else { // Incapacidade
                      document.getElementById('containerDetalhamentoProventos').style.display = 'block';
                      valorBeneficioFinal = calculateTotalProventos(); // Usa a tabela de proventos para incapacidade
-                     descricaoCalculo = `O valor do benefício é composto pelo somatório dos proventos detalhados.`;
+                     descricaoCalculo = `O valor do benefício é composto pelo somatório dos proventos detalhados, conforme laudo.`;
                 }
 
             } else { // Pensão
@@ -1324,4 +1335,5 @@ Object.assign(window, {
     adicionarLinhaPeriodoCTC, calcularTempoPeriodosCTC, removerLinhaPeriodoCTC, salvarCTC, gerarDocumentoCTC,
     carregarCTC, excluirCTC, alternarTema
 });
+
 
