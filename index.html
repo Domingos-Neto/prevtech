@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<title>ITAPREV - Sistema de Gestão Previdenciária v3.5 (Revisado)</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css" rel="stylesheet" />
+<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+
+</head>
+<body>
+
+<div id="telaLogin">
+  <div class="login-container">
+    <div class="login-branding">
+      <div class="branding-content">
+        <h2>ITAPREV</h2>
+        <p>Sistema de Gestão do Regime Próprio de Previdência Social.</p>
+      </div>
+    </div>
+    <div class="login-form" id="login-form-container">
+      <h2>Acesse sua Conta</h2>
+      <p>Bem-vindo(a) de volta! Use sua conta Google autorizada para acessar.</p>
+      
+      <button onclick="auth.loginGoogle()" class="google-login-btn">
+        <i class="fab fa-google"></i> Entrar com Google
+      </button>
+      
+      <p id="mensagem" class="status-message"></p>
+      <small style="text-align: center; color: #999; margin-top: 20px;">
+        Este sistema utiliza autenticação segura via Google. O login tradicional com usuário e senha foi desativado por motivos de segurança.
+      </small>
+    </div>
+  </div>
+</div>
+
+<div class="app-container" style="display:none;">
+
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <h2>ITAPREV</h2>
+        </div>
+        <div class="sidebar-profile">
+            <div id="user-avatar" class="sidebar-profile-avatar"></div>
+            <div class="profile-info">
+                <span id="usuarioLogadoSidebar"></span>
+                <small id="usuarioTipoSidebar">Usuário do Sistema</small>
+            </div>
+        </div>
+        <ul id="main-nav" class="sidebar-nav">
+            <li class="sidebar-section-title">Principal</li>
+            <li><a href="#" class="active" onclick="handleNavClick(event, 'dashboard')"><i class="ri-home-4-line"></i> Painel Inicial</a></li>
+            <li><a href="#" onclick="handleNavClick(event, 'calculadora')"><i class="ri-calculator-line"></i> Nova Simulação</a></li>
+            <li><a href="#" onclick="handleNavClick(event, 'geradorCTC')"><i class="ri-file-text-line"></i> Gerar CTC</a></li>
+            <li><a href="#" onclick="handleNavClick(event, 'telaLegislacao')"><i class="ri-book-open-line"></i> Legislação</a></li>
+            
+            <li class="sidebar-section-title">Módulos de Gestão</li>
+            <li><a href="#" onclick="handleNavClick(event, 'telaCadastro')"><i class="ri-user-settings-line"></i> Gestão Cadastral</a></li>
+            <li><a href="#" onclick="handleNavClick(event, 'telaProcessos')"><i class="ri-node-tree"></i> Acomp. de Processos</a></li>
+            <li><a href="#" onclick="handleNavClick(event, 'telaFinanceiro')"><i class="ri-line-chart-line"></i> Financeiro</a></li>
+            <li><a href="#" onclick="handleNavClick(event, 'telaRelatorios')"><i class="ri-file-chart-line"></i> Relatórios e BI</a></li>
+
+            <li id="admin-section-title" class="sidebar-section-title" style="display:none;">Administração</li>
+            <li id="admin-nav-item" style="display:none;"><a href="#" onclick="handleNavClick(event, 'telaUsuarios')"><i class="ri-shield-user-line"></i> Gerenciar Usuários</a></li>
+        </ul>
+    </aside>
+
+    <main class="main-content">
+        <header class="topbar">
+            <div id="datetime-container"></div>
+            <div class="topbar-right">
+                <div class="user-info">
+                    <b id="usuarioLogado"></b>
+                </div>
+                <button id="toggleTheme" onclick="alternarTema()" title="Alternar Tema"><i class="ri-moon-line"></i></button>
+                <button onclick="auth.logout()" title="Sair do Sistema"><i class="ri-logout-box-r-line"></i></button>
+            </div>
+        </header>
+
+        <div class="page-content">
+            <div class="content-wrapper">
+
+                <div id="dashboard" style="display:none;">
+                    <h2>Painel de Controle</h2>
+                    <div id="admin-dashboard-controls" style="display:none;">
+                        <label for="view-selector"><i class="ri-eye-line"></i> Visão do Painel:</label>
+                        <select id="view-selector" onchange="atualizarDashboardView()">
+                            <option value="meus_registros">Meus Registros</option>
+                            <option value="todos_usuarios">Todos os Usuários</option>
+                        </select>
+                    </div>
+                    <div class="dashboard-grid">
+                        <div class="dashboard-card" onclick="handleNavClick(event, 'calculadora')"><i class="ri-add-circle-line" style="color: #0d47a1;"></i><span>Nova Simulação de Benefício</span></div>
+                        <div class="dashboard-card" onclick="handleNavClick(event, 'geradorCTC')"><i class="ri-file-text-line" style="color: #17a2b8;"></i><span>Gerar Certidão (CTC)</span></div>
+                        <div class="dashboard-card" onclick="handleNavClick(event, 'telaLegislacao')"><i class="ri-book-open-line" style="color: #6f42c1;"></i><span>Acessar Legislação</span></div>
+                        
+                        <div class="dashboard-card" style="text-align: left; align-items: flex-start; cursor: default; grid-column: 4; grid-row: 1 / span 2;">
+                            <h4 style="margin-top:0; display:flex; align-items:center; gap:8px; border:none; font-size: 1.1em;">
+                                <i class="ri-time-line" style="font-size: 1.5rem; margin-bottom:0; color: #dc3545;"></i>
+                                <span style="color: var(--text-color);">Calculadora de Tempo</span>
+                            </h4>
+                            <p style="font-size:0.9em; margin-top: 5px; margin-bottom:15px; color: var(--text-secondary-color);">Calcule o tempo entre duas datas para fins previdenciários.</p>
+                            <div style="width:100%; display:grid; gap:10px;">
+                                <label style="font-size:0.9em;">Data Início: <input type="date" id="calc-data-inicio" style="padding:8px;"></label>
+                                <label style="font-size:0.9em;">Data Fim: <input type="date" id="calc-data-fim" style="padding:8px;"></label>
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                                    <button id="btn-limpar-tempo" class="secondary" style="margin-top:0;">Limpar</button>
+                                    <button id="btn-calcular-tempo" class="danger" style="margin-top:0;">Calcular</button>
+                                </div>
+                            </div>
+                            <div id="resultado-calculo-tempo" style="margin-top:15px; background: var(--secondary-color); padding:10px; border-radius:6px; width:100%; min-height:75px; font-size: 0.9em;">
+                                </div>
+                        </div>
+
+                        <div class="dashboard-card" style="grid-column: 1 / span 3; align-items: flex-start; text-align: left;">
+                            <h4 style="margin-top:0; display:flex; align-items:center; gap:8px; border:none; font-size: 1.1em;">
+                                <i class="ri-rocket-line" style="font-size: 1.5rem; margin-bottom:0; color: #ffc107;"></i>
+                                <span style="color: var(--text-color);">Acesso Rápido aos Módulos</span>
+                            </h4>
+                            <p style="font-size:0.9em; margin-top: 5px; margin-bottom:15px; color: var(--text-secondary-color);">Navegue diretamente para os principais módulos de gestão do sistema.</p>
+                            <div style="width: 100%; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-items: stretch;">
+                                <button onclick="handleNavClick(event, 'telaCadastro')" class="secondary" style="margin-top:0; padding: 12px; text-align:left; display:flex; align-items:center; gap:8px;"><i class="ri-user-settings-line"></i> Gestão Cadastral</button>
+                                <button onclick="handleNavClick(event, 'telaProcessos')" class="secondary" style="margin-top:0; padding: 12px; text-align:left; display:flex; align-items:center; gap:8px;"><i class="ri-node-tree"></i> Acomp. de Processos</button>
+                                <button onclick="handleNavClick(event, 'telaFinanceiro')" class="secondary" style="margin-top:0; padding: 12px; text-align:left; display:flex; align-items:center; gap:8px;"><i class="ri-line-chart-line"></i> Financeiro</button>
+                                <button onclick="handleNavClick(event, 'telaRelatorios')" class="secondary" style="margin-top:0; padding: 12px; text-align:left; display:flex; align-items:center; gap:8px;"><i class="ri-file-chart-line"></i> Relatórios e BI</button>
+                            </div>
+                        </div>
+
+                    </div>
+                    <h3><i class="ri-folder-history-fill"></i> Histórico de Simulações Salvas</h3>
+                    <ul id="listaHistorico"></ul>
+                    <h3><i class="ri-file-copy-2-fill"></i> CTCs Salvas</h3>
+                    <ul id="listaCTCsSalvas"></ul>
+                </div>
+
+                <div id="calculadora" style="display:none;">
+                    <div id="passo1" class="wizard-step">
+                        <h2>Passo 1: Dados e Tipo de Benefício</h2>
+                        <div class="form-grid">
+                            <label>Tipo de Benefício:
+                                <select id="tipoBeneficio" onchange="alternarCamposBeneficio()">
+                                <option value="voluntaria">Aposentadoria Voluntária</option>
+                                <option value="incapacidade">Aposentadoria por Incapacidade Permanente</option>
+                                <option value="pensao_ativo">Pensão por Morte (Instituidor Ativo)</option>
+                                <option value="pensao_aposentado">Pensão por Morte (Instituidor Aposentado)</option>
+                                </select>
+                            </label>
+                        </div>
+                        <div id="camposIncapacidade" style="display:none;" class="form-grid"><label>A incapacidade decorre de acidente de trabalho, doença profissional ou doença grave?<select id="incapacidadeGrave"><option value="sim">Sim</option><option value="nao" selected>Não</option></select></label></div>
+                        <div id="containerGestaoDependentes" style="display:none;"><h4>Dependentes para Pensão</h4><table id="tabela-dependentes"><thead><tr><th>Nome Completo</th><th style="width: 150px;">Data de Nasc.</th><th style="width: 180px;">Parentesco</th><th style="width: 110px;">Inválido?</th><th style="width: 100px;">Ações</th></tr></thead><tbody id="corpo-tabela-dependentes"></tbody></table><button type="button" onclick="adicionarLinhaDependente()">+ Adicionar Dependente</button></div>
+                        <div id="camposPensaoAtivo" style="display:none;"></div>
+                        <div id="camposPensaoAposentado" style="display:none;" class="form-grid"><label>Valor do Provento Bruto do Aposentado (R$): <input type="number" id="proventoAposentado" value="0" /></label></div>
+                        <h4>Informações do Servidor (Instituidor)</h4>
+                        <div class="form-grid">
+                            <label>Nome: <input type="text" id="nomeServidor" /></label>
+                            <label>Matrícula: <input type="text" id="matriculaServidor" /></label>
+                            <label>CPF: <input type="text" id="cpfServidor" placeholder="000.000.000-00" /><small id="cpf-status" class="status-message"></small></label>
+                            <label>RG (com órgão emissor): <input type="text" id="rgServidor" placeholder="Ex: 20181776485 - SSPDS-CE" /></label>
+                            <label>Cargo (com referência): <input type="text" id="cargoServidor" placeholder="Ex: Professora de Educação Básica II Ref. 16" /></label>
+                            <div style="display: flex; align-items: center; justify-content: flex-start; padding-top: 25px;">
+                            <input type="checkbox" id="isProfessor" style="width: auto; height: auto; margin-right: 10px;">
+                            <label for="isProfessor" style="margin: 0; flex-direction: row; align-items: center;">Servidor é Professor(a)? (Aplica redutor no tempo de contribuição)</label>
+                            </div>
+                            <label>Carga Horária: <input type="text" id="cargaHorariaServidor" placeholder="Ex: 20hrs. semanais" /></label>
+                            <label>Carga Horária: <input type="text" id="cargaHorariaServidor" placeholder="Ex: 20hrs. semanais" /></label>
+                            <label>Lotação (Secretaria): <input type="text" id="lotacaoServidor" placeholder="Ex: Secretaria de Educação de Itapipoca-CE" /></label>
+                            <label>Data de Admissão: <input type="date" id="dataAdmissao" /></label>
+                            <label>Data do Requerimento: <input type="date" id="dataRequerimento" /></label>
+                            <label>Data do Cálculo: <input type="date" id="dataCalculo" /></label>
+                            <label>Data de Nascimento: <input type="date" id="dataNascimento" /></label>
+                            <label>Sexo: <select id="sexo"><option value="M">Masculino</option><option value="F">Feminino</option></select></label>
+                            <label>Tempo de Contribuição Externo (dias): <input type="number" id="tempoExterno" value="0" min="0" /></label>
+                            <label><div class="tooltip-container">Tempo Especial Convertido (dias):<span class="tooltip">?<span class="tooltiptext">Informe o tempo de atividade especial já convertido em tempo comum. Ex: 10 anos de atividade especial de um homem (fator 1.4) se convertem em 14 anos de tempo comum (5110 dias), ou seja, 4 anos (1460 dias) a mais a serem informados aqui.</span></span></div><input type="number" id="tempoEspecial" value="0" min="0" /></label>
+                        </div>
+                        <div id="camposAtoAposentadoria" style="display:none;"><h4>Informações para o Ato de Aposentadoria</h4><div class="form-grid"><label>Nº do Processo Administrativo: <input type="text" id="processoAposentadoria" /></label><label>Nº do Ato de Aposentadoria: <input type="number" id="atoNumeroAposentadoria" /></label></div><label>Fundamento Legal (para o Ato de Aposentadoria):<textarea id="fundamentoLegalPersonalizado"></textarea></label></div>
+                        <div id="camposAtoPensao" style="display:none;"><h4>Informações para o Ato de Pensão</h4><div class="form-grid"><label>Nome do Pensionista Principal (Beneficiário): <input type="text" id="nomePensionista" /></label><label>Relação de Parentesco (do Principal): <input type="text"id="relacaoPensionista" /></label><label>Data do Óbito do Servidor: <input type="date" id="dataObito" /></label><label>Nº do Processo Administrativo: <input type="text" id="processoAdministrativo" /></label><label>Nº do Ato de Pensão: <input type="number" id="atoNumero" /></label></div></div>
+                        <div class="wizard-nav"><button class="secondary" onclick="handleNavClick(event, 'dashboard')">Voltar ao Painel</button><button onclick="irParaPasso(2)">Próximo Passo ❯</button></div>
+                    </div>
+                    <div id="passo2" class="wizard-step" style="display:none;"><h2 class="accordion-toggle">Passo 2: Salários de Contribuição (para Média)</h2><div class="accordion-content"><div class="tabela-container"><table id="tabela-salarios"><thead><tr><th>Nº</th><th>MÊS/ANO</th><th>FATOR</th><th>SALÁRIO (R$)</th><th>SALÁRIO ATUALIZADO (R$)</th><th>Ações</th></tr></thead><tbody id="corpo-tabela"></tbody></table></div><div class="grupos-botoes"><div class="grupo"><h4>Ações da Tabela</h4><button onclick="adicionarLinha()"><span class="button-text">+ Adicionar Linha</span></button><button class="danger" onclick="limparTabela()">Limpar Tabela</button></div><div class="grupo"><h4>Importar/Exportar Dados</h4><button onclick="exportarExcel(this)">📥 Exportar para Excel</button><button onclick="document.getElementById('arquivoExcel').click()">📥 Importar do Excel</button></div></div></div><div class="wizard-nav"><button class="secondary" onclick="irParaPasso(1)">❮ Passo Anterior</button><button onclick="calcularBeneficio(true, this)"><span class="button-text">Calcular e Ver Resultado ❯</span><span class="spinner"></span></button></div></div>
+                    <div id="passo3" class="wizard-step" style="display:none;">
+    <h2>Passo 3: Resultado e Geração de Documentos</h2>
+
+    <div id="resultado"></div>
+    
+    <div id="resultado-resumo-media" style="margin-top: 15px; padding: 15px; background-color: var(--secondary-color); border-radius: 8px; font-size: 0.9em;"></div>
+
+    <div id="resultado-resumo-tempo" style="margin-top: 15px; padding: 15px; background-color: var(--secondary-color); border-radius: 8px; font-size: 0.9em;"></div>
+
+    <div id="resultadoLiquido"></div>
+    <div id="resultadoProjecao"></div>
+    <div id="resultadoAbono"></div>
+
+    <div id="containerDetalhamentoProventos" style="display:none;">
+        <h4>Detalhamento dos Proventos para o Ato</h4>
+        <table id="tabela-proventos-ato">
+            <thead><tr><th>DESCRIÇÃO</th><th>VALOR (R$)</th><th>Ações</th></tr></thead>
+            <tbody id="corpo-tabela-proventos-ato"></tbody>
+            <tfoot><tr style="font-weight: bold;"><td>TOTAL DOS PROVENTOS</td><td id="total-proventos-ato">R$ 0,00</td><td></td></tr></tfoot>
+        </table>
+        <button onclick="adicionarLinhaProvento()">+ Adicionar Linha de Provento</button>
+    </div>
+    <canvas id="graficoSalarios"></canvas>
+
+    <h4>Ações Finais</h4>
+    <div class="form-grid">
+        <div class="grupo-horizontal">
+            <input type="text" id="nomeSimulacao" placeholder="Nome da simulação p/ salvar" />
+            <button onclick="salvarSimulacaoHistorico()">🕘 Salvar no Histórico</button>
+        </div>
+        <div class="grupo-horizontal">
+            <button class="secondary" onclick="imprimirSimulacao()">🖨️ Imprimir Relatório</button>
+            <button onclick="exportarTudoZIP(this)">📦 Exportar ZIP</button>
+        </div>
+    </div>
+    <div id="containerAtoAposentadoriaBtn" style="display:none; margin-top: 20px;"><button class="success" onclick="gerarAtoDeAposentadoria(this)"><span class="button-text">🏛️ Gerar Ato de Aposentadoria</span><span class="spinner"></span></button></div>
+    <div id="containerAtoPensaoBtn" style="display:none; margin-top: 20px;"><button class="success" onclick="gerarAtoDePensao(this)"><span class="button-text">🏛️ Gerar Ato de Pensão</span><span class="spinner"></span></button></div>
+    <div class="wizard-nav">
+        <button class="secondary" onclick="irParaPasso(2)">❮ Voltar e Ajustar Salários</button>
+        <button onclick="handleNavClick(event, 'dashboard')">Finalizar e Voltar ao Painel</button>
+    </div>
+</div>
+                
+
+                <div id="geradorCTC" style="display:none;">
+                     <h2>Gerador de Certidão de Tempo de Contribuição (CTC)</h2><h4>Dados do Servidor</h4><div class="form-grid">
+                        <label>Nome do Servidor: <input type="text" id="ctc-nomeServidor"></label>
+                        <label>Matrícula: <input type="text" id="ctc-matricula"></label>
+                        <label>CPF: <input type="text" id="ctc-cpf" placeholder="000.000.000-00"><small id="ctc-cpf-status" class="status-message"></small></label>
+                        <label>RG (com órgão emissor): <input type="text" id="ctc-rg"></label>
+                        <label>Data de Nascimento: <input type="date" id="ctc-dataNascimento"></label>
+                        <label>Sexo: <select id="ctc-sexo"><option value="M">Masculino</option><option value="F">Feminino</option></select></label>
+                        <label>Cargo Efetivo: <input type="text" id="ctc-cargo" placeholder="Ex: Professor de Educação Básica II"></label>
+                        <label>Lotação (Secretaria): <input type="text" id="ctc-lotacao" placeholder="Ex: Secretaria de Educação"></label>
+                        <label>Data de Admissão: <input type="date" id="ctc-dataAdmissao"></label>
+                        <label>Data de Exoneração: <input type="date" id="ctc-dataExoneracao"></label>
+                        <label>Nº do Processo: <input type="text" id="ctc-processo"></label>
+                    </div><h4>Períodos de Contribuição</h4><table id="tabela-periodos-ctc"><thead><tr><th style="width: 150px;">Data Início</th><th style="width: 150px;">Data Fim</th><th style="width: 100px;">Tempo Bruto (dias)</th><th style="width: 100px;">Deduções (dias)</th><th style="width: 120px;">Tempo Líquido (dias)</th><th>Fonte / Observação</th><th style="width: 100px;">Ações</th></tr></thead><tbody id="corpo-tabela-periodos-ctc"></tbody></table><button type="button" onclick="adicionarLinhaPeriodoCTC()">+ Adicionar Período</button><h4 id="total-tempo-ctc" style="text-align: right; border-top: 2px solid var(--primary-color); padding-top: 10px; margin-top:20px;">Total: 0 dias</h4><div class="wizard-nav"><button class="secondary" onclick="handleNavClick(event, 'dashboard')">Voltar ao Painel</button><button onclick="salvarCTC()" class="secondary">💾 Salvar CTC</button><button class="success" onclick="gerarDocumentoCTC(this)"><span class="button-text">🏛️ Gerar Documento CTC</span><span class="spinner"></span></button></div>
+                </div>
+
+                <div id="telaLegislacao" style="display:none;">
+                     <h2><i class="ri-book-open-fill"></i> Legislação Aplicável ao RPPS</h2>
+                     <h3>📄 Leis Federais</h3>
+                     <div class="dashboard-grid">
+                       <div class="dashboard-card" style="cursor: default; text-align: left; align-items: flex-start;">
+                         <h4>Lei 9.717/1998</h4><p>Dispõe sobre regras gerais para a organização e o funcionamento dos regimes próprios de previdência social.</p>
+                         <a href="pdfs/lei_9717_98.pdf" target="_blank" style="text-decoration: none;"><button style="width:100%; margin-top: auto;">Visualizar PDF</button></a>
+                       </div>
+                       <div class="dashboard-card" style="cursor: default; text-align: left; align-items: flex-start;">
+                         <h4>Lei 10.887/2004</h4><p>Altera a Lei nº 9.717/98 e dispõe sobre a aplicação de disposições da Emenda Constitucional nº 41.</p>
+                         <a href="pdfs/lei_10887_2004.pdf" target="_blank" style="text-decoration: none;"><button style="width:100%; margin-top: auto;">Visualizar PDF</button></a>
+                       </div>
+                       <div class="dashboard-card" style="cursor: default; text-align: left; align-items: flex-start;">
+                         <h4>Portaria MPS nº 1.467/2022</h4><p>Disciplina parâmetros e diretrizes gerais para organização e funcionamento dos RPPS.</p>
+                         <a href="pdfs/portaria_mps_1467_2022.pdf" target="_blank" style="text-decoration: none;"><button style="width:100%; margin-top: auto;">Visualizar PDF</button></a>
+                       </div>
+                     </div>
+                     <h3>🏛️ Leis Municipais</h3>
+                     <div class="dashboard-grid"></div>
+                </div>
+
+                <div id="telaCadastro" style="display:none;">
+                    <h2><i class="ri-user-settings-fill"></i> Módulo de Gestão Cadastral</h2>
+                    <p>Gerencie as informações de todos os servidores e pensionistas do RPPS.</p>
+                    <div class="form-grid" style="align-items: flex-end; margin-bottom: 20px;">
+                        <input type="text" placeholder="Buscar por nome, CPF ou matrícula...">
+                        <button>Buscar Servidor</button>
+                        <button class="success">Adicionar Novo Servidor</button>
+                    </div>
+                    
+                    <div id="fichaCadastralServidor">
+                        <h4>Ficha Cadastral: <span style="color: var(--primary-light);">Maria Oliveira Santos</span></h4>
+                        <div class="tab-nav">
+                            <button class="active">Dados Pessoais</button>
+                            <button>Dados Funcionais</button>
+                            <button>Dependentes</button>
+                            <button>Histórico de Contribuições</button>
+                        </div>
+                        <div class="tab-content active">
+                            <div class="form-grid">
+                                <label>Nome Completo: <input type="text" value="Maria Oliveira Santos" readonly></label>
+                                <label>CPF: <input type="text" value="999.888.777-66" readonly></label>
+                                <label>Data de Nascimento: <input type="date" value="1970-05-20" readonly></label>
+                                <label>Endereço: <input type="text" value="Rua das Flores, 123" readonly></label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="telaProcessos" style="display:none;">
+                    <h2><i class="ri-node-tree"></i> Módulo de Acompanhamento de Processos</h2>
+                    <p>Acompanhe o andamento dos processos de concessão de benefícios de forma visual e organizada.</p>
+                     <div class="kanban-board">
+                        <div class="kanban-column">
+                            <h4><i class="ri-inbox-line"></i> Novos Pedidos</h4>
+                            <div class="kanban-card">
+                                <p>Aposentadoria Voluntária</p>
+                                <small>Requerente: CARLOS SOUZA</small>
+                                <small>Processo: 2025/00123</small>
+                                <small>Data de Entrada: 25/07/2025</small>
+                            </div>
+                        </div>
+                        <div class="kanban-column">
+                            <h4><i class="ri-file-search-line"></i> Em Análise</h4>
+                             <div class="kanban-card">
+                                <p>Pensão por Morte</p>
+                                <small>Requerente: ANA LIMA (Dependente)</small>
+                                <small>Processo: 2025/00119</small>
+                                <small>Data de Entrada: 22/07/2025</small>
+                            </div>
+                             <div class="kanban-card">
+                                <p>Emissão de CTC</p>
+                                <small>Requerente: JOSÉ ALMEIDA</small>
+                                <small>Processo: 2025/00121</small>
+                                <small>Data de Entrada: 23/07/2025</small>
+                            </div>
+                        </div>
+                        <div class="kanban-column">
+                            <h4><i class="ri-check-double-line"></i> Concluídos</h4>
+                             <div class="kanban-card">
+                                <p>Aposentadoria por Incapacidade</p>
+                                <small>Requerente: RITA DE CÁSSIA</small>
+                                <small>Processo: 2025/00115</small>
+                                <small>Data de Entrada: 15/07/2025</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="telaFinanceiro" style="display:none;">
+                    <h2><i class="ri-line-chart-fill"></i> Módulo Financeiro e Contribuições</h2>
+                    <p>Controle a arrecadação, despesas e a saúde financeira do fundo de previdência.</p>
+                    <div class="dashboard-grid">
+                        <div class="dashboard-card"><i class="ri-arrow-down-line" style="color:#28a745"></i><span>Arrecadação do Mês<br><b>R$ 1.500.000,00</b></span></div>
+                        <div class="dashboard-card"><i class="ri-arrow-up-line" style="color:#dc3545"></i><span>Despesas com Benefícios<br><b>R$ 1.250.000,00</b></span></div>
+                        <div class="dashboard-card"><i class="ri-scales-3-line" style="color:#17a2b8"></i><span>Saldo do Fundo<br><b>R$ 50.000.000,00</b></span></div>
+                    </div>
+                    <h4>Controle de Folhas de Pagamento</h4>
+                    <table>
+                        <thead><tr><th>Competência</th><th>Data de Importação</th><th>Valor Total</th><th>Status</th></tr></thead>
+                        <tbody>
+                            <tr><td>06/2025</td><td>05/07/2025</td><td>R$ 1.480.000,00</td><td>Conciliado</td></tr>
+                            <tr><td>05/2025</td><td>06/06/2025</td><td>R$ 1.475.000,00</td><td>Conciliado</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div id="telaRelatorios" style="display:none;">
+                    <h2><i class="ri-file-chart-fill"></i> Módulo de Relatórios e BI</h2>
+                    <p>Gere relatórios gerenciais, estatísticos e para os órgãos de controle.</p>
+                    <ul class="list-group">
+                        <li class="list-group-item"><div><b>Extrato de Contribuições do Servidor</b><br><small>Gera o extrato individual com todas as contribuições de um servidor.</small></div><button>Gerar</button></li>
+                        <li class="list-group-item"><div><b>Relação de Aposentados e Pensionistas</b><br><small>Lista todos os beneficiários atuais e o valor de seus proventos.</small></div><button>Gerar</button></li>
+                        <li class="list-group-item"><div><b>Dados para Avaliação Atuarial</b><br><small>Exporta a base de dados consolidada para a realização do cálculo atuarial.</small></div><button>Gerar</button></li>
+                        <li class="list-group-item"><div><b>Relatório para o COMPREV</b><br><small>Gera os dados necessários para a Compensação Previdenciária.</small></div><button>Gerar</button></li>
+                        <li class="list-group-item"><div><b>Relatórios para o TCE</b><br><small>Exporta informações nos leiautes exigidos pelo Tribunal de Contas.</small></div><button>Gerar</button></li>
+                    </ul>
+                </div>
+                
+                <div id="telaUsuarios" style="display:none;">
+                    <h2><i class="ri-shield-user-fill"></i> Gerenciamento de Usuários</h2>
+                    <p>O gerenciamento de usuários foi desativado nesta versão do cliente por motivos de segurança. A adição e remoção de e-mails autorizados deve ser feita diretamente no código-fonte ou em um painel de administração seguro.</p>
+                </div>
+
+                <input type="file" id="arquivoExcel" accept=".xlsx, .xls" style="display:none;" onchange="importarExcel()" />
+                <div id="printableArea" style="display:none;"></div>
+
+            </div> 
+            <footer>
+                <p>ITAPREV - Sistema de Gestão Previdenciária. Itapipoca-CE, 2025.</p>
+                <p><small>Desenvolvido por Domingos Barroso Neto (V 1.0)</small></p>
+            </footer>
+        </div>
+
+    </main> 
+</div>
+
+<div id="floating-buttons-container" style="display:none;">
+    <a id="btnWhatsapp" class="floating-btn" href="https://wa.me/5588997139954" target="_blank" title="Contato via WhatsApp">
+        <i class="fab fa-whatsapp"></i>
+    </a>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+
+<script type="module" src="script.js"></script>
+
+</body>
+</html>
+
+
