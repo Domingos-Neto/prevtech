@@ -176,7 +176,8 @@ function setupEventListeners() {
 
 function handleNavClick(event, targetView) {
     if (event) event.preventDefault();
-  if (AppState.loadTimeoutId) {
+  
+    if (AppState.loadTimeoutId) {
         clearTimeout(AppState.loadTimeoutId);
         AppState.loadTimeoutId = null;
     }
@@ -1355,5 +1356,6 @@ Object.assign(window, {
     adicionarLinhaPeriodoCTC, calcularTempoPeriodosCTC, removerLinhaPeriodoCTC, salvarCTC, gerarDocumentoCTC,
     carregarCTC, excluirCTC, alternarTema
 });
+
 
 
