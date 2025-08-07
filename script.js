@@ -184,6 +184,8 @@ function handleNavClick(event, targetView) {
     ui.updateActiveNav(targetView);
     ui.showView(targetView);
 
+  setTimeout(() => {
+
     // ESTRUTURA SWITCH CORRIGIDA E COMPLETA
     switch (targetView) {
         case 'dashboard':
@@ -211,6 +213,7 @@ function handleNavClick(event, targetView) {
             // mas os cases precisam existir para uma estrutura de código correta.
             break;
     }
+    }, 10); // Um atraso pequeno como 10ms é suficiente
 }
 
 function atualizarDashboardView() {
@@ -1370,4 +1373,5 @@ Object.assign(window, {
     adicionarLinhaPeriodoCTC, calcularTempoPeriodosCTC, removerLinhaPeriodoCTC, salvarCTC, gerarDocumentoCTC,
     carregarCTC, excluirCTC, alternarTema
 });
+
 
