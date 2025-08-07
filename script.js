@@ -1059,7 +1059,7 @@ function carregarDoHistorico(id) {
     const rE = h.find(r => r.id === id);
     if (!rE) return ui.showToast("Erro: Simulação não encontrada.", false);
     const d = rE.dados;
-    handleNavClick(null, 'simulacao');
+    handleNavClick(null, 'calculadora');
     setTimeout(() => {
         for (const k in d.passo1) {
             const e = document.getElementById(k);
@@ -1344,3 +1344,4 @@ Object.assign(window, {
     adicionarLinhaPeriodoCTC, calcularTempoPeriodosCTC, removerLinhaPeriodoCTC, salvarCTC, gerarDocumentoCTC,
     carregarCTC, excluirCTC, alternarTema
 });
+
