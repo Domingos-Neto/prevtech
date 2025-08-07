@@ -160,6 +160,11 @@
                             <label>CPF: <input type="text" id="cpfServidor" placeholder="000.000.000-00" /><small id="cpf-status" class="status-message"></small></label>
                             <label>RG (com órgão emissor): <input type="text" id="rgServidor" placeholder="Ex: 20181776485 - SSPDS-CE" /></label>
                             <label>Cargo (com referência): <input type="text" id="cargoServidor" placeholder="Ex: Professora de Educação Básica II Ref. 16" /></label>
+                            <div style="display: flex; align-items: center; justify-content: flex-start; padding-top: 25px;">
+                            <input type="checkbox" id="isProfessor" style="width: auto; height: auto; margin-right: 10px;">
+                            <label for="isProfessor" style="margin: 0; flex-direction: row; align-items: center;">Servidor é Professor(a)? (Aplica redutor no tempo de contribuição)</label>
+                            </div>
+                            <label>Carga Horária: <input type="text" id="cargaHorariaServidor" placeholder="Ex: 20hrs. semanais" /></label>
                             <label>Carga Horária: <input type="text" id="cargaHorariaServidor" placeholder="Ex: 20hrs. semanais" /></label>
                             <label>Lotação (Secretaria): <input type="text" id="lotacaoServidor" placeholder="Ex: Secretaria de Educação de Itapipoca-CE" /></label>
                             <label>Data de Admissão: <input type="date" id="dataAdmissao" /></label>
@@ -389,4 +394,5 @@
 
 </body>
 </html>
+
 
