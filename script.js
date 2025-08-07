@@ -37,7 +37,8 @@ const AppState = {
     simulacaoResultados: {},
     dashboardViewMode: 'meus_registros',
     currentStep: 1,
-};
+    loadTimeoutId: null
+  };  
 
 const auth = {
     loginGoogle: async () => {
@@ -175,6 +176,10 @@ function setupEventListeners() {
 
 function handleNavClick(event, targetView) {
     if (event) event.preventDefault();
+  if (AppState.loadTimeoutId) {
+        clearTimeout(AppState.loadTimeoutId);
+        AppState.loadTimeoutId = null;
+    }
     ui.updateActiveNav(targetView);
     ui.showView(targetView);
     switch (targetView) {
@@ -1058,9 +1063,12 @@ function carregarDoHistorico(id) {
     const h = JSON.parse(localStorage.getItem(c) || "[]");
     const rE = h.find(r => r.id === id);
     if (!rE) return ui.showToast("Erro: Simulação não encontrada.", false);
+    
     const d = rE.dados;
-    handleNavClick(null, 'calculadora');
-    setTimeout(() => {
+    handleNavClick(null, 'calculadora'); // Esta chamada agora também limpa timeouts antigos
+    
+    // Armazena o ID do novo timeout para que possa ser cancelado se necessário
+    AppState.loadTimeoutId = setTimeout(() => {
         for (const k in d.passo1) {
             const e = document.getElementById(k);
             if (e) e.value = d.passo1[k];
@@ -1082,6 +1090,9 @@ function carregarDoHistorico(id) {
         if (t !== 'pensao_aposentado') irParaPasso(2);
         else irParaPasso(1);
         calcularBeneficio(true);
+
+        // Limpa o ID após a execução bem-sucedida
+        AppState.loadTimeoutId = null;
     }, 100);
 }
 
@@ -1344,4 +1355,5 @@ Object.assign(window, {
     adicionarLinhaPeriodoCTC, calcularTempoPeriodosCTC, removerLinhaPeriodoCTC, salvarCTC, gerarDocumentoCTC,
     carregarCTC, excluirCTC, alternarTema
 });
+
 
