@@ -37,8 +37,8 @@ const AppState = {
     simulacaoResultados: {},
     dashboardViewMode: 'meus_registros',
     currentStep: 1,
-    loadTimeoutId: null
-  };  
+    loadTimeoutId: null // Variável para controlar o timeout
+};  
 
 const auth = {
     loginGoogle: async () => {
@@ -162,12 +162,10 @@ function setupEventListeners() {
     const ctcCpfInput = document.getElementById('ctc-cpf');
     if(ctcCpfInput) ctcCpfInput.addEventListener('input', (e) => validaCPF(e.target, document.getElementById('ctc-cpf-status')));
 
-    // Eventos para a calculadora de tempo
     const btnCalcTempo = document.getElementById('btn-calcular-tempo');
     if (btnCalcTempo) {
         btnCalcTempo.addEventListener('click', calcularTempoEntreDatas);
     }
-    // *** NOVO: Evento para o botão de limpar ***
     const btnLimparTempo = document.getElementById('btn-limpar-tempo');
     if (btnLimparTempo) {
         btnLimparTempo.addEventListener('click', limparCalculoTempo);
@@ -177,10 +175,12 @@ function setupEventListeners() {
 function handleNavClick(event, targetView) {
     if (event) event.preventDefault();
   
+    // CORREÇÃO: Limpa qualquer carregamento de simulação pendente
     if (AppState.loadTimeoutId) {
         clearTimeout(AppState.loadTimeoutId);
         AppState.loadTimeoutId = null;
     }
+
     ui.updateActiveNav(targetView);
     ui.showView(targetView);
     switch (targetView) {
@@ -188,11 +188,11 @@ function handleNavClick(event, targetView) {
             listarHistorico();
             listarCTCsSalvas();
             break;
-        case 'simulacao':
+        case 'calculadora':
             limparFormularioCompleto();
             irParaPasso(1);
             break;
-        case 'ctc':
+        case 'geradorCTC':
             limparFormularioCTC();
             break;
     }
@@ -349,8 +349,16 @@ function limparFormularioCompleto() {
     document.getElementById('resultadoProjecao').innerHTML = '';
     document.getElementById('resultadoAbono').innerHTML = '';
     document.getElementById('resultadoLiquido').innerHTML = '';
+    document.getElementById('resultado-resumo-media').innerHTML = '';
+    document.getElementById('resultado-resumo-tempo').innerHTML = '';
+    document.getElementById('isProfessor').checked = false;
+
     AppState.simulacaoResultados = {};
-    if (AppState.salarioChart) AppState.salarioChart.destroy();
+    if (AppState.salarioChart) {
+        AppState.salarioChart.destroy();
+        AppState.salarioChart = null;
+    }
+
     const hoje = new Date().toISOString().split('T')[0];
     document.getElementById("dataCalculo").value = hoje;
     document.getElementById("dataRequerimento").value = hoje;
@@ -450,7 +458,6 @@ function removerLinhaDependente(b) {
 }
 
 function calcularMediaSalarial() {
-    // Coleta todos os salários atualizados da tabela
     const salariosAtualizadosInputs = document.querySelectorAll("#corpo-tabela .atualizado");
     let salariosValidos = [];
 
@@ -470,29 +477,23 @@ function calcularMediaSalarial() {
         return { media: 0, somaMaiores: 0, totalSalarios: 0, qtdMaiores: 0, salarios: [] };
     }
 
-    // Ordena os salários do maior para o menor
     salariosValidos.sort((a, b) => b.value - a.value);
 
-    // Calcula a quantidade correspondente a 80% dos maiores salários
     const quantidadeTotal = salariosValidos.length;
     const quantidade80 = Math.ceil(quantidadeTotal * 0.8);
 
-    // Pega apenas os 80% maiores salários
     const maioresSalarios = salariosValidos.slice(0, quantidade80);
 
-    // Soma os 80% maiores salários
     const somaMaiores = maioresSalarios.reduce((acc, s) => acc + s.value, 0);
     
-    // Calcula a média
     const media = maioresSalarios.length > 0 ? somaMaiores / maioresSalarios.length : 0;
     
-    // Retorna todos os dados calculados
     return { 
         media: media, 
         somaMaiores: somaMaiores,
         totalSalarios: quantidadeTotal,
         qtdMaiores: maioresSalarios.length,
-        salarios: salariosValidos // Retorna todos para o gráfico
+        salarios: salariosValidos
     };
 }
 
@@ -518,7 +519,6 @@ function calcularBeneficio(navegar = true, botao = null) {
             
             AppState.simulacaoResultados = {};
 
-            // Limpa resultados anteriores
             resultadoDiv.innerHTML = '';
             resumoMediaDiv.innerHTML = '';
             resumoTempoDiv.innerHTML = '';
@@ -540,14 +540,12 @@ function calcularBeneficio(navegar = true, botao = null) {
             const isPensao = tipoBeneficio === 'pensao_ativo' || tipoBeneficio === 'pensao_aposentado';
 
             if (isAposentadoria) {
-                // --- LÓGICA DE TEMPO DE CONTRIBUIÇÃO APRIMORADA E CORRIGIDA ---
                 const dataAdmissaoStr = document.getElementById('dataAdmissao').value;
                 const dataRequerimentoStr = document.getElementById('dataRequerimento').value;
 
-                // Criar datas em UTC para evitar problemas com fuso horário e horário de verão
                 const dataAdmissao = new Date(Date.UTC(
                     parseInt(dataAdmissaoStr.substring(0, 4)),
-                    parseInt(dataAdmissaoStr.substring(5, 7)) - 1, // Mês em JS é 0-11
+                    parseInt(dataAdmissaoStr.substring(5, 7)) - 1,
                     parseInt(dataAdmissaoStr.substring(8, 10))
                 ));
                 const dataRequerimento = new Date(Date.UTC(
@@ -559,28 +557,22 @@ function calcularBeneficio(navegar = true, botao = null) {
                 const tempoExternoDias = parseInt(document.getElementById('tempoExterno').value) || 0;
                 const tempoEspecialDias = parseInt(document.getElementById('tempoEspecial').value) || 0;
                 const sexo = document.getElementById('sexo').value;
-
                 const isProfessor = document.getElementById('isProfessor').checked;
                 const tempoRequeridoAnos = isProfessor ? (sexo === 'M' ? 30 : 25) : (sexo === 'M' ? 35 : 30);
                 const regraAplicada = isProfessor ? `Regra de Professor (${tempoRequeridoAnos} anos)` : `Regra Geral (${tempoRequeridoAnos} anos)`;
 
-                // 1. Cálculo do tempo trabalhado (Numerador) - Corrigido
                 const MS_POR_DIA = 1000 * 60 * 60 * 24;
-                // Usamos Math.round para compensar pequenas imprecisões e +1 para cálculo inclusivo.
                 const tempoServicoDias = Math.round((dataRequerimento - dataAdmissao) / MS_POR_DIA) + 1;
                 
                 const tempoContribuicaoTotalDias = tempoServicoDias + tempoExternoDias + tempoEspecialDias;
                 const { anos, meses, dias } = diasParaAnosMesesDias(tempoContribuicaoTotalDias);
                 
-                // 2. Tempo total exigido (Denominador)
                 const tempoRequeridoDias = tempoRequeridoAnos * 365.25;
-
-                // 3. Cálculo do Percentual
                 const percentualTC = Math.min(tempoContribuicaoTotalDias / tempoRequeridoDias, 1.0);
                 
                 const diasFaltantes = Math.max(0, tempoRequeridoDias - tempoContribuicaoTotalDias);
                 const dataFutura = new Date(dataRequerimento);
-                dataFutura.setDate(dataFutura.getDate() + diasFaltantes);
+                dataFutura.setUTCDate(dataFutura.getUTCDate() + diasFaltantes);
 
                 resumoTempoDiv.innerHTML = `
                     <h4>Resumo do Tempo de Contribuição</h4>
@@ -589,7 +581,6 @@ function calcularBeneficio(navegar = true, botao = null) {
                     <p style="font-weight:bold;">Percentual do Tempo de Serviço Atingido: <strong>${(percentualTC * 100).toFixed(2)}%</strong></p>
                     <p>Data projetada para atingir 100% do tempo: <strong>${formatarDataBR(dataFutura.toISOString().split('T')[0], false)}</strong></p>
                 `;
-                // --- FIM DA LÓGICA APRIMORADA ---
 
                 if (tipoBeneficio === 'voluntaria') {
                     valorBeneficioFinal = mediaResultados.media * percentualTC;
@@ -598,7 +589,7 @@ function calcularBeneficio(navegar = true, botao = null) {
                     verificarAbonoPermanencia();
                 } else { // Incapacidade
                      document.getElementById('containerDetalhamentoProventos').style.display = 'block';
-                     valorBeneficioFinal = calculateTotalProventos(); // Usa a tabela de proventos para incapacidade
+                     valorBeneficioFinal = calculateTotalProventos();
                      descricaoCalculo = `O valor do benefício é composto pelo somatório dos proventos detalhados, conforme laudo.`;
                 }
 
@@ -647,8 +638,9 @@ function calcularBeneficio(navegar = true, botao = null) {
     }, 50);
 }
 
-// All document generation and logic functions follow...
-// Note: they are long but are included for completeness.
+// O restante do código permanece o mesmo, incluindo as funções de geração de documentos e manipulação do DOM.
+// ... (funções gerarAtoDePensao, gerarAtoDeAposentadoria, etc.)
+
 function gerarAtoDePensao(b) {
     ui.toggleSpinner(b, true);
     try {
@@ -1025,7 +1017,7 @@ function salvarSimulacaoHistorico(nF) {
 
 function coletarDadosSimulacao() {
     const d = { passo1: {}, tabela: [], proventosAto: [], dependentes: [], resultados: AppState.simulacaoResultados };
-    document.querySelectorAll('#passo1 input,#passo1 select,#passo1 textarea').forEach(e => { if (e.id) d.passo1[e.id] = e.value; });
+    document.querySelectorAll('#passo1 input,#passo1 select,#passo1 textarea').forEach(e => { if (e.id) d.passo1[e.id] = e.type === 'checkbox' ? e.checked : e.value; });
     document.querySelectorAll("#corpo-tabela tr").forEach(l => {
         const i = l.querySelectorAll("input");
         d.tabela.push([i[0].value, i[1].value, i[2].value]);
@@ -1066,33 +1058,47 @@ function carregarDoHistorico(id) {
     if (!rE) return ui.showToast("Erro: Simulação não encontrada.", false);
     
     const d = rE.dados;
-    handleNavClick(null, 'calculadora'); // Esta chamada agora também limpa timeouts antigos
+    handleNavClick(null, 'calculadora');
     
-    // Armazena o ID do novo timeout para que possa ser cancelado se necessário
     AppState.loadTimeoutId = setTimeout(() => {
         for (const k in d.passo1) {
             const e = document.getElementById(k);
-            if (e) e.value = d.passo1[k];
+            if (e) {
+                if (e.type === 'checkbox') {
+                    e.checked = d.passo1[k];
+                } else {
+                    e.value = d.passo1[k];
+                }
+            }
         }
+        
+        document.getElementById('corpo-tabela').innerHTML = '';
         if (d.tabela) d.tabela.forEach(l => adicionarLinha(...l));
+        
+        document.getElementById('corpo-tabela-proventos-ato').innerHTML = '';
         if (d.proventosAto) {
-            document.getElementById('corpo-tabela-proventos-ato').innerHTML = '';
             d.proventosAto.forEach(p => adicionarLinhaProvento(p.descricao, p.valor));
             calculateTotalProventos();
         }
+
+        document.getElementById('corpo-tabela-dependentes').innerHTML = '';
         if (d.dependentes) {
-            document.getElementById('corpo-tabela-dependentes').innerHTML = '';
             d.dependentes.forEach(dep => adicionarLinhaDependente(dep.nome, dep.dataNasc, dep.parentesco, dep.invalido));
         }
+
         AppState.simulacaoResultados = d.resultados || {};
         alternarCamposBeneficio();
         ui.showToast(`Simulação "${rE.nome}" carregada.`, true);
         const t = document.getElementById('tipoBeneficio').value;
-        if (t !== 'pensao_aposentado') irParaPasso(2);
-        else irParaPasso(1);
-        calcularBeneficio(true);
+        
+        if (t !== 'pensao_aposentado') {
+             irParaPasso(2); // Vai para o passo 2 primeiro
+             calcularBeneficio(true); // Calcula e depois navega para o 3
+        } else {
+            irParaPasso(1);
+            calcularBeneficio(true);
+        }
 
-        // Limpa o ID após a execução bem-sucedida
         AppState.loadTimeoutId = null;
     }, 100);
 }
@@ -1171,7 +1177,7 @@ function carregarCTC(id) {
     const cs = JSON.parse(localStorage.getItem(ch) || "[]");
     const cE = cs.find(c => c.id === id);
     if (!cE) return ui.showToast("Erro: CTC não encontrada.", false);
-    handleNavClick(null, 'ctc');
+    handleNavClick(null, 'geradorCTC');
     setTimeout(() => {
         const d = cE.dados;
         document.getElementById('ctc-nomeServidor').value = d.nomeServidor;
@@ -1218,6 +1224,7 @@ function adicionarLinhaPeriodoCTC(i = '', f = '', d = '0', fo = '') {
         l = document.createElement('tr');
     l.innerHTML = `<td><input type="date" class="ctc-inicio" onchange="calcularTempoPeriodosCTC()" value="${i}"></td><td><input type="date" class="ctc-fim" onchange="calcularTempoPeriodosCTC()" value="${f}"></td><td><input type="number" class="ctc-bruto" readonly></td><td><input type="number" class="ctc-deducoes" value="${d}" oninput="calcularTempoPeriodosCTC()"></td><td><input type="number" class="ctc-liquido" readonly></td><td><input type="text" class="ctc-fonte" value="${fo}" placeholder="Ex: ITAPREV"></td><td><button class="danger" style="margin:0;padding:5px;" onclick="removerLinhaPeriodoCTC(this)">Remover</button></td>`;
     t.appendChild(l);
+    calcularTempoPeriodosCTC();
 }
 
 function removerLinhaPeriodoCTC(b) {
@@ -1302,9 +1309,6 @@ function exportarTudoZIP(b) {
     }, 50);
 }
 
-// =================================================================================
-// FUNÇÕES DA CALCULADORA DE TEMPO
-// =================================================================================
 function calcularTempoEntreDatas() {
     const dataInicioStr = document.getElementById('calc-data-inicio').value;
     const dataFimStr = document.getElementById('calc-data-fim').value;
@@ -1336,17 +1340,12 @@ function calcularTempoEntreDatas() {
     `;
 }
 
-// *** NOVA FUNÇÃO PARA LIMPAR A CALCULADORA ***
 function limparCalculoTempo() {
     document.getElementById('calc-data-inicio').value = '';
     document.getElementById('calc-data-fim').value = '';
     document.getElementById('resultado-calculo-tempo').innerHTML = '';
 }
 
-
-// =================================================================================
-// Expondo funções para o escopo global (para uso no HTML onclick)
-// =================================================================================
 Object.assign(window, {
     auth, ui, handleNavClick, atualizarDashboardView, irParaPasso, alternarCamposBeneficio,
     adicionarLinha, limparTabela, exportarExcel, importarExcel, atualizarSalarioLinha, excluirLinha,
@@ -1356,6 +1355,3 @@ Object.assign(window, {
     adicionarLinhaPeriodoCTC, calcularTempoPeriodosCTC, removerLinhaPeriodoCTC, salvarCTC, gerarDocumentoCTC,
     carregarCTC, excluirCTC, alternarTema
 });
-
-
-
