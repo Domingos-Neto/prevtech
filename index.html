@@ -176,7 +176,7 @@
                         </div>
                         <div id="camposAtoAposentadoria" style="display:none;"><h4>Informações para o Ato de Aposentadoria</h4><div class="form-grid"><label>Nº do Processo Administrativo: <input type="text" id="processoAposentadoria" /></label><label>Nº do Ato de Aposentadoria: <input type="number" id="atoNumeroAposentadoria" /></label></div><label>Fundamento Legal (para o Ato de Aposentadoria):<textarea id="fundamentoLegalPersonalizado"></textarea></label></div>
                         <div id="camposAtoPensao" style="display:none;"><h4>Informações para o Ato de Pensão</h4><div class="form-grid"><label>Nome do Pensionista Principal (Beneficiário): <input type="text" id="nomePensionista" /></label><label>Relação de Parentesco (do Principal): <input type="text"id="relacaoPensionista" /></label><label>Data do Óbito do Servidor: <input type="date" id="dataObito" /></label><label>Nº do Processo Administrativo: <input type="text" id="processoAdministrativo" /></label><label>Nº do Ato de Pensão: <input type="number" id="atoNumero" /></label></div></div>
-                        <div class="wizard-nav"><button class="secondary" onclick="handleNavClick(event, 'dashboard')">Voltar ao Painel</button><button onclick="irParaPasso(2)">Próximo Passo ❯</button></div>
+                        <div class="wizard-nav"><button class="secondary" data-view="dashboard">Voltar ao Painel</button><button onclick="irParaPasso(2)">Próximo Passo ❯</button></div>
                     </div>
                     <div id="passo2" class="wizard-step" style="display:none;"><h2 class="accordion-toggle">Passo 2: Salários de Contribuição (para Média)</h2><div class="accordion-content"><div class="tabela-container"><table id="tabela-salarios"><thead><tr><th>Nº</th><th>MÊS/ANO</th><th>FATOR</th><th>SALÁRIO (R$)</th><th>SALÁRIO ATUALIZADO (R$)</th><th>Ações</th></tr></thead><tbody id="corpo-tabela"></tbody></table></div><div class="grupos-botoes"><div class="grupo"><h4>Ações da Tabela</h4><button onclick="adicionarLinha()"><span class="button-text">+ Adicionar Linha</span></button><button class="danger" onclick="limparTabela()">Limpar Tabela</button></div><div class="grupo"><h4>Importar/Exportar Dados</h4><button onclick="exportarExcel(this)">📥 Exportar para Excel</button><button onclick="document.getElementById('arquivoExcel').click()">📥 Importar do Excel</button></div></div></div><div class="wizard-nav"><button class="secondary" onclick="irParaPasso(1)">❮ Passo Anterior</button><button onclick="calcularBeneficio(true, this)"><span class="button-text">Calcular e Ver Resultado ❯</span><span class="spinner"></span></button></div></div>
                     <div id="passo3" class="wizard-step" style="display:none;">
@@ -218,7 +218,7 @@
     <div id="containerAtoPensaoBtn" style="display:none; margin-top: 20px;"><button class="success" onclick="gerarAtoDePensao(this)"><span class="button-text">🏛️ Gerar Ato de Pensão</span><span class="spinner"></span></button></div>
     <div class="wizard-nav">
         <button class="secondary" onclick="irParaPasso(2)">❮ Voltar e Ajustar Salários</button>
-        <button onclick="handleNavClick(event, 'dashboard')">Finalizar e Voltar ao Painel</button>
+        <button class="secondary" data-view="dashboard">Finalizar e Voltar ao Painel</button>
     </div>
 </div>
                 
@@ -393,6 +393,7 @@
 
 </body>
 </html>
+
 
 
 
