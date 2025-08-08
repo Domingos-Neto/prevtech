@@ -146,7 +146,7 @@ function initSistemaPosLogin() {
         document.body.classList.add('dark-mode');
         document.querySelector("#toggleTheme i").className = 'ri-sun-line';
     }
-    handleNavClick(null, 'dashboard');
+    MapsToView('dashboard');
 }
 
 function setupEventListeners() {
@@ -1087,7 +1087,7 @@ function carregarDoHistorico(id) {
     if (!rE) return ui.showToast("Erro: Simulação não encontrada.", false);
     
     const d = rE.dados;
-    handleNavClick(null, 'calculadora');
+    MapsToView('calculadora');
     
     AppState.loadTimeoutId = setTimeout(() => {
         for (const k in d.passo1) {
@@ -1376,7 +1376,7 @@ function limparCalculoTempo() {
 }
 
 Object.assign(window, {
-    auth, ui, handleNavClick, atualizarDashboardView, irParaPasso, alternarCamposBeneficio,
+    auth, ui, atualizarDashboardView, irParaPasso, alternarCamposBeneficio,
     adicionarLinha, limparTabela, exportarExcel, importarExcel, atualizarSalarioLinha, excluirLinha,
     calcularBeneficio, adicionarLinhaProvento, calculateTotalProventos, excluirLinhaProvento,
     adicionarLinhaDependente, removerLinhaDependente, salvarSimulacaoHistorico, imprimirSimulacao,
@@ -1384,6 +1384,7 @@ Object.assign(window, {
     adicionarLinhaPeriodoCTC, calcularTempoPeriodosCTC, removerLinhaPeriodoCTC, salvarCTC, gerarDocumentoCTC,
     carregarCTC, excluirCTC, alternarTema
 });
+
 
 
 
