@@ -170,6 +170,17 @@ function setupEventListeners() {
     if (btnLimparTempo) {
         btnLimparTempo.addEventListener('click', limparCalculoTempo);
     }
+// Listener de navegação centralizado
+    document.body.addEventListener('click', (event) => {
+        // Encontra o elemento clicado ou um pai que tenha o atributo data-view
+        const navElement = event.target.closest('[data-view]');
+
+        if (navElement) {
+            event.preventDefault();
+            const targetView = navElement.dataset.view;
+            navigateToView(targetView);
+        }
+    });
 }
 
 function handleNavClick(event, targetView) {
@@ -1373,5 +1384,6 @@ Object.assign(window, {
     adicionarLinhaPeriodoCTC, calcularTempoPeriodosCTC, removerLinhaPeriodoCTC, salvarCTC, gerarDocumentoCTC,
     carregarCTC, excluirCTC, alternarTema
 });
+
 
 
