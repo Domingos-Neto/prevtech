@@ -141,13 +141,14 @@
                         <h2>Passo 1: Dados e Tipo de Benefício</h2>
                         <div class="form-grid">
                             <label>Tipo de Benefício:
-                                <select id="tipoBeneficio" onchange="alternarCamposBeneficio()">
-                                <option value="voluntaria">Aposentadoria Voluntária</option>
-                                <option value="incapacidade">Aposentadoria por Incapacidade Permanente</option>
-                                <option value="pensao_ativo">Pensão por Morte (Instituidor Ativo)</option>
-                                <option value="pensao_aposentado">Pensão por Morte (Instituidor Aposentado)</option>
-                                </select>
-                            </label>
+                            <select id="tipoBeneficio" onchange="alternarCamposBeneficio()">
+                            <option value="voluntaria">Aposentadoria Voluntária</option>
+                            <option value="incapacidade">Aposentadoria por Incapacidade Permanente</option>
+                            <option value="compulsoria">Aposentadoria Compulsória</option> 
+                            <option value="pensao_ativo">Pensão por Morte (Instituidor Ativo)</option>
+                            <option value="pensao_aposentado">Pensão por Morte (Instituidor Aposentado)</option>
+                        </select>
+                      </label>
                         </div>
                         <div id="camposIncapacidade" style="display:none;" class="form-grid"><label>A incapacidade decorre de acidente de trabalho, doença profissional ou doença grave?<select id="incapacidadeGrave"><option value="sim">Sim</option><option value="nao" selected>Não</option></select></label></div>
                         <div id="containerGestaoDependentes" style="display:none;"><h4>Dependentes para Pensão</h4><table id="tabela-dependentes"><thead><tr><th>Nome Completo</th><th style="width: 150px;">Data de Nasc.</th><th style="width: 180px;">Parentesco</th><th style="width: 110px;">Inválido?</th><th style="width: 100px;">Ações</th></tr></thead><tbody id="corpo-tabela-dependentes"></tbody></table><button type="button" onclick="adicionarLinhaDependente()">+ Adicionar Dependente</button></div>
@@ -348,3 +349,4 @@
 
 </body>
 </html>
+
