@@ -156,12 +156,18 @@ function initSistemaPosLogin() {
 }
 
 function setupEventListeners() {
-    const accToggle = document.querySelector("#passo2 .accordion-toggle");
-    if (accToggle) accToggle.addEventListener("click", () => {
-        accToggle.classList.toggle("active");
-        const content = accToggle.nextElementSibling;
-        content.style.maxHeight = content.style.maxHeight ? null : `${content.scrollHeight}px`;
+    // CÓDIGO MODIFICADO na função setupEventListeners
+document.querySelectorAll(".accordion-toggle").forEach(toggle => {
+    toggle.addEventListener("click", () => {
+        toggle.classList.toggle("active");
+        const content = toggle.nextElementSibling;
+        if (content.style.maxHeight) {
+            content.style.maxHeight = null;
+        } else {
+            content.style.maxHeight = content.scrollHeight + "px";
+        }
     });
+});
     const cpfInput = document.getElementById('cpfServidor');
     if (cpfInput) cpfInput.addEventListener('input', (e) => validaCPF(e.target, document.getElementById('cpf-status')));
     
@@ -1333,6 +1339,7 @@ Object.assign(window, {
     // Novas funções expostas para a calculadora de tempo
     calcularTempoEntreDatas, limparCalculoTempo
 });
+
 
 
 
