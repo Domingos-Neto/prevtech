@@ -118,8 +118,9 @@ const ui = {
         document.querySelector(".app-container").style.display = "flex";
         document.getElementById("floating-buttons-container").style.display = "flex";
     },
+    // MODIFICADO: Renomeado 'calculadora' para 'simulacao' na lista de views.
     showView: (viewId) => {
-        const views = ['dashboard', 'calculadora', 'geradorCTC', 'telaLegislacao', 'telaCadastro', 'telaProcessos', 'telaFinanceiro', 'telaRelatorios', 'telaUsuarios'];
+        const views = ['dashboard', 'simulacao', 'geradorCTC', 'telaLegislacao', 'telaCadastro', 'telaProcessos', 'telaFinanceiro', 'telaRelatorios', 'telaUsuarios'];
         views.forEach(id => {
             const viewElement = document.getElementById(id);
             if (viewElement) viewElement.style.display = 'none';
@@ -182,6 +183,8 @@ function handleNavClick(event, targetView) {
     if (event) event.preventDefault();
     ui.updateActiveNav(targetView);
     ui.showView(targetView);
+
+    // Agora, ao chamar com 'simulacao', a limpeza será acionada.
     switch (targetView) {
         case 'dashboard':
             listarHistorico();
@@ -191,7 +194,7 @@ function handleNavClick(event, targetView) {
             limparFormularioCompleto();
             irParaPasso(1);
             break;
-        case 'ctc':
+        case 'geradorCTC': // Corrigido para 'geradorCTC' para ser consistente com o HTML
             limparFormularioCTC();
             break;
     }
@@ -1319,4 +1322,5 @@ Object.assign(window, {
     // Novas funções expostas para a calculadora de tempo
     calcularTempoEntreDatas, limparCalculoTempo
 });
+
 
