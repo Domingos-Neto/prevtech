@@ -325,18 +325,23 @@ function irParaPasso(passo) {
 
 function alternarCamposBeneficio() {
     const tipo = document.getElementById('tipoBeneficio').value;
-    const isAposentadoria = tipo === 'voluntaria' || tipo === 'incapacidade';
+    // MODIFICADO: Adicionado 'compulsoria' à verificação
+    const isAposentadoria = tipo === 'voluntaria' || tipo === 'incapacidade' || tipo === 'compulsoria';
     const isPensao = tipo === 'pensao_ativo' || tipo === 'pensao_aposentado';
+    
     document.getElementById('camposIncapacidade').style.display = tipo === 'incapacidade' ? 'grid' : 'none';
     document.getElementById('camposPensaoAtivo').style.display = tipo === 'pensao_ativo' ? 'block' : 'none';
     document.getElementById('camposPensaoAposentado').style.display = tipo === 'pensao_aposentado' ? 'grid' : 'none';
     document.getElementById('containerGestaoDependentes').style.display = isPensao ? 'block' : 'none';
+    
     const containerDependentes = document.getElementById('containerGestaoDependentes');
     if (tipo === 'pensao_ativo') document.getElementById('camposPensaoAtivo').appendChild(containerDependentes);
     else if (tipo === 'pensao_aposentado') document.getElementById('camposPensaoAposentado').appendChild(containerDependentes);
+    
     document.getElementById('camposAtoAposentadoria').style.display = isAposentadoria ? 'block' : 'none';
     document.getElementById('camposAtoPensao').style.display = isPensao ? 'block' : 'none';
     document.getElementById('containerDetalhamentoProventos').style.display = isAposentadoria ? 'block' : 'none';
+    
     const passo2 = document.getElementById('passo2');
     if (passo2) passo2.style.display = tipo === 'pensao_aposentado' ? 'none' : AppState.currentStep === 2 ? 'block' : 'none';
 }
@@ -471,7 +476,7 @@ function calcularMediaSalarial() {
 
 function calcularBeneficio(n = true, b = null) {
     const t = document.getElementById('tipoBeneficio').value;
-    if ((t === 'voluntaria' || t === 'incapacidade') && (!document.getElementById('dataNascimento').value || !document.getElementById('dataAdmissao').value)) {
+    if ((t === 'voluntaria' || t === 'incapacidade' || t === 'compulsoria') && (!document.getElementById('dataNascimento').value || !document.getElementById('dataAdmissao').value)) {
         return ui.showToast("Data de Nascimento e Admissão são obrigatórias.", false);
     }
     
@@ -489,29 +494,35 @@ function calcularBeneficio(n = true, b = null) {
                 AppState.simulacaoResultados.salariosParaGrafico = s;
             }
 
-            const isA = t === 'voluntaria' || t === 'incapacidade';
+            const isA = t === 'voluntaria' || t === 'incapacidade' || t === 'compulsoria';
             const isP = t === 'pensao_ativo' || t === 'pensao_aposentado';
 
             if (isA) {
+                 const dataCalculo = document.getElementById('dataCalculo').value ? new Date(document.getElementById('dataCalculo').value + 'T00:00:00') : new Date();
+                 const dataAdmissao = new Date(document.getElementById('dataAdmissao').value + 'T00:00:00');
+                 const tempoServicoPublico = (dataCalculo - dataAdmissao) / 31557600000;
+                 const tempoExternoAnos = (parseInt(document.getElementById('tempoExterno').value) || 0) / 365.25;
+                 const tempoEspecialAnos = (parseInt(document.getElementById('tempoEspecial').value) || 0) / 365.25;
+                 const tempoContribTotalAnos = tempoServicoPublico + tempoExternoAnos + tempoEspecialAnos;
+
                 if (t === 'voluntaria') {
                     vB = calculateTotalProventos();
                     dC = `O valor do benefício é composto pelo somatório dos proventos detalhados, que tem como base a média salarial. A elegibilidade e o valor final podem variar conforme a regra de transição aplicável.`;
                     projetarAposentadoria(m);
                     verificarAbonoPermanencia();
+
                 } else if (t === 'incapacidade') {
                     const isGrave = document.getElementById('incapacidadeGrave').value === 'sim';
-                    const tempoContribTotal = ((new Date(document.getElementById('dataCalculo').value) - new Date(document.getElementById('dataAdmissao').value)) / 31557600000) + (parseInt(document.getElementById('tempoExterno').value) || 0) / 365.25;
 
                     if (isGrave) {
                         vB = m;
                         dC = `Cálculo com base no Art. 7º, §3º do Decreto 113/2022. O valor corresponde a 100% da média salarial, por se tratar de incapacidade decorrente de acidente de trabalho, doença profissional ou do trabalho.`;
                     } else {
-                        const anosExcedentes = Math.max(0, Math.floor(tempoContribTotal) - 20);
+                        const anosExcedentes = Math.max(0, Math.floor(tempoContribTotalAnos) - 20);
                         const percentual = Math.min(1, 0.60 + (anosExcedentes * 0.02));
                         vB = m * percentual;
                         dC = `Cálculo com base no Art. 7º, §2º do Decreto 113/2022. O valor corresponde a ${ (percentual * 100).toFixed(0) }% da média salarial (60% + 2% por ano de contribuição que exceder 20 anos).`;
                     }
-                    // Para incapacidade, os proventos detalhados são zerados e o valor calculado é setado como a base.
                      document.querySelectorAll("#corpo-tabela-proventos-ato .provento-valor").forEach(i => i.value = '');
                      const baseProventoInput = document.querySelector("#corpo-tabela-proventos-ato .provento-descricao[value='Salário Base']");
                      if(baseProventoInput) {
@@ -519,8 +530,31 @@ function calcularBeneficio(n = true, b = null) {
                      } else {
                         adicionarLinhaProvento('Provento Calculado por Incapacidade', vB.toFixed(2));
                      }
-                     calculateTotalProventos(); // Recalcula o total, que será o próprio vB
+                     calculateTotalProventos();
+
+                } else if (t === 'compulsoria') {
+                    // Lógica baseada no Art. 8º do Decreto 113/2022
+                    const anosContrib = Math.floor(tempoContribTotalAnos);
+                    const fatorProporcionalidade = Math.min(1, anosContrib / 20); // Inciso I, §3º, Art. 8 
+                    
+                    const anosExcedentes = Math.max(0, anosContrib - 20);
+                    const percentualBase = 0.60 + (anosExcedentes * 0.02);
+                    const mediaComRegraGeral = m * Math.min(1, percentualBase); // Inciso II, §3º, Art. 8 
+
+                    vB = mediaComRegraGeral * fatorProporcionalidade; // Inciso III, §3º, Art. 8 
+                    
+                    dC = `Cálculo conforme Art. 8º do Decreto 113/2022. O benefício é proporcional ao tempo de contribuição. <br><b>Fator de Proporcionalidade:</b> ${fatorProporcionalidade.toFixed(4)} (${anosContrib} anos / 20). <br><b>Valor Base (Regra Geral):</b> ${formatarDinheiro(mediaComRegraGeral)}.`;
+
+                    if (vB < SALARIO_MINIMO) { // §4º, Art. 8 
+                        vB = SALARIO_MINIMO;
+                        dC += `<br><b>Ajuste:</b> O valor foi elevado para o salário mínimo vigente.`;
+                    }
+
+                    document.querySelectorAll("#corpo-tabela-proventos-ato .provento-valor").forEach(i => i.value = '');
+                    adicionarLinhaProvento('Provento Calculado (Compulsória)', vB.toFixed(2));
+                    calculateTotalProventos();
                 }
+
             } else { // Pensões
                 const nD = document.getElementById('corpo-tabela-dependentes').rows.length;
                 const percentualCota = Math.min(1.0, 0.5 + nD * 0.1);
@@ -625,10 +659,14 @@ function gerarAtoDeAposentadoria(b) {
             pR = `APOSENTAR VOLUNTARIAMENTE ${aD} ${sS} ${aP} <b class="uppercase">${d.nomeServidor}</b>`;
         } else if (tB === 'incapacidade') {
             tA = 'ATO CONCESSIVO DE APOSENTADORIA POR INCAPACIDADE PERMANENTE';
-            const iG = document.getElementById('incapacidadeGrave').value,
-                tPr = iG === 'sim' ? 'COM PROVENTOS INTEGRAIS' : 'COM PROVENTOS PROPORCIONAIS';
+            const iG = document.getElementById('incapacidadeGrave').value;
+            const tPr = iG === 'sim' ? 'COM PROVENTOS INTEGRAIS' : 'COM PROVENTOS PROPORCIONAIS';
             pR = `APOSENTAR POR INCAPACIDADE PERMANENTE, ${tPr}, ${aD} ${sS} ${aP} <b class="uppercase">${d.nomeServidor}</b>`;
+        } else if (tB === 'compulsoria') { // BLOCO ADICIONADO
+            tA = 'ATO CONCESSIVO DE APOSENTADORIA COMPULSÓRIA';
+            pR = `APOSENTAR COMPULSORIAMENTE, COM PROVENTOS PROPORCIONAIS, ${aD} ${sS} ${aP} <b class="uppercase">${d.nomeServidor}</b>`;
         }
+        
         const vF = formatarDinheiro(tP),
             tE = valorPorExtenso(tP);
         let pHTR = '';
@@ -1281,3 +1319,4 @@ Object.assign(window, {
     // Novas funções expostas para a calculadora de tempo
     calcularTempoEntreDatas, limparCalculoTempo
 });
+
