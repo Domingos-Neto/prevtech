@@ -31,6 +31,12 @@ const provider = new GoogleAuthProvider();
 const EMAILS_AUTORIZADOS = ["domingosbarroson@gmail.com", "setordebeneficiositaprev@gmail.com"].map(e => e.toLowerCase());
 const ADMIN_EMAILS = ["domingosbarroson@gmail.com"].map(e => e.toLowerCase());
 
+// =================================================================================
+//  CONFIGURAÇÕES GLOBAIS E CONSTANTES LEGAIS
+// =================================================================================
+// ATENÇÃO: Este valor deve ser atualizado anualmente conforme o novo salário mínimo nacional.
+const SALARIO_MINIMO = 1412.00; 
+
 const AppState = {
     usuarioAtual: null,
     salarioChart: null,
@@ -166,7 +172,6 @@ function setupEventListeners() {
     if (btnCalcTempo) {
         btnCalcTempo.addEventListener('click', calcularTempoEntreDatas);
     }
-    // *** NOVO: Evento para o botão de limpar ***
     const btnLimparTempo = document.getElementById('btn-limpar-tempo');
     if (btnLimparTempo) {
         btnLimparTempo.addEventListener('click', limparCalculoTempo);
@@ -463,60 +468,89 @@ function calcularMediaSalarial() {
     return { media: med, salarios: sM };
 }
 
+
 function calcularBeneficio(n = true, b = null) {
     const t = document.getElementById('tipoBeneficio').value;
-    if (t === 'voluntaria') {
-        if (!document.getElementById('dataNascimento').value || !document.getElementById('dataAdmissao').value)
-            return ui.showToast("Data de Nascimento e Admissão são obrigatórias.", false);
+    if ((t === 'voluntaria' || t === 'incapacidade') && (!document.getElementById('dataNascimento').value || !document.getElementById('dataAdmissao').value)) {
+        return ui.showToast("Data de Nascimento e Admissão são obrigatórias.", false);
     }
+    
     ui.toggleSpinner(b, true);
     setTimeout(() => {
         try {
             const rD = document.getElementById('resultado');
-            let vB = 0,
-                dC = '',
-                m = 0,
-                s = [];
+            let vB = 0, dC = '', m = 0, s = [];
             AppState.simulacaoResultados = {};
+
             if (t !== 'pensao_aposentado') {
                 const mR = calcularMediaSalarial();
                 m = mR.media;
                 s = mR.salarios;
                 AppState.simulacaoResultados.salariosParaGrafico = s;
             }
-            const isA = t === 'voluntaria' || t === 'incapacidade',
-                isP = t === 'pensao_ativo' || t === 'pensao_aposentado';
+
+            const isA = t === 'voluntaria' || t === 'incapacidade';
+            const isP = t === 'pensao_ativo' || t === 'pensao_aposentado';
+
             if (isA) {
-                vB = calculateTotalProventos();
-                dC = `O valor do benefício é composto pelo somatório dos proventos detalhados. A média salarial (${formatarDinheiro(m)}) serve como base.`;
                 if (t === 'voluntaria') {
+                    vB = calculateTotalProventos();
+                    dC = `O valor do benefício é composto pelo somatório dos proventos detalhados, que tem como base a média salarial. A elegibilidade e o valor final podem variar conforme a regra de transição aplicável.`;
                     projetarAposentadoria(m);
                     verificarAbonoPermanencia();
+                } else if (t === 'incapacidade') {
+                    const isGrave = document.getElementById('incapacidadeGrave').value === 'sim';
+                    const tempoContribTotal = ((new Date(document.getElementById('dataCalculo').value) - new Date(document.getElementById('dataAdmissao').value)) / 31557600000) + (parseInt(document.getElementById('tempoExterno').value) || 0) / 365.25;
+
+                    if (isGrave) {
+                        vB = m;
+                        dC = `Cálculo com base no Art. 7º, §3º do Decreto 113/2022. O valor corresponde a 100% da média salarial, por se tratar de incapacidade decorrente de acidente de trabalho, doença profissional ou do trabalho.`;
+                    } else {
+                        const anosExcedentes = Math.max(0, Math.floor(tempoContribTotal) - 20);
+                        const percentual = Math.min(1, 0.60 + (anosExcedentes * 0.02));
+                        vB = m * percentual;
+                        dC = `Cálculo com base no Art. 7º, §2º do Decreto 113/2022. O valor corresponde a ${ (percentual * 100).toFixed(0) }% da média salarial (60% + 2% por ano de contribuição que exceder 20 anos).`;
+                    }
+                    // Para incapacidade, os proventos detalhados são zerados e o valor calculado é setado como a base.
+                     document.querySelectorAll("#corpo-tabela-proventos-ato .provento-valor").forEach(i => i.value = '');
+                     const baseProventoInput = document.querySelector("#corpo-tabela-proventos-ato .provento-descricao[value='Salário Base']");
+                     if(baseProventoInput) {
+                        baseProventoInput.closest('tr').querySelector('.provento-valor').value = vB.toFixed(2);
+                     } else {
+                        adicionarLinhaProvento('Provento Calculado por Incapacidade', vB.toFixed(2));
+                     }
+                     calculateTotalProventos(); // Recalcula o total, que será o próprio vB
                 }
-            } else {
-                const nD = document.getElementById('corpo-tabela-dependentes').rows.length,
-                    p = Math.min(0.5 + nD * 0.1, 1.0);
+            } else { // Pensões
+                const nD = document.getElementById('corpo-tabela-dependentes').rows.length;
+                const percentualCota = Math.min(1.0, 0.5 + nD * 0.1);
+                
                 if (t === 'pensao_ativo') {
-                    vB = m * p;
-                    dC = `Cota de ${(p*100).toFixed(0)}% (50% + ${nD*10}% por dependente) sobre a média salarial.`;
+                    vB = m * percentualCota;
+                    dC = `Cálculo conforme Art. 23 da EC 103/19. Cota de ${ (percentualCota * 100).toFixed(0) }% (50% base + ${ nD * 10 }% por dependente) sobre a média salarial do servidor ativo.`;
                 } else if (t === 'pensao_aposentado') {
-                    const pB = parseFloat(document.getElementById('proventoAposentado').value) || 0;
-                    vB = pB * p;
-                    dC = `Cota de ${(p*100).toFixed(0)}% sobre o provento de ${formatarDinheiro(pB)}.`;
+                    const proventoBrutoAposentado = parseFloat(document.getElementById('proventoAposentado').value) || 0;
+                    vB = proventoBrutoAposentado * percentualCota;
+                    dC = `Cálculo conforme Art. 23 da EC 103/19. Cota de ${ (percentualCota * 100).toFixed(0) }% (50% base + ${ nD * 10 }% por dependente) sobre o provento bruto de ${formatarDinheiro(proventoBrutoAposentado)} que o servidor recebia.`;
                 }
             }
+
             AppState.simulacaoResultados = { ...AppState.simulacaoResultados, mediaSalarial: m, valorBeneficioFinal: vB, tipo: document.querySelector("#tipoBeneficio option:checked").text, descricao: dC };
-            rD.innerHTML = `<h3>Resultado do Cálculo (Bruto)</h3><p><b>Tipo:</b> ${AppState.simulacaoResultados.tipo}</p>${m>0?`<p><b>Média Salarial:</b> ${formatarDinheiro(AppState.simulacaoResultados.mediaSalarial)}</p>`:''}<p><b>Cálculo:</b> ${AppState.simulacaoResultados.descricao}</p><p style="font-size:1.2em;font-weight:bold;">💰 Valor Bruto: ${formatarDinheiro(AppState.simulacaoResultados.valorBeneficioFinal)}</p>`;
+            rD.innerHTML = `<h3>Resultado do Cálculo (Bruto)</h3><p><b>Tipo:</b> ${AppState.simulacaoResultados.tipo}</p>${m>0?`<p><b>Média Salarial de Contribuição:</b> ${formatarDinheiro(AppState.simulacaoResultados.mediaSalarial)}</p>`:''}<p><b>Fundamento do Cálculo:</b> ${AppState.simulacaoResultados.descricao}</p><p style="font-size:1.2em;font-weight:bold;">💰 Valor Bruto do Benefício: ${formatarDinheiro(AppState.simulacaoResultados.valorBeneficioFinal)}</p>`;
             calculateValorLiquido(vB);
+
             document.getElementById('containerAtoAposentadoriaBtn').style.display = isA ? 'block' : 'none';
             document.getElementById('containerAtoPensaoBtn').style.display = isP ? 'block' : 'none';
+
             if (s.length > 0) desenharGrafico(s, m);
+
             if (n) irParaPasso(3);
         } finally {
             ui.toggleSpinner(b, false);
         }
     }, 50);
 }
+
 
 // All document generation and logic functions follow...
 // Note: they are long but are included for completeness.
@@ -666,23 +700,48 @@ function calculateValorLiquido(pB) {
         document.getElementById('resultadoLiquido').innerHTML = '';
         return;
     }
-    const tR = 7786.02;
-    let cR = 0;
-    if (pB > tR) cR = (pB - tR) * 0.14;
-    const bC = pB - cR;
-    let iR = 0;
-    if (bC > 2259.20) {
-        if (bC <= 2826.65) iR = bC * 0.075 - 169.44;
-        else if (bC <= 3751.05) iR = bC * 0.15 - 381.44;
-        else if (bC <= 4664.68) iR = bC * 0.225 - 662.77;
-        else iR = bC * 0.275 - 896.00;
+
+    const tetoRGPS = 7786.02; // Teto do RGPS para referência
+    const tipoBeneficio = document.getElementById('tipoBeneficio').value;
+    let baseIsencaoContribuicao = SALARIO_MINIMO * 3;
+    let descricaoContribuicao = `(14% sobre o que excede 3 salários mínimos - ${formatarDinheiro(baseIsencaoContribuicao)})`;
+
+    // Conforme Lei 035/2022 Art. 10, II, a regra de isenção muda para aposentadoria por invalidez
+    if (tipoBeneficio === 'incapacidade') {
+        baseIsencaoContribuicao = tetoRGPS;
+        descricaoContribuicao = `(14% sobre o que excede o teto do RGPS - ${formatarDinheiro(baseIsencaoContribuicao)})`;
     }
-    iR = Math.max(0, iR);
-    const tD = cR + iR,
-        vL = pB - tD;
-    const h = `<h3>Estimativa do Valor Líquido</h3><p>Simulação dos descontos legais sobre o valor bruto.</p><table><tr><td>Provento Bruto</td><td>${formatarDinheiro(pB)}</td></tr><tr><td>(-) Contribuição RPPS (Inativos)</td><td>${formatarDinheiro(cR)}</td></tr><tr><td>(-) Imposto de Renda (IRRF)</td><td>${formatarDinheiro(iR)}</td></tr><tr style="font-weight:bold;"><td>(=) Valor Líquido Estimado</td><td>${formatarDinheiro(vL)}</td></tr></table><small>Nota: Valores de descontos são estimativas.</small>`;
-    document.getElementById('resultadoLiquido').innerHTML = h;
+
+    let contribuicaoRPPS = 0;
+    if (pB > baseIsencaoContribuicao) {
+        contribuicaoRPPS = (pB - baseIsencaoContribuicao) * 0.14;
+    }
+
+    const baseCalculoIR = pB - contribuicaoRPPS;
+    let impostoRenda = 0;
+    if (baseCalculoIR > 2259.20) { // Faixas do IR - devem ser atualizadas conforme legislação
+        if (baseCalculoIR <= 2826.65) impostoRenda = baseCalculoIR * 0.075 - 169.44;
+        else if (baseCalculoIR <= 3751.05) impostoRenda = baseCalculoIR * 0.15 - 381.44;
+        else if (baseCalculoIR <= 4664.68) impostoRenda = baseCalculoIR * 0.225 - 662.77;
+        else impostoRenda = baseCalculoIR * 0.275 - 896.00;
+    }
+    impostoRenda = Math.max(0, impostoRenda);
+
+    const totalDescontos = contribuicaoRPPS + impostoRenda;
+    const valorLiquido = pB - totalDescontos;
+
+    const html = `<h3>Estimativa do Valor Líquido</h3>
+                  <p>Simulação dos descontos legais sobre o valor bruto do benefício.</p>
+                  <table>
+                      <tr><td>(+) Provento Bruto</td><td>${formatarDinheiro(pB)}</td></tr>
+                      <tr><td>(-) Contribuição RPPS (Inativos) ${descricaoContribuicao}</td><td>${formatarDinheiro(contribuicaoRPPS)}</td></tr>
+                      <tr><td>(-) Imposto de Renda Retido na Fonte (IRRF)</td><td>${formatarDinheiro(impostoRenda)}</td></tr>
+                      <tr style="font-weight:bold;"><td>(=) Valor Líquido Estimado</td><td>${formatarDinheiro(valorLiquido)}</td></tr>
+                  </table>
+                  <small>Nota: Valores de descontos são estimativas e podem variar. As faixas do IR e o valor do Salário Mínimo devem ser atualizados periodicamente.</small>`;
+    document.getElementById('resultadoLiquido').innerHTML = html;
 }
+
 
 function projetarAposentadoria(mS) {
     const rPD = document.getElementById('resultadoProjecao'),
@@ -1201,7 +1260,6 @@ function calcularTempoEntreDatas() {
     `;
 }
 
-// *** NOVA FUNÇÃO PARA LIMPAR A CALCULADORA ***
 function limparCalculoTempo() {
     document.getElementById('calc-data-inicio').value = '';
     document.getElementById('calc-data-fim').value = '';
@@ -1219,5 +1277,7 @@ Object.assign(window, {
     adicionarLinhaDependente, removerLinhaDependente, salvarSimulacaoHistorico, imprimirSimulacao,
     exportarTudoZIP, gerarAtoDeAposentadoria, gerarAtoDePensao, carregarDoHistorico, excluirDoHistorico,
     adicionarLinhaPeriodoCTC, calcularTempoPeriodosCTC, removerLinhaPeriodoCTC, salvarCTC, gerarDocumentoCTC,
-    carregarCTC, excluirCTC, alternarTema
+    carregarCTC, excluirCTC, alternarTema,
+    // Novas funções expostas para a calculadora de tempo
+    calcularTempoEntreDatas, limparCalculoTempo
 });
