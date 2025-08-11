@@ -350,7 +350,10 @@ function alternarCamposBeneficio() {
 }
 
 function limparFormularioCompleto() {
-    document.querySelectorAll('#calculadora input[type="text"],#calculadora input[type="date"],#calculadora input[type="number"], #calculadora textarea').forEach(i => i.value = '');
+    // CORREÇÃO: O seletor foi atualizado de '#calculadora' para '#simulacao'
+    document.querySelectorAll('#simulacao input[type="text"],#simulacao input[type="date"],#simulacao input[type="number"], #simulacao textarea').forEach(i => i.value = '');
+    
+    // O restante da função já estava correto
     document.getElementById('corpo-tabela').innerHTML = '';
     document.getElementById('resultado').innerHTML = '';
     document.getElementById('resultadoProjecao').innerHTML = '';
@@ -358,20 +361,28 @@ function limparFormularioCompleto() {
     document.getElementById('resultadoLiquido').innerHTML = '';
     AppState.simulacaoResultados = {};
     if (AppState.salarioChart) AppState.salarioChart.destroy();
+    
     const hoje = new Date().toISOString().split('T')[0];
     document.getElementById("dataCalculo").value = hoje;
     document.getElementById("dataRequerimento").value = hoje;
     document.getElementById("tempoExterno").value = "0";
     document.getElementById("tempoEspecial").value = "0";
+    
     document.getElementById('corpo-tabela-proventos-ato').innerHTML = '';
     calculateTotalProventos();
+    
     document.getElementById('corpo-tabela-dependentes').innerHTML = '';
+    
+    // Define o fundamento legal padrão para uma nova simulação
     document.getElementById('fundamentoLegalPersonalizado').value = 'com fundamento no art. 40 §3º da CF/88 (redação dada pela EC n.º 103/19), e nas Leis Municipais n.º 205/94, em seu art. 67; Lei n.º 080/17 que altera a Lei n.º 066/17; Decreto Municipal nº. 113/2022, art. 21, §4º, incisos I, II, III, §5º, §6º, I, “b”, art. 4º, inciso I, da Lei 035/2022, bem como, EC 103/2019';
+    
+    // Adiciona as linhas de provento padrão para um formulário limpo
     adicionarLinhaProvento('Salário Base', '');
     adicionarLinhaProvento('Anuênio 25%', '');
     adicionarLinhaProvento('Indenização 20% Lei n.º 066/2017', '');
     adicionarLinhaProvento('Especialização L.033/07-A.26', '');
     adicionarLinhaProvento('Vantagem Pessoal Nominalmente Identificada - VPNI', '');
+    
     const accToggle = document.querySelector('#passo2 .accordion-toggle'),
         accContent = document.querySelector('#passo2 .accordion-content');
     if (accToggle && accContent) {
@@ -1322,5 +1333,6 @@ Object.assign(window, {
     // Novas funções expostas para a calculadora de tempo
     calcularTempoEntreDatas, limparCalculoTempo
 });
+
 
 
