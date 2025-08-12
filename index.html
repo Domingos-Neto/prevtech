@@ -56,7 +56,8 @@
             <li><a href="#" onclick="handleNavClick(event, 'simulacao')"><i class="ri-calculator-line"></i> Nova Simulação</a></li>
             <li><a href="#" onclick="handleNavClick(event, 'geradorCTC')"><i class="ri-file-text-line"></i> Gerar CTC</a></li>
             <li><a href="#" onclick="handleNavClick(event, 'telaLegislacao')"><i class="ri-book-open-line"></i> Legislação</a></li>
-            
+            <li><a href="#" onclick="handleNavClick(event, 'telaConfiguracoes')"><i class="ri-settings-3-line"></i> Configurações</a></li>
+          
             <li class="sidebar-section-title">Módulos de Gestão</li>
             <li><a href="#" onclick="handleNavClick(event, 'telaCadastro')"><i class="ri-user-settings-line"></i> Gestão Cadastral</a></li>
             <li><a href="#" onclick="handleNavClick(event, 'telaProcessos')"><i class="ri-node-tree"></i> Acomp. de Processos</a></li>
@@ -261,7 +262,29 @@
         </div>
     </div>
 </div>
+             <div id="telaConfiguracoes" style="display:none;">
+    <h2><i class="ri-settings-3-fill"></i> Configurações do Sistema</h2>
+    <p style="font-size: 1.05em; color: var(--text-secondary-color); margin-top:-5px; margin-bottom: 30px;">
+        Gerencie aqui as informações que são utilizadas globalmente no sistema, como os nomes para assinatura nos documentos oficiais.
+    </p>
 
+    <h4>Nomes para Assinatura</h4>
+    <div class="form-grid">
+        <label>Nome do Prefeito(a) Municipal:
+            <input type="text" id="config-nome-prefeito" placeholder="Digite o nome completo do Prefeito(a)">
+        </label>
+        <label>Nome do(a) Presidente do ITAPREV:
+            <input type="text" id="config-nome-presidente" placeholder="Digite o nome completo do(a) Presidente">
+        </label>
+    </div>
+
+    <div class="wizard-nav" style="justify-content: flex-end;">
+        <button onclick="salvarConfiguracoes(this)" class="success">
+            <span class="button-text">💾 Salvar Configurações</span>
+            <span class="spinner"></span>
+        </button>
+    </div>
+</div>
                 <div id="telaCadastro" style="display:none;">
                     <h2><i class="ri-user-settings-fill"></i> Módulo de Gestão Cadastral</h2>
                     <p>Gerencie as informações de todos os servidores e pensionistas do RPPS.</p>
@@ -395,6 +418,7 @@
 
 </body>
 </html>
+
 
 
 
