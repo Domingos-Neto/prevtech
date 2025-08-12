@@ -43,6 +43,7 @@ const AppState = {
     simulacaoResultados: {},
     dashboardViewMode: 'meus_registros',
     currentStep: 1,
+    configuracoes: { nomePrefeito: '', nomePresidente: '' }
 };
 
 const auth = {
@@ -120,7 +121,7 @@ const ui = {
     },
     // MODIFICADO: Renomeado 'calculadora' para 'simulacao' na lista de views.
     showView: (viewId) => {
-        const views = ['dashboard', 'simulacao', 'geradorCTC', 'telaLegislacao', 'telaCadastro', 'telaProcessos', 'telaFinanceiro', 'telaRelatorios', 'telaUsuarios'];
+        const views = ['dashboard', 'simulacao', 'geradorCTC', 'telaLegislacao', 'telaConfiguracoes', 'telaCadastro', 'telaProcessos', 'telaFinanceiro', 'telaRelatorios', 'telaUsuarios'];
         views.forEach(id => {
             const viewElement = document.getElementById(id);
             if (viewElement) viewElement.style.display = 'none';
@@ -141,6 +142,7 @@ document.addEventListener("DOMContentLoaded", auth.init);
 
 function initSistemaPosLogin() {
     ui.updateUserInfo();
+    carregarConfiguracoes();
     setupEventListeners();
     atualizarDataHora();
     setInterval(atualizarDataHora, 1000 * 60);
@@ -665,7 +667,7 @@ function gerarAtoDePensao(b) {
             dataObito: formatarDataBR(document.getElementById('dataObito').value, false) || '__/__/____',
             valorBeneficio: AppState.simulacaoResultados.valorBeneficioFinal || 0,
             dataAtual: new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' }),
-            nomeDiretor: 'PREFEITO MUNICIPAL'
+            nomeDiretor: AppState.configuracoes.nomePresidente || 'PRESIDENTE DO ITAPREV'
         };
         const vE = valorPorExtenso(d.valorBeneficio) + " reais",
             vF = formatarDinheiro(d.valorBeneficio),
@@ -736,7 +738,7 @@ function gerarAtoDeAposentadoria(b) {
             if (desc && v > 0) pHTR += `<tr><td>${desc}</td><td>${formatarDinheiro(v)}</td></tr>`;
         });
         const e = `<style>body{font-family:'Times New Roman',Times,serif;color:black;background-color:white;line-height:1.5;font-size:12pt;margin:0;padding:20mm;}.container{width:210mm;min-height:297mm;box-sizing:border-box;}.center{text-align:center;}.bold{font-weight:bold;}.uppercase{text-transform:uppercase;}.justify{text-align:justify;}.header{margin-bottom:25px;}h4.title{margin:0;font-weight:bold;}p{margin:1em 0;}.resolve-text{margin-top:25px;}.proventos-table{width:100%;border-collapse:collapse;margin:20px 0;border:1px solid black;}.proventos-table th,.proventos-table td{border:1px solid black;padding:5px;}.proventos-table th{background-color:#e0e0e0;text-align:center;}.proventos-table td:last-child{text-align:right;}.proventos-table tfoot td{font-weight:bold;}.signature-block{margin-top:80px;text-align:center;}.signature-block p{margin:0;line-height:1.2;}@media print{body{padding:0;}}</style>`,
-            cH = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Ato de Aposentadoria Nº ${d.atoNumero}/${d.atoAno}</title>${e}</head><body><div class="container"><div class="center header"><h4 class="title uppercase">${tA} N.º ${d.atoNumero}/${d.atoAno}.</h4></div><p class="justify">O PREFEITO MUNICIPAL DE ITAPIPOCA, no uso de suas atribuições legais, que lhe confere a Lei Orgânica do Município de Itapipoca e a Presidente do Instituto de Previdência do Município de Itapipoca – ITAPREV, no uso de suas atribuições conferidas,</p><h4 class="center uppercase">RESOLVEM:</h4><p class="justify resolve-text">${pR}, ${d.nacionalidade}, ${pP} do RG n.º ${d.rg}, inscrit${s==='F'?'a':'o'} no CPF sob o n.º ${d.cpf}, matrícula n.º ${d.matricula}, ${d.cargaHoraria}, ocupante do cargo de <b class="uppercase">${d.cargo}</b>, lotad${s==='F'?'a':'o'} na <b class="uppercase">${d.lotacao}</b>, com admissão no serviço público em ${d.admissao}, ${d.fundamentoLegal}, com início do benefício na data da publicação deste Ato de Aposentadoria, de acordo com o quadro discriminativo abaixo:</p><table class="proventos-table"><thead><tr><th>CÁLCULO DOS PROVENTOS</th><th>VALOR</th></tr></thead><tbody>${pHTR}</tbody><tfoot><tr><td>TOTAL DOS PROVENTOS</td><td>${vF}</td></tr></tfoot></table><p class="justify">Desse modo, os proventos ${pPo} ${sS.toLowerCase()} serão fixados em ${vF} (${tE}).</p><p class="center">Itapipoca – CE, ${d.dataAtual}.</p><div class="signature-block"><p class="uppercase bold">FELIPE SOUZA PINHEIRO</p><p>Prefeito Municipal</p></div><div class="signature-block"><p class="uppercase bold">EDIANIA DE CASTRO ALBUQUERQUE</p><p>Presidente do ITAPREV</p></div></div></body></html>`;
+            cH = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Ato de Aposentadoria Nº ${d.atoNumero}/${d.atoAno}</title>${e}</head><body><div class="container"><div class="center header"><h4 class="title uppercase">${tA} N.º ${d.atoNumero}/${d.atoAno}.</h4></div><p class="justify">O PREFEITO MUNICIPAL DE ITAPIPOCA, no uso de suas atribuições legais, que lhe confere a Lei Orgânica do Município de Itapipoca e a Presidente do Instituto de Previdência do Município de Itapipoca – ITAPREV, no uso de suas atribuições conferidas,</p><h4 class="center uppercase">RESOLVEM:</h4><p class="justify resolve-text">${pR}, ${d.nacionalidade}, ${pP} do RG n.º ${d.rg}, inscrit${s==='F'?'a':'o'} no CPF sob o n.º ${d.cpf}, matrícula n.º ${d.matricula}, ${d.cargaHoraria}, ocupante do cargo de <b class="uppercase">${d.cargo}</b>, lotad${s==='F'?'a':'o'} na <b class="uppercase">${d.lotacao}</b>, com admissão no serviço público em ${d.admissao}, ${d.fundamentoLegal}, com início do benefício na data da publicação deste Ato de Aposentadoria, de acordo com o quadro discriminativo abaixo:</p><table class="proventos-table"><thead><tr><th>CÁLCULO DOS PROVENTOS</th><th>VALOR</th></tr></thead><tbody>${pHTR}</tbody><tfoot><tr><td>TOTAL DOS PROVENTOS</td><td>${vF}</td></tr></tfoot></table><p class="justify">Desse modo, os proventos ${pPo} ${sS.toLowerCase()} serão fixados em ${vF} (${tE}).</p><p class="center">Itapipoca – CE, ${d.dataAtual}.</p>`<div class="signature-block"><p class="uppercase bold">${AppState.configuracoes.nomePrefeito || 'NOME DO PREFEITO(A)'}</p><p>Prefeito Municipal</p></div><div class="signature-block"><p class="uppercase bold">${AppState.configuracoes.nomePresidente || 'NOME DO(A) PRESIDENTE'}</p><p>Presidente do ITAPREV</p></div></div></body></html>`;
         const nA = window.open();
         nA.document.open();
         nA.document.write(cH);
@@ -1363,7 +1365,43 @@ function limparCalculoTempo() {
     document.getElementById('calc-data-fim').value = '';
     document.getElementById('resultado-calculo-tempo').innerHTML = '';
 }
+function carregarConfiguracoes() {
+    const configsSalvas = localStorage.getItem('itaprevConfiguracoes');
+    if (configsSalvas) {
+        AppState.configuracoes = JSON.parse(configsSalvas);
+    }
+    // Popula os campos na tela de configurações, se existirem
+    const nomePrefeitoInput = document.getElementById('config-nome-prefeito');
+    const nomePresidenteInput = document.getElementById('config-nome-presidente');
+    if (nomePrefeitoInput) {
+        nomePrefeitoInput.value = AppState.configuracoes.nomePrefeito || '';
+    }
+    if (nomePresidenteInput) {
+        nomePresidenteInput.value = AppState.configuracoes.nomePresidente || '';
+    }
+}
 
+function salvarConfiguracoes(button) {
+    ui.toggleSpinner(button, true);
+    try {
+        const nomePrefeito = document.getElementById('config-nome-prefeito').value;
+        const nomePresidente = document.getElementById('config-nome-presidente').value;
+
+        AppState.configuracoes = {
+            nomePrefeito: nomePrefeito.toUpperCase(),
+            nomePresidente: nomePresidente.toUpperCase()
+        };
+
+        localStorage.setItem('itaprevConfiguracoes', JSON.stringify(AppState.configuracoes));
+        ui.showToast("Configurações salvas com sucesso!", true);
+
+    } catch (err) {
+        console.error("Erro ao salvar configurações:", err);
+        ui.showToast("Ocorreu um erro ao salvar as configurações.", false);
+    } finally {
+        ui.toggleSpinner(button, false);
+    }
+}
 
 // =================================================================================
 // Expondo funções para o escopo global (para uso no HTML onclick)
@@ -1375,10 +1413,11 @@ Object.assign(window, {
     adicionarLinhaDependente, removerLinhaDependente, salvarSimulacaoHistorico, imprimirSimulacao,
     exportarTudoZIP, gerarAtoDeAposentadoria, gerarAtoDePensao, carregarDoHistorico, excluirDoHistorico,
     adicionarLinhaPeriodoCTC, calcularTempoPeriodosCTC, removerLinhaPeriodoCTC, salvarCTC, gerarDocumentoCTC,
-    carregarCTC, excluirCTC, alternarTema,
+    carregarCTC, excluirCTC, alternarTema,salvarConfiguracoes,
     // Novas funções expostas para a calculadora de tempo
     calcularTempoEntreDatas, limparCalculoTempo
 });
+
 
 
 
