@@ -270,20 +270,28 @@ function validaCPF(inputElement, statusElement) {
 }
 
 function valorPorExtenso(valor) {
-    if (typeof valor === 'number') valor = String(valor.toFixed(2));
+    if (typeof valor !== 'string') {
+        valor = valor.toFixed(2);
+    }
     valor = valor.replace('.', ',');
-    if (valor.indexOf(',') === -1) valor += ',00';
-    let inteiros = valor.split(',')[0];
+    let [inteiros, centavos] = valor.split(',');
+
+    if (inteiros === '0' && centavos === '00') {
+        return "zero reais";
+    }
+
     const unidades = ["", "um", "dois", "três", "quatro", "cinco", "seis", "sete", "oito", "nove", "dez", "onze", "doze", "treze", "quatorze", "quinze", "dezesseis", "dezessete", "dezoito", "dezenove"];
     const dezenas = ["", "", "vinte", "trinta", "quarenta", "cinquenta", "sessenta", "setenta", "oitenta", "noventa"];
     const centenas = ["", "cento", "duzentos", "trezentos", "quatrocentos", "quinhentos", "seiscentos", "setecentos", "oitocentos", "novecentos"];
     const milharClasses = ["", "mil", "milhão", "bilhão", "trilhão"];
+
     function numeroParaExtenso(n) {
         if (n == 0) return "";
         let nStr = String(n).padStart(3, '0');
-        if (nStr == '100') return "cem";
+        if (nStr === '100') return "cem";
         let extenso = [];
         if (nStr[0] !== '0') extenso.push(centenas[parseInt(nStr[0])]);
+        
         let dezenaUnidade = parseInt(nStr.substring(1));
         if (dezenaUnidade > 0) {
             if (dezenaUnidade < 20) {
@@ -295,24 +303,56 @@ function valorPorExtenso(valor) {
         }
         return extenso.join(" e ");
     }
-    let extensoFinal = [];
-    if (inteiros == '0') { return "zero"; }
-    let grupos = [];
-    while (inteiros.length > 0) {
-        grupos.push(inteiros.slice(-3));
-        inteiros = inteiros.slice(0, -3);
-    }
-    for (let i = grupos.length - 1; i >= 0; i--) {
-        let grupoInt = parseInt(grupos[i]);
-        if (grupoInt > 0) {
-            let extensoGrupo = numeroParaExtenso(grupoInt);
-            if (i > 0) {
-                extensoGrupo += " " + milharClasses[i] + (grupoInt > 1 ? (i === 1 ? '' : (i === 2 ? 'ões' : 's')) : '');
+
+    let extensoReais = [];
+    if (parseInt(inteiros) !== 0) {
+        let grupos = [];
+        let tempInteiros = inteiros;
+        while (tempInteiros.length > 0) {
+            grupos.push(tempInteiros.slice(-3));
+            tempInteiros = tempInteiros.slice(0, -3);
+        }
+
+        for (let i = grupos.length - 1; i >= 0; i--) {
+            let grupoInt = parseInt(grupos[i]);
+            if (grupoInt > 0) {
+                let extensoGrupo = numeroParaExtenso(grupoInt);
+                if (i > 0) {
+                    extensoGrupo += " " + milharClasses[i] + ((grupoInt > 1 && i > 1) ? 'ões' : '');
+                }
+                extensoReais.push(extensoGrupo);
             }
-            extensoFinal.push(extensoGrupo);
         }
     }
-    return extensoFinal.join(" e ");
+    
+    let parteReais = extensoReais.join(" e ");
+    if (parseInt(inteiros) > 1) {
+        parteReais += " reais";
+    } else if (parseInt(inteiros) === 1) {
+        parteReais += " real";
+    }
+
+    let parteCentavos = "";
+    if (parseInt(centavos) > 0) {
+        parteCentavos = numeroParaExtenso(parseInt(centavos));
+        if (parseInt(centavos) > 1) {
+            parteCentavos += " centavos";
+        } else {
+            parteCentavos += " centavo";
+        }
+    }
+
+    if (parteReais && parteCentavos) {
+        return `${parteReais} e ${parteCentavos}`;
+    } else if (parteReais) {
+        // Se a parte em reais terminar com "milhões" e não houver centavos, ajusta para "de reais"
+        if (parteReais.endsWith("milhão")) return parteReais.replace("milhão", "de reais");
+        return parteReais;
+    } else if (parteCentavos) {
+        return parteCentavos;
+    }
+    
+    return "zero reais";
 }
 
 function irParaPasso(passo) {
@@ -1339,6 +1379,7 @@ Object.assign(window, {
     // Novas funções expostas para a calculadora de tempo
     calcularTempoEntreDatas, limparCalculoTempo
 });
+
 
 
 
