@@ -189,5 +189,19 @@ body.dark-mode #admin-dashboard-controls { background-color: #2c2c2c; }
   max-width: 300px;
   border-radius: 12px;
 }
+/* --- estilos do accordion de CTC --- */
+.ctc-accordion .ctc-periodo { border: 1px solid var(--border-color); border-radius: 8px; margin-bottom: 10px; overflow: hidden; background: var(--surface-color); }
+.ctc-accordion .ctc-periodo summary { cursor: pointer; list-style: none; padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; gap:12px; background: var(--secondary-color); }
+.ctc-accordion .ctc-periodo summary::-webkit-details-marker { display: none; }
+.ctc-accordion .ctc-periodo .ctc-summary-line { display:flex; gap:12px; align-items:center; width:100%; }
+.ctc-accordion .ctc-periodo .ctc-range { flex:1; font-weight:600; color:var(--text-color); }
+.ctc-accordion .ctc-periodo .ctc-stats { white-space:nowrap; color:var(--text-secondary-color); font-size:0.95em }
+.ctc-accordion .ctc-periodo .ctc-periodo-body { padding: 12px; background: transparent; }
+.ctc-accordion .ctc-periodo .ctc-periodo-body label { margin-bottom: 6px; }
+@media (max-width:720px) {
+  .ctc-accordion .ctc-periodo summary { flex-direction: column; align-items: flex-start; gap:6px; }
+  .ctc-accordion .ctc-accordion-legend { display:none; }
+}
+
 
 
