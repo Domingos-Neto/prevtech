@@ -189,5 +189,57 @@ body.dark-mode #admin-dashboard-controls { background-color: #2c2c2c; }
   max-width: 300px;
   border-radius: 12px;
 }
+/* =================================================== */
+/* MELHORIAS VISUAIS NA BARRA SUPERIOR (TOPBAR)       */
+/* =================================================== */
+
+/* Remove o fundo antigo e prepara os elementos para um novo visual */
+.datetime-container,
+.user-info {
+  background-color: transparent;
+  border-radius: 8px; /* Bordas mais arredondadas, como os cards */
+  padding: 8px 12px;
+  font-size: 0.9em;
+  font-weight: 500;
+  border: 1px solid transparent; /* Borda inicial transparente */
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px; /* Espaço entre o ícone e o texto */
+}
+
+/* Adiciona um fundo sutil e moderno, que se adapta ao tema claro/escuro */
+body:not(.dark-mode) .datetime-container,
+body:not(.dark-mode) .user-info {
+    background-color: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+body.dark-mode .datetime-container,
+body.dark-mode .user-info {
+    background-color: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Efeito de "levantar" ao passar o mouse */
+.datetime-container:hover,
+.user-info:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  background-color: rgba(255, 255, 255, 0.25);
+}
+
+/* Adiciona ícones antes do texto para maior intuitividade */
+.user-info::before {
+  font-family: 'Remixicon';
+  content: '\ea13'; /* Código do ícone: ri-user-line */
+  font-size: 1.2rem;
+  line-height: 1;
+}
+
+/* Ajusta o texto do usuário para não ficar em negrito por padrão */
+.user-info b {
+    font-weight: 500;
+}
 
 
