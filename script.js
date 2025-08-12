@@ -119,7 +119,6 @@ const ui = {
         document.querySelector(".app-container").style.display = "flex";
         document.getElementById("floating-buttons-container").style.display = "flex";
     },
-    // MODIFICADO: Renomeado 'calculadora' para 'simulacao' na lista de views.
     showView: (viewId) => {
         const views = ['dashboard', 'simulacao', 'geradorCTC', 'telaLegislacao', 'telaConfiguracoes', 'telaCadastro', 'telaProcessos', 'telaFinanceiro', 'telaRelatorios', 'telaUsuarios'];
         views.forEach(id => {
@@ -158,25 +157,23 @@ function initSistemaPosLogin() {
 }
 
 function setupEventListeners() {
-    // CÓDIGO MODIFICADO na função setupEventListeners
-document.querySelectorAll(".accordion-toggle").forEach(toggle => {
-    toggle.addEventListener("click", () => {
-        toggle.classList.toggle("active");
-        const content = toggle.nextElementSibling;
-        if (content.style.maxHeight) {
-            content.style.maxHeight = null;
-        } else {
-            content.style.maxHeight = content.scrollHeight + "px";
-        }
+    document.querySelectorAll(".accordion-toggle").forEach(toggle => {
+        toggle.addEventListener("click", () => {
+            toggle.classList.toggle("active");
+            const content = toggle.nextElementSibling;
+            if (content.style.maxHeight) {
+                content.style.maxHeight = null;
+            } else {
+                content.style.maxHeight = content.scrollHeight + "px";
+            }
+        });
     });
-});
     const cpfInput = document.getElementById('cpfServidor');
     if (cpfInput) cpfInput.addEventListener('input', (e) => validaCPF(e.target, document.getElementById('cpf-status')));
     
     const ctcCpfInput = document.getElementById('ctc-cpf');
     if(ctcCpfInput) ctcCpfInput.addEventListener('input', (e) => validaCPF(e.target, document.getElementById('ctc-cpf-status')));
 
-    // Eventos para a calculadora de tempo
     const btnCalcTempo = document.getElementById('btn-calcular-tempo');
     if (btnCalcTempo) {
         btnCalcTempo.addEventListener('click', calcularTempoEntreDatas);
@@ -192,7 +189,6 @@ function handleNavClick(event, targetView) {
     ui.updateActiveNav(targetView);
     ui.showView(targetView);
 
-    // Agora, ao chamar com 'simulacao', a limpeza será acionada.
     switch (targetView) {
         case 'dashboard':
             listarHistorico();
@@ -202,8 +198,11 @@ function handleNavClick(event, targetView) {
             limparFormularioCompleto();
             irParaPasso(1);
             break;
-        case 'geradorCTC': // Corrigido para 'geradorCTC' para ser consistente com o HTML
+        case 'geradorCTC':
             limparFormularioCTC();
+            break;
+        case 'telaConfiguracoes':
+            popularCamposConfiguracoes();
             break;
     }
 }
@@ -347,7 +346,6 @@ function valorPorExtenso(valor) {
     if (parteReais && parteCentavos) {
         return `${parteReais} e ${parteCentavos}`;
     } else if (parteReais) {
-        // Se a parte em reais terminar com "milhões" e não houver centavos, ajusta para "de reais"
         if (parteReais.endsWith("milhão")) return parteReais.replace("milhão", "de reais");
         return parteReais;
     } else if (parteCentavos) {
@@ -376,7 +374,6 @@ function irParaPasso(passo) {
 
 function alternarCamposBeneficio() {
     const tipo = document.getElementById('tipoBeneficio').value;
-    // MODIFICADO: Adicionado 'compulsoria' à verificação
     const isAposentadoria = tipo === 'voluntaria' || tipo === 'incapacidade' || tipo === 'compulsoria';
     const isPensao = tipo === 'pensao_ativo' || tipo === 'pensao_aposentado';
     
@@ -398,7 +395,6 @@ function alternarCamposBeneficio() {
 }
 
 function limparFormularioCompleto() {
-    // MODIFICADO: Adicionado '#simulacao select' para limpar também os menus de seleção como "Sexo".
     document.querySelectorAll('#simulacao input[type="text"],#simulacao input[type="date"],#simulacao input[type="number"], #simulacao textarea, #simulacao select').forEach(i => i.value = '');
     
     document.getElementById('corpo-tabela').innerHTML = '';
@@ -409,12 +405,6 @@ function limparFormularioCompleto() {
     AppState.simulacaoResultados = {};
     if (AppState.salarioChart) AppState.salarioChart.destroy();
     
-    // REMOVIDO: Linhas que preenchiam as datas com o dia de hoje.
-    // const hoje = new Date().toISOString().split('T')[0];
-    // document.getElementById("dataCalculo").value = hoje;
-    // document.getElementById("dataRequerimento").value = hoje;
-    
-    // Mantido para garantir que os valores numéricos padrão sejam '0' e não vazios.
     document.getElementById("tempoExterno").value = "0";
     document.getElementById("tempoEspecial").value = "0";
     
@@ -595,19 +585,18 @@ function calcularBeneficio(n = true, b = null) {
                      calculateTotalProventos();
 
                 } else if (t === 'compulsoria') {
-                    // Lógica baseada no Art. 8º do Decreto 113/2022
                     const anosContrib = Math.floor(tempoContribTotalAnos);
-                    const fatorProporcionalidade = Math.min(1, anosContrib / 20); // Inciso I, §3º, Art. 8 
+                    const fatorProporcionalidade = Math.min(1, anosContrib / 20); 
                     
                     const anosExcedentes = Math.max(0, anosContrib - 20);
                     const percentualBase = 0.60 + (anosExcedentes * 0.02);
-                    const mediaComRegraGeral = m * Math.min(1, percentualBase); // Inciso II, §3º, Art. 8 
+                    const mediaComRegraGeral = m * Math.min(1, percentualBase);
 
-                    vB = mediaComRegraGeral * fatorProporcionalidade; // Inciso III, §3º, Art. 8 
+                    vB = mediaComRegraGeral * fatorProporcionalidade;
                     
                     dC = `Cálculo conforme Art. 8º do Decreto 113/2022. O benefício é proporcional ao tempo de contribuição. <br><b>Fator de Proporcionalidade:</b> ${fatorProporcionalidade.toFixed(4)} (${anosContrib} anos / 20). <br><b>Valor Base (Regra Geral):</b> ${formatarDinheiro(mediaComRegraGeral)}.`;
 
-                    if (vB < SALARIO_MINIMO) { // §4º, Art. 8 
+                    if (vB < SALARIO_MINIMO) {
                         vB = SALARIO_MINIMO;
                         dC += `<br><b>Ajuste:</b> O valor foi elevado para o salário mínimo vigente.`;
                     }
@@ -647,9 +636,70 @@ function calcularBeneficio(n = true, b = null) {
     }, 50);
 }
 
+// =================================================================================
+// FUNÇÕES DE GESTÃO DE CONFIGURAÇÕES
+// =================================================================================
 
-// All document generation and logic functions follow...
-// Note: they are long but are included for completeness.
+/**
+ * Carrega as configurações do localStorage para a memória do App (AppState).
+ * É seguro chamar esta função na inicialização.
+ */
+function carregarConfiguracoes() {
+    const configsSalvas = localStorage.getItem('itaprevConfiguracoes');
+    if (configsSalvas) {
+        try {
+            // Tenta carregar as configurações salvas
+            AppState.configuracoes = JSON.parse(configsSalvas);
+        } catch (e) {
+            console.error("Erro ao ler as configurações do localStorage. Usando valores padrão.", e);
+            // Se houver um erro (JSON corrompido), usa os valores padrão
+            AppState.configuracoes = { nomePrefeito: '', nomePresidente: '' };
+        }
+    }
+}
+
+/**
+ * Popula os campos do formulário na tela de Configurações com os dados da memória (AppState).
+ * Deve ser chamada apenas quando a tela de configurações for exibida.
+ */
+function popularCamposConfiguracoes() {
+    const nomePrefeitoInput = document.getElementById('config-nome-prefeito');
+    const nomePresidenteInput = document.getElementById('config-nome-presidente');
+
+    if (nomePrefeitoInput) {
+        nomePrefeitoInput.value = AppState.configuracoes.nomePrefeito || '';
+    }
+    if (nomePresidenteInput) {
+        nomePresidenteInput.value = AppState.configuracoes.nomePresidente || '';
+    }
+}
+
+function salvarConfiguracoes(button) {
+    ui.toggleSpinner(button, true);
+    try {
+        const nomePrefeito = document.getElementById('config-nome-prefeito').value;
+        const nomePresidente = document.getElementById('config-nome-presidente').value;
+
+        AppState.configuracoes = {
+            nomePrefeito: nomePrefeito.toUpperCase(),
+            nomePresidente: nomePresidente.toUpperCase()
+        };
+
+        localStorage.setItem('itaprevConfiguracoes', JSON.stringify(AppState.configuracoes));
+        ui.showToast("Configurações salvas com sucesso!", true);
+
+    } catch (err) {
+        console.error("Erro ao salvar configurações:", err);
+        ui.showToast("Ocorreu um erro ao salvar as configurações.", false);
+    } finally {
+        ui.toggleSpinner(button, false);
+    }
+}
+
+// =================================================================================
+// FUNÇÕES DE GERAÇÃO DE DOCUMENTOS
+// =================================================================================
+
 function gerarAtoDePensao(b) {
     ui.toggleSpinner(b, true);
     try {
@@ -724,7 +774,7 @@ function gerarAtoDeAposentadoria(b) {
             const iG = document.getElementById('incapacidadeGrave').value;
             const tPr = iG === 'sim' ? 'COM PROVENTOS INTEGRAIS' : 'COM PROVENTOS PROPORCIONAIS';
             pR = `APOSENTAR POR INCAPACIDADE PERMANENTE, ${tPr}, ${aD} ${sS} ${aP} <b class="uppercase">${d.nomeServidor}</b>`;
-        } else if (tB === 'compulsoria') { // BLOCO ADICIONADO
+        } else if (tB === 'compulsoria') {
             tA = 'ATO CONCESSIVO DE APOSENTADORIA COMPULSÓRIA';
             pR = `APOSENTAR COMPULSORIAMENTE, COM PROVENTOS PROPORCIONAIS, ${aD} ${sS} ${aP} <b class="uppercase">${d.nomeServidor}</b>`;
         }
@@ -738,7 +788,7 @@ function gerarAtoDeAposentadoria(b) {
             if (desc && v > 0) pHTR += `<tr><td>${desc}</td><td>${formatarDinheiro(v)}</td></tr>`;
         });
         const e = `<style>body{font-family:'Times New Roman',Times,serif;color:black;background-color:white;line-height:1.5;font-size:12pt;margin:0;padding:20mm;}.container{width:210mm;min-height:297mm;box-sizing:border-box;}.center{text-align:center;}.bold{font-weight:bold;}.uppercase{text-transform:uppercase;}.justify{text-align:justify;}.header{margin-bottom:25px;}h4.title{margin:0;font-weight:bold;}p{margin:1em 0;}.resolve-text{margin-top:25px;}.proventos-table{width:100%;border-collapse:collapse;margin:20px 0;border:1px solid black;}.proventos-table th,.proventos-table td{border:1px solid black;padding:5px;}.proventos-table th{background-color:#e0e0e0;text-align:center;}.proventos-table td:last-child{text-align:right;}.proventos-table tfoot td{font-weight:bold;}.signature-block{margin-top:80px;text-align:center;}.signature-block p{margin:0;line-height:1.2;}@media print{body{padding:0;}}</style>`,
-            cH = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Ato de Aposentadoria Nº ${d.atoNumero}/${d.atoAno}</title>${e}</head><body><div class="container"><div class="center header"><h4 class="title uppercase">${tA} N.º ${d.atoNumero}/${d.atoAno}.</h4></div><p class="justify">O PREFEITO MUNICIPAL DE ITAPIPOCA, no uso de suas atribuições legais, que lhe confere a Lei Orgânica do Município de Itapipoca e a Presidente do Instituto de Previdência do Município de Itapipoca – ITAPREV, no uso de suas atribuições conferidas,</p><h4 class="center uppercase">RESOLVEM:</h4><p class="justify resolve-text">${pR}, ${d.nacionalidade}, ${pP} do RG n.º ${d.rg}, inscrit${s==='F'?'a':'o'} no CPF sob o n.º ${d.cpf}, matrícula n.º ${d.matricula}, ${d.cargaHoraria}, ocupante do cargo de <b class="uppercase">${d.cargo}</b>, lotad${s==='F'?'a':'o'} na <b class="uppercase">${d.lotacao}</b>, com admissão no serviço público em ${d.admissao}, ${d.fundamentoLegal}, com início do benefício na data da publicação deste Ato de Aposentadoria, de acordo com o quadro discriminativo abaixo:</p><table class="proventos-table"><thead><tr><th>CÁLCULO DOS PROVENTOS</th><th>VALOR</th></tr></thead><tbody>${pHTR}</tbody><tfoot><tr><td>TOTAL DOS PROVENTOS</td><td>${vF}</td></tr></tfoot></table><p class="justify">Desse modo, os proventos ${pPo} ${sS.toLowerCase()} serão fixados em ${vF} (${tE}).</p><p class="center">Itapipoca – CE, ${d.dataAtual}.</p>`<div class="signature-block"><p class="uppercase bold">${AppState.configuracoes.nomePrefeito || 'NOME DO PREFEITO(A)'}</p><p>Prefeito Municipal</p></div><div class="signature-block"><p class="uppercase bold">${AppState.configuracoes.nomePresidente || 'NOME DO(A) PRESIDENTE'}</p><p>Presidente do ITAPREV</p></div></div></body></html>`;
+            cH = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Ato de Aposentadoria Nº ${d.atoNumero}/${d.atoAno}</title>${e}</head><body><div class="container"><div class="center header"><h4 class="title uppercase">${tA} N.º ${d.atoNumero}/${d.atoAno}.</h4></div><p class="justify">O PREFEITO MUNICIPAL DE ITAPIPOCA, no uso de suas atribuições legais, que lhe confere a Lei Orgânica do Município de Itapipoca e a Presidente do Instituto de Previdência do Município de Itapipoca – ITAPREV, no uso de suas atribuições conferidas,</p><h4 class="center uppercase">RESOLVEM:</h4><p class="justify resolve-text">${pR}, ${d.nacionalidade}, ${pP} do RG n.º ${d.rg}, inscrit${s==='F'?'a':'o'} no CPF sob o n.º ${d.cpf}, matrícula n.º ${d.matricula}, ${d.cargaHoraria}, ocupante do cargo de <b class="uppercase">${d.cargo}</b>, lotad${s==='F'?'a':'o'} na <b class="uppercase">${d.lotacao}</b>, com admissão no serviço público em ${d.admissao}, ${d.fundamentoLegal}, com início do benefício na data da publicação deste Ato de Aposentadoria, de acordo com o quadro discriminativo abaixo:</p><table class="proventos-table"><thead><tr><th>CÁLCULO DOS PROVENTOS</th><th>VALOR</th></tr></thead><tbody>${pHTR}</tbody><tfoot><tr><td>TOTAL DOS PROVENTOS</td><td>${vF}</td></tr></tfoot></table><p class="justify">Desse modo, os proventos ${pPo} ${sS.toLowerCase()} serão fixados em ${vF} (${tE}).</p><p class="center">Itapipoca – CE, ${d.dataAtual}.</p><div class="signature-block"><p class="uppercase bold">${AppState.configuracoes.nomePrefeito || 'NOME DO PREFEITO(A)'}</p><p>Prefeito Municipal</p></div><div class="signature-block"><p class="uppercase bold">${AppState.configuracoes.nomePresidente || 'NOME DO(A) PRESIDENTE'}</p><p>Presidente do ITAPREV</p></div></div></body></html>`;
         const nA = window.open();
         nA.document.open();
         nA.document.write(cH);
@@ -801,12 +851,11 @@ function calculateValorLiquido(pB) {
         return;
     }
 
-    const tetoRGPS = 7786.02; // Teto do RGPS para referência
+    const tetoRGPS = 7786.02;
     const tipoBeneficio = document.getElementById('tipoBeneficio').value;
     let baseIsencaoContribuicao = SALARIO_MINIMO * 3;
     let descricaoContribuicao = `(14% sobre o que excede 3 salários mínimos - ${formatarDinheiro(baseIsencaoContribuicao)})`;
 
-    // Conforme Lei 035/2022 Art. 10, II, a regra de isenção muda para aposentadoria por invalidez
     if (tipoBeneficio === 'incapacidade') {
         baseIsencaoContribuicao = tetoRGPS;
         descricaoContribuicao = `(14% sobre o que excede o teto do RGPS - ${formatarDinheiro(baseIsencaoContribuicao)})`;
@@ -819,7 +868,7 @@ function calculateValorLiquido(pB) {
 
     const baseCalculoIR = pB - contribuicaoRPPS;
     let impostoRenda = 0;
-    if (baseCalculoIR > 2259.20) { // Faixas do IR - devem ser atualizadas conforme legislação
+    if (baseCalculoIR > 2259.20) {
         if (baseCalculoIR <= 2826.65) impostoRenda = baseCalculoIR * 0.075 - 169.44;
         else if (baseCalculoIR <= 3751.05) impostoRenda = baseCalculoIR * 0.15 - 381.44;
         else if (baseCalculoIR <= 4664.68) impostoRenda = baseCalculoIR * 0.225 - 662.77;
@@ -1365,43 +1414,7 @@ function limparCalculoTempo() {
     document.getElementById('calc-data-fim').value = '';
     document.getElementById('resultado-calculo-tempo').innerHTML = '';
 }
-function carregarConfiguracoes() {
-    const configsSalvas = localStorage.getItem('itaprevConfiguracoes');
-    if (configsSalvas) {
-        AppState.configuracoes = JSON.parse(configsSalvas);
-    }
-    // Popula os campos na tela de configurações, se existirem
-    const nomePrefeitoInput = document.getElementById('config-nome-prefeito');
-    const nomePresidenteInput = document.getElementById('config-nome-presidente');
-    if (nomePrefeitoInput) {
-        nomePrefeitoInput.value = AppState.configuracoes.nomePrefeito || '';
-    }
-    if (nomePresidenteInput) {
-        nomePresidenteInput.value = AppState.configuracoes.nomePresidente || '';
-    }
-}
 
-function salvarConfiguracoes(button) {
-    ui.toggleSpinner(button, true);
-    try {
-        const nomePrefeito = document.getElementById('config-nome-prefeito').value;
-        const nomePresidente = document.getElementById('config-nome-presidente').value;
-
-        AppState.configuracoes = {
-            nomePrefeito: nomePrefeito.toUpperCase(),
-            nomePresidente: nomePresidente.toUpperCase()
-        };
-
-        localStorage.setItem('itaprevConfiguracoes', JSON.stringify(AppState.configuracoes));
-        ui.showToast("Configurações salvas com sucesso!", true);
-
-    } catch (err) {
-        console.error("Erro ao salvar configurações:", err);
-        ui.showToast("Ocorreu um erro ao salvar as configurações.", false);
-    } finally {
-        ui.toggleSpinner(button, false);
-    }
-}
 
 // =================================================================================
 // Expondo funções para o escopo global (para uso no HTML onclick)
@@ -1413,16 +1426,7 @@ Object.assign(window, {
     adicionarLinhaDependente, removerLinhaDependente, salvarSimulacaoHistorico, imprimirSimulacao,
     exportarTudoZIP, gerarAtoDeAposentadoria, gerarAtoDePensao, carregarDoHistorico, excluirDoHistorico,
     adicionarLinhaPeriodoCTC, calcularTempoPeriodosCTC, removerLinhaPeriodoCTC, salvarCTC, gerarDocumentoCTC,
-    carregarCTC, excluirCTC, alternarTema,salvarConfiguracoes,
-    // Novas funções expostas para a calculadora de tempo
+    carregarCTC, excluirCTC, alternarTema,
+    salvarConfiguracoes,
     calcularTempoEntreDatas, limparCalculoTempo
 });
-
-
-
-
-
-
-
-
-
