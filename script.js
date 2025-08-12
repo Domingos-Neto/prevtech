@@ -235,8 +235,19 @@ function atualizarDataHora() {
     const container = document.getElementById('datetime-container');
     if (container) {
         const agora = new Date();
-        const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-        container.innerHTML = `${agora.toLocaleDateString('pt-BR', options)} | ${agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
+
+        // Formata o dia da semana por extenso (ex: "terça-feira")
+        const diaSemana = new Intl.DateTimeFormat('pt-BR', { weekday: 'long' }).format(agora);
+        // Formata a data como DD/MM (ex: "12/08")
+        const data = new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit' }).format(agora);
+        // Formata a hora como HH:MM (ex: "19:13")
+        const hora = new Intl.DateTimeFormat('pt-BR', { hour: '2-digit', minute: '2-digit' }).format(agora);
+
+        // Garante que a primeira letra do dia da semana seja maiúscula
+        const diaSemanaCapitalized = diaSemana.charAt(0).toUpperCase() + diaSemana.slice(1);
+
+        // Monta o HTML final com ícones e o novo formato
+        container.innerHTML = `<span><i class="ri-calendar-2-line"></i> ${diaSemanaCapitalized}, ${data}</span> <span style="opacity: 0.5">|</span> <span><i class="ri-time-line"></i> ${hora}</span>`;
     }
 }
 
@@ -1430,4 +1441,3 @@ Object.assign(window, {
     salvarConfiguracoes,
     calcularTempoEntreDatas, limparCalculoTempo
 });
-
