@@ -68,17 +68,20 @@
         </ul>
     </aside>
 
-    <main class="main-content">
-        <header class="topbar">
-            <div id="datetime-container"></div>
-            <div class="topbar-right">
-                <div class="user-info">
-                    <b id="usuarioLogado"></b>
-                </div>
-                <button id="toggleTheme" onclick="alternarTema()" title="Alternar Tema"><i class="ri-moon-line"></i></button>
-                <button onclick="auth.logout()" title="Sair do Sistema"><i class="ri-logout-box-r-line"></i></button>
-            </div>
-        </header>
+    <header class="topbar">
+
+    <div class="topbar-left">
+        <button id="toggleSidebar" class="sidebar-toggle-btn"><i class="ri-menu-line"></i></button>
+    </div>
+    <div id="datetime-container"></div>
+    <div class="topbar-right">
+        <div class="user-info">
+            <b id="usuarioLogado"></b>
+        </div>
+        <button id="toggleTheme" onclick="alternarTema()" title="Alternar Tema"><i class="ri-moon-line"></i></button>
+        <button onclick="auth.logout()" title="Sair do Sistema"><i class="ri-logout-box-r-line"></i></button>
+    </div>
+</header>
 
         <div class="page-content">
             <div class="content-wrapper">
@@ -395,6 +398,7 @@
 
 </body>
 </html>
+
 
 
 
