@@ -236,7 +236,7 @@ function atualizarDataHora() {
     if (container) {
         const agora = new Date();
         const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-        container.innerHTML = `🗓️ ${agora.toLocaleDateString('pt-BR', options)} | ⏰ ${agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
+        container.innerHTML = `${agora.toLocaleDateString('pt-BR', options)} | ${agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
     }
 }
 
@@ -1430,3 +1430,4 @@ Object.assign(window, {
     salvarConfiguracoes,
     calcularTempoEntreDatas, limparCalculoTempo
 });
+
