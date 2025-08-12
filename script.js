@@ -727,15 +727,15 @@ function gerarDocumentoCTC(b) {
             processo: document.getElementById("ctc-processo").value || "________________",
         };
         let rH = "";
-        Array.from(document.querySelectorAll("#corpo-tabela-periodos-ctc tr")).forEach(tr => {
-            const dI = formatarDataBR(tr.children[0]?.querySelector("input")?.value, false) || "",
-                dF = formatarDataBR(tr.children[1]?.querySelector("input")?.value, false) || "",
-                br = tr.children[2]?.querySelector("input")?.value || "0",
-                de = tr.children[3]?.querySelector("input")?.value || "0",
-                li = tr.children[4]?.querySelector("input")?.value || "0",
-                fo = tr.children[5]?.querySelector("input")?.value || "";
-            rH += `<tr><td>${dI}</td><td>${dF}</td><td>${br}</td><td>${de}</td><td>${li}</td><td>${fo}</td></tr>`;
-        });
+Array.from(document.querySelectorAll("#corpo-tabela-periodos-ctc .ctc-periodo")).forEach(det => {
+    const dI = formatarDataBR(det.querySelector('.ctc-inicio')?.value, false) || "",
+          dF = formatarDataBR(det.querySelector('.ctc-fim')?.value, false) || "",
+          br = det.querySelector('.ctc-bruto')?.value || "0",
+          de = det.querySelector('.ctc-deducoes')?.value || "0",
+          li = det.querySelector('.ctc-liquido')?.value || "0",
+          fo = det.querySelector('.ctc-fonte')?.value || "";
+    rH += `<tr><td>${dI}</td><td>${dF}</td><td>${br}</td><td>${de}</td><td>${li}</td><td>${fo}</td></tr>`;
+});
         const tTT = document.getElementById("total-tempo-ctc").innerText.replace("Total: ", "").split("\n")[0];
         const nR = AppState.usuarioAtual.displayName.toUpperCase() || "________________";
         const e = `<style>body{font-family:Arial,sans-serif;margin:40px;color:#333;font-size:11pt;}.container{max-width:800px;margin:auto;}.header,.footer{text-align:center;}.header h3{margin:0;}.header p{margin:5px 0;}.section{margin-top:25px;}.section h4{margin-top:0;margin-bottom:10px;padding-bottom:3px;border-bottom:1px solid #999;}.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px 15px;}.info-grid span{font-weight:bold;}table{width:100%;border-collapse:collapse;margin-top:10px;font-size:10pt;}th,td{border:1px solid #777;padding:6px;text-align:center;}th{background-color:#f0f0f0;}.footer p{margin:0;}.signature{margin-top:60px;}</style>`,
@@ -1112,7 +1112,12 @@ function salvarCTC() {
             dataAdmissao: document.getElementById('ctc-dataAdmissao').value,
             dataExoneracao: document.getElementById('ctc-dataExoneracao').value,
             processo: document.getElementById('ctc-processo').value,
-            periodos: Array.from(document.querySelectorAll("#corpo-tabela-periodos-ctc tr")).map(l => ({ inicio: l.querySelector('.ctc-inicio').value, fim: l.querySelector('.ctc-fim').value, deducoes: l.querySelector('.ctc-deducoes').value, fonte: l.querySelector('.ctc-fonte').value }))
+            periodos: Array.from(document.querySelectorAll("#corpo-tabela-periodos-ctc .ctc-periodo")).map(det => ({
+            inicio: det.querySelector('.ctc-inicio')?.value || '',
+            fim: det.querySelector('.ctc-fim')?.value || '',
+            deducoes: det.querySelector('.ctc-deducoes')?.value || '0',
+            fonte: det.querySelector('.ctc-fonte')?.value || ''
+    }))
         }
     };
     const ch = `ctcs_salvas_${AppState.usuarioAtual.uid}`;
@@ -1153,7 +1158,7 @@ function carregarCTC(id) {
     const cs = JSON.parse(localStorage.getItem(ch) || "[]");
     const cE = cs.find(c => c.id === id);
     if (!cE) return ui.showToast("Erro: CTC não encontrada.", false);
-    handleNavClick(null, 'ctc');
+    handleNavClick(null, 'geradorCTC');
     setTimeout(() => {
         const d = cE.dados;
         document.getElementById('ctc-nomeServidor').value = d.nomeServidor;
@@ -1196,42 +1201,102 @@ function limparFormularioCTC() {
 }
 
 function adicionarLinhaPeriodoCTC(i = '', f = '', d = '0', fo = '') {
-    const t = document.getElementById('corpo-tabela-periodos-ctc'),
-        l = document.createElement('tr');
-    l.innerHTML = `<td><input type="date" class="ctc-inicio" onchange="calcularTempoPeriodosCTC()" value="${i}"></td><td><input type="date" class="ctc-fim" onchange="calcularTempoPeriodosCTC()" value="${f}"></td><td><input type="number" class="ctc-bruto" readonly></td><td><input type="number" class="ctc-deducoes" value="${d}" oninput="calcularTempoPeriodosCTC()"></td><td><input type="number" class="ctc-liquido" readonly></td><td><input type="text" class="ctc-fonte" value="${fo}" placeholder="Ex: ITAPREV"></td><td><button class="danger" style="margin:0;padding:5px;" onclick="removerLinhaPeriodoCTC(this)">Remover</button></td>`;
-    t.appendChild(l);
+    const container = document.getElementById('corpo-tabela-periodos-ctc');
+    if (!container) return;
+    const idx = container.children.length + 1;
+
+    const details = document.createElement('details');
+    details.className = 'ctc-periodo';
+
+    details.innerHTML = `
+      <summary>
+        <div class="ctc-summary-line">
+          <span class="ctc-index">#${idx}</span>
+          <span class="ctc-range">${i ? formatarDataBR(i, false) : 'Início'} — ${f ? formatarDataBR(f, false) : 'Fim'}</span>
+          <span class="ctc-stats">Bruto: <span class="ctc-bruto-sum">0</span>d | Líq: <span class="ctc-liq-sum">0</span>d</span>
+        </div>
+      </summary>
+      <div class="ctc-periodo-body">
+        <div class="form-grid" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;">
+          <label>Data Início:<input type="date" class="ctc-inicio" value="${i}"></label>
+          <label>Data Fim:<input type="date" class="ctc-fim" value="${f}"></label>
+          <label>Tempo Bruto (dias):<input type="number" class="ctc-bruto" readonly></label>
+          <label>Deduções (dias):<input type="number" class="ctc-deducoes" value="${d}"></label>
+          <label>Tempo Líquido (dias):<input type="number" class="ctc-liquido" readonly></label>
+          <label>Fonte / Observação:<input type="text" class="ctc-fonte" value="${fo}" placeholder="Ex: ITAPREV"></label>
+        </div>
+        <div style="margin-top:8px;display:flex;gap:8px;justify-content:flex-end;">
+          <button class="danger" style="padding:6px 10px;" onclick="removerLinhaPeriodoCTC(this)">Remover</button>
+        </div>
+      </div>
+    `;
+
+    container.appendChild(details);
+
+    // listeners para recalcular quando datas/deduções mudarem
+    const inicio = details.querySelector('.ctc-inicio');
+    const fim = details.querySelector('.ctc-fim');
+    const ded = details.querySelector('.ctc-deducoes');
+    [inicio, fim].forEach(el => { if (el) el.addEventListener('change', () => calcularTempoPeriodosCTC()); });
+    if (ded) ded.addEventListener('input', () => calcularTempoPeriodosCTC());
+
+    // abrir o item novo por conveniência
+    details.open = true;
+
+    // recalcula totais
+    calcularTempoPeriodosCTC();
 }
 
 function removerLinhaPeriodoCTC(b) {
-    b.closest('tr').remove();
+    const details = b.closest('.ctc-periodo');
+    if (details) details.remove();
     calcularTempoTotalCTC();
 }
 
 function calcularTempoPeriodosCTC() {
-    document.querySelectorAll("#corpo-tabela-periodos-ctc tr").forEach(l => {
-        const iE = l.querySelector('.ctc-inicio'),
-            fE = l.querySelector('.ctc-fim'),
-            bE = l.querySelector('.ctc-bruto'),
-            dE = l.querySelector('.ctc-deducoes'),
-            lE = l.querySelector('.ctc-liquido');
-        if (iE.value && fE.value) {
+    const items = document.querySelectorAll("#corpo-tabela-periodos-ctc .ctc-periodo");
+    items.forEach((det, index) => {
+        const iE = det.querySelector('.ctc-inicio'),
+              fE = det.querySelector('.ctc-fim'),
+              bE = det.querySelector('.ctc-bruto'),
+              dE = det.querySelector('.ctc-deducoes'),
+              lE = det.querySelector('.ctc-liquido'),
+              sumBr = det.querySelector('.ctc-bruto-sum'),
+              sumLi = det.querySelector('.ctc-liq-sum'),
+              range = det.querySelector('.ctc-range'),
+              idxEl = det.querySelector('.ctc-index');
+
+        if (idxEl) idxEl.textContent = `#${index + 1}`;
+
+        if (iE && fE && iE.value && fE.value) {
             const i = new Date(iE.value + 'T00:00:00'),
-                f = new Date(fE.value + 'T00:00:00');
+                  f = new Date(fE.value + 'T00:00:00');
             if (f >= i) {
                 const dT = Math.abs(f - i),
-                    dD = Math.ceil(dT / 86400000) + 1;
-                bE.value = dD;
-                const d = parseInt(dE.value) || 0;
-                lE.value = dD - d;
+                      dD = Math.ceil(dT / 86400000) + 1;
+                if (bE) bE.value = dD;
+                const ded = parseInt(dE.value) || 0;
+                if (lE) lE.value = Math.max(0, dD - ded);
+                if (sumBr) sumBr.textContent = dD;
+                if (sumLi) sumLi.textContent = Math.max(0, dD - ded);
+                if (range) range.textContent = `${formatarDataBR(iE.value, false)} — ${formatarDataBR(fE.value, false)}`;
             } else {
-                bE.value = 0;
-                lE.value = 0;
+                if (bE) bE.value = 0;
+                if (lE) lE.value = 0;
+                if (sumBr) sumBr.textContent = 0;
+                if (sumLi) sumLi.textContent = 0;
+                if (range) range.textContent = `${formatarDataBR(iE.value, false)} — ${formatarDataBR(fE.value, false)}`;
             }
         } else {
-            bE.value = '';
-            lE.value = '';
+            if (bE) bE.value = '';
+            if (lE) lE.value = '';
+            if (sumBr) sumBr.textContent = '';
+            if (sumLi) sumLi.textContent = '';
+            if (range) range.textContent = `${iE && iE.value ? formatarDataBR(iE.value, false) : 'Início'} — ${fE && fE.value ? formatarDataBR(fE.value, false) : 'Fim'}`;
         }
     });
+
+    // atualiza o total
     calcularTempoTotalCTC();
 }
 
@@ -1339,6 +1404,7 @@ Object.assign(window, {
     // Novas funções expostas para a calculadora de tempo
     calcularTempoEntreDatas, limparCalculoTempo
 });
+
 
 
 
