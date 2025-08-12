@@ -1142,7 +1142,11 @@ function listarCTCsSalvas() {
         const li = document.createElement("li"),
             dF = new Date(c.data || Date.now()).toLocaleString('pt-BR'),
             nS = c.dados.nomeServidor || 'Não informado';
-        li.innerHTML = `<div class="item-info"><span>${c.nome}</span><small>${nS} - ${dF}</small></div><div class="item-actions"><button onclick="carregarCTC('${c.id}')" title="Carregar"><i class="ri-folder-open-line"></i></button><button class="danger" onclick="excluirCTC('${c.id}')" title="Excluir"><i class="ri-delete-bin-line"></i></button></div>`;
+        li.innerHTML = `<div class="item-info"><span>${c.nome}</span><small>${nS} - ${dF}</small></div>
+                <div class="item-actions">
+                  <button onclick="carregarCTC('${c.id}')" title="Carregar"><i class="ri-folder-open-line"></i></button>
+                  <button class="danger" onclick="excluirCTC('${c.id}')" title="Excluir"><i class="ri-delete-bin-line"></i></button>
+                </div>`;
         l.appendChild(li);
     });
 }
