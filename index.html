@@ -192,25 +192,11 @@
                         <label>Data de Admissão: <input type="date" id="ctc-dataAdmissao"></label>
                         <label>Data de Exoneração: <input type="date" id="ctc-dataExoneracao"></label>
                         <label>Nº do Processo: <input type="text" id="ctc-processo"></label>
-                    <h4 class="accordion-toggle">Períodos de Contribuição</h4>
-<div class="accordion-content">
-    <table id="tabela-periodos-ctc">
-        <thead>
-            <tr>
-                <th style="width: 150px;">Data Início</th>
-                <th style="width: 150px;">Data Fim</th>
-                <th style="width: 100px;">Tempo Bruto (dias)</th>
-                <th style="width: 100px;">Deduções (dias)</th>
-                <th style="width: 120px;">Tempo Líquido (dias)</th>
-                <th>Fonte / Observação</th>
-                <th style="width: 100px;">Ações</th>
-            </tr>
-        </thead>
-        <tbody id="corpo-tabela-periodos-ctc"></tbody>
+                    <h4>Períodos de Contribuição</h4>
+<table id="tabela-periodos-ctc">
     </table>
-    <button type="button" onclick="adicionarLinhaPeriodoCTC()">+ Adicionar Período</button>
-    <h4 id="total-tempo-ctc" style="text-align: right; border-top: 2px solid var(--primary-color); padding-top: 10px; margin-top:20px;">Total: 0 dias</h4>
-</div>
+<button type="button" onclick="adicionarLinhaPeriodoCTC()">+ Adicionar Período</button>
+<h4 id="total-tempo-ctc" style="text-align: right; border-top: 2px solid var(--primary-color); padding-top: 10px; margin-top:20px;">Total: 0 dias</h4>
 
                 <div id="telaLegislacao" style="display:none;">
     <h2><i class="ri-book-open-fill"></i> Legislação Aplicável ao RPPS</h2>
@@ -412,6 +398,7 @@
 
 </body>
 </html>
+
 
 
 
