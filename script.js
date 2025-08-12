@@ -184,7 +184,36 @@ document.querySelectorAll(".accordion-toggle").forEach(toggle => {
         btnLimparTempo.addEventListener('click', limparCalculoTempo);
     }
 }
+// --- CÓDIGO NOVO PARA O MENU RESPONSIVO ---
+    const toggleBtn = document.getElementById('toggleSidebar');
+    const sidebar = document.querySelector('.sidebar');
 
+    if (toggleBtn && sidebar) {
+        toggleBtn.addEventListener('click', () => {
+            sidebar.classList.toggle('visible');
+            document.body.classList.toggle('sidebar-open'); // Para o fundo escuro
+        });
+    }
+
+    // Fecha o menu ao clicar em um link de navegação em telas pequenas
+    document.querySelectorAll('.sidebar-nav a').forEach(link => {
+        link.addEventListener('click', () => {
+            if (window.innerWidth <= 992) {
+                sidebar.classList.remove('visible');
+                document.body.classList.remove('sidebar-open');
+            }
+        });
+    });
+
+    // Fecha o menu se clicar fora dele (no overlay escuro)
+    document.body.addEventListener('click', (e) => {
+        if (e.target.classList.contains('sidebar-open')) {
+            sidebar.classList.remove('visible');
+            document.body.classList.remove('sidebar-open');
+        }
+    });
+    // --- FIM DO CÓDIGO NOVO ---
+}
 function handleNavClick(event, targetView) {
     if (event) event.preventDefault();
     ui.updateActiveNav(targetView);
@@ -1339,6 +1368,7 @@ Object.assign(window, {
     // Novas funções expostas para a calculadora de tempo
     calcularTempoEntreDatas, limparCalculoTempo
 });
+
 
 
 
