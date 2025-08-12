@@ -35,7 +35,7 @@ const ADMIN_EMAILS = ["domingosbarroson@gmail.com"].map(e => e.toLowerCase());
 //  CONFIGURAÇÕES GLOBAIS E CONSTANTES LEGAIS
 // =================================================================================
 // ATENÇÃO: Este valor deve ser atualizado anualmente conforme o novo salário mínimo nacional.
-const SALARIO_MINIMO = 1412.00; 
+const SALARIO_MINIMO = 1518.00; 
 
 const AppState = {
     usuarioAtual: null,
@@ -1339,6 +1339,7 @@ Object.assign(window, {
     // Novas funções expostas para a calculadora de tempo
     calcularTempoEntreDatas, limparCalculoTempo
 });
+
 
 
 
