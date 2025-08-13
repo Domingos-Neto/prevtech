@@ -93,17 +93,18 @@
                             <option value="todos_usuarios">Todos os Usuários</option>
                         </select>
                     </div>
+                    
                     <div class="dashboard-grid">
                         <div class="dashboard-card" onclick="handleNavClick(event, 'simulacao')"><i class="ri-add-circle-line" style="color: #0d47a1;"></i><span>Nova Simulação de Benefício</span></div>
                         <div class="dashboard-card" onclick="handleNavClick(event, 'geradorCTC')"><i class="ri-file-text-line" style="color: #17a2b8;"></i><span>Gerar Certidão (CTC)</span></div>
                         <div class="dashboard-card" onclick="handleNavClick(event, 'telaLegislacao')"><i class="ri-book-open-line" style="color: #6f42c1;"></i><span>Acessar Legislação</span></div>
                         
-                        <div class="dashboard-card" style="text-align: left; align-items: flex-start; cursor: default; grid-column: 4; grid-row: 1 / span 2;">
+                        <div class="dashboard-card" style="text-align: left; align-items: flex-start; cursor: default; grid-column: 4; grid-row: 1 / span 3;">
                             <h4 style="margin-top:0; display:flex; align-items:center; gap:8px; border:none; font-size: 1.1em;">
                                 <i class="ri-time-line" style="font-size: 1.5rem; margin-bottom:0; color: #dc3545;"></i>
                                 <span style="color: var(--text-color);">Calculadora de Tempo</span>
                             </h4>
-                            <p style="font-size:0.9em; margin-top: 5px; margin-bottom:15px; color: var(--text-secondary-color);">Calcule o tempo entre duas datas para fins previdenciários.</p>
+                            <p style="font-size:0.9em; margin-top: 5px; margin-bottom:15px; color: var(--text-secondary-color);">Calcule o tempo entre duas datas.</p>
                             <div style="width:100%; display:grid; gap:10px;">
                                 <label style="font-size:0.9em;">Data Início: <input type="date" id="calc-data-inicio" style="padding:8px;"></label>
                                 <label style="font-size:0.9em;">Data Fim: <input type="date" id="calc-data-fim" style="padding:8px;"></label>
@@ -112,25 +113,24 @@
                                     <button id="btn-calcular-tempo" class="danger" style="margin-top:0;">Calcular</button>
                                 </div>
                             </div>
-                            <div id="resultado-calculo-tempo" style="margin-top:15px; background: var(--secondary-color); padding:10px; border-radius:6px; width:100%; min-height:75px; font-size: 0.9em;">
-                                </div>
+                            <div id="resultado-calculo-tempo" style="margin-top:15px; background: var(--secondary-color); padding:10px; border-radius:6px; width:100%; min-height:75px; font-size: 0.9em;"></div>
                         </div>
 
-                        <div class="dashboard-card" style="cursor: default;"><i class="ri-file-list-3-line"></i><span>Total de Simulações</span><h3 id="kpi-total-simulacoes" style="margin:5px 0 0 0; border:none;">0</h3></div>
-                        <div class="dashboard-card" style="cursor: default;"><i class="ri-file-text-line"></i><span>Total de CTCs</span><h3 id="kpi-total-ctcs" style="margin:5px 0 0 0; border:none;">0</h3></div>
-                        <div class="dashboard-card" style="cursor: default;"><i class="ri-money-dollar-circle-line"></i><span>Valor Médio (Benefício)</span><h3 id="kpi-valor-medio" style="margin:5px 0 0 0; border:none;">R$ 0,00</h3></div>
-
-                        <div class="dashboard-card" style="grid-column: 1 / span 3; align-items: flex-start; text-align: left;">
+                        <div class="dashboard-card" style="grid-column: 1 / -1; grid-row: 2; align-items: flex-start; text-align: left;">
                             <h4 style="margin-top:0; display:flex; align-items:center; gap:8px; border:none; font-size: 1.1em;">
                                 <i class="ri-pie-chart-2-line" style="font-size: 1.5rem; margin-bottom:0; color: #28a745;"></i>
                                 <span>Distribuição de Tipos de Benefícios</span>
                             </h4>
-                            <div style="width: 100%; height: 250px; position: relative;">
+                            <div style="width: 100%; height: 280px; position: relative;">
                                 <canvas id="graficoTiposBeneficio"></canvas>
                             </div>
                         </div>
-
+                        
+                        <div class="dashboard-card" style="cursor: default; grid-row: 3;"><i class="ri-file-list-3-line"></i><span>Total de Simulações</span><h3 id="kpi-total-simulacoes" style="margin:5px 0 0 0; border:none;">0</h3></div>
+                        <div class="dashboard-card" style="cursor: default; grid-row: 3;"><i class="ri-file-text-line"></i><span>Total de CTCs</span><h3 id="kpi-total-ctcs" style="margin:5px 0 0 0; border:none;">0</h3></div>
+                        <div class="dashboard-card" style="cursor: default; grid-row: 3;"><i class="ri-money-dollar-circle-line"></i><span>Valor Médio (Benefício)</span><h3 id="kpi-valor-medio" style="margin:5px 0 0 0; border:none;">R$ 0,00</h3></div>
                     </div>
+
                     <h3 class="accordion-toggle"><i class="ri-folder-history-fill"></i> Histórico de Simulações Salvas</h3>
                     <ul id="listaHistorico" class="accordion-content"></ul>
                     <h3 class="accordion-toggle"><i class="ri-file-copy-2-fill"></i> CTCs Salvas</h3>
@@ -197,71 +197,71 @@
                 </div>
 
                 <div id="telaLegislacao" style="display:none;">
-    <h2><i class="ri-book-open-fill"></i> Legislação Aplicável ao RPPS</h2>
-    <p style="font-size: 1.05em; color: var(--text-secondary-color); margin-top:-5px; margin-bottom: 30px;">
-        Consulte as principais normas que regem o Regime Próprio de Previdência Social de Itapipoca. Mantenha-se atualizado sobre os fundamentos legais para a concessão e cálculo de benefícios.
-    </p>
+                    <h2><i class="ri-book-open-fill"></i> Legislação Aplicável ao RPPS</h2>
+                    <p style="font-size: 1.05em; color: var(--text-secondary-color); margin-top:-5px; margin-bottom: 30px;">
+                        Consulte as principais normas que regem o Regime Próprio de Previdência Social de Itapipoca. Mantenha-se atualizado sobre os fundamentos legais para a concessão e cálculo de benefícios.
+                    </p>
 
-    <h4><i class="ri-government-fill"></i> Normas Federais</h4>
-    <div class="dashboard-grid">
-        <div class="dashboard-card" style="cursor: default; text-align: left; align-items: flex-start; flex-direction: column;">
-            <i class="ri-scales-3-line" style="font-size: 2.8rem; margin-bottom: 15px; color: #6f42c1;"></i>
-            <h5 style="margin:0; font-size:1.1em; line-height: 1.2;">Constituição Federal<br><b>Artigo 40</b></h5>
-            <p style="font-size:0.9em; margin-top: 10px; margin-bottom:15px; flex-grow:1; color: var(--text-secondary-color);">
-                A base de todo o sistema. Estabelece as diretrizes constitucionais para os Regimes Próprios de Previdência Social (RPPS) dos servidores públicos.
-            </p>
-            <a href="https://www.planalto.gov.br/ccivil_03/constituicao/constituicao.htm" target="_blank" rel="noopener noreferrer" style="text-decoration: none; width:100%;"><button style="width:100%; margin-top: auto;">Consultar Artigo</button></a>
-        </div>
+                    <h4><i class="ri-government-fill"></i> Normas Federais</h4>
+                    <div class="dashboard-grid">
+                        <div class="dashboard-card" style="cursor: default; text-align: left; align-items: flex-start; flex-direction: column;">
+                            <i class="ri-scales-3-line" style="font-size: 2.8rem; margin-bottom: 15px; color: #6f42c1;"></i>
+                            <h5 style="margin:0; font-size:1.1em; line-height: 1.2;">Constituição Federal<br><b>Artigo 40</b></h5>
+                            <p style="font-size:0.9em; margin-top: 10px; margin-bottom:15px; flex-grow:1; color: var(--text-secondary-color);">
+                                A base de todo o sistema. Estabelece as diretrizes constitucionais para os Regimes Próprios de Previdência Social (RPPS) dos servidores públicos.
+                            </p>
+                            <a href="https://www.planalto.gov.br/ccivil_03/constituicao/constituicao.htm" target="_blank" rel="noopener noreferrer" style="text-decoration: none; width:100%;"><button style="width:100%; margin-top: auto;">Consultar Artigo</button></a>
+                        </div>
 
-        <div class="dashboard-card" style="cursor: default; text-align: left; align-items: flex-start; flex-direction: column;">
-            <i class="ri-article-line" style="font-size: 2.8rem; margin-bottom: 15px; color: #dc3545;"></i>
-            <h5 style="margin:0; font-size:1.1em; line-height: 1.2;">Emenda Constitucional<br><b>Nº 103/2019</b></h5>
-            <p style="font-size:0.9em; margin-top: 10px; margin-bottom:15px; flex-grow:1; color: var(--text-secondary-color);">
-                A "Reforma da Previdência". Altera o sistema de previdência, estabelecendo as regras de transição, cálculo e os requisitos de aposentadoria vigentes.
-            </p>
-            <a href="https://www.planalto.gov.br/ccivil_03/constituicao/emendas/emc/emc103.htm" target="_blank" rel="noopener noreferrer" style="text-decoration: none; width:100%;"><button style="width:100%; margin-top: auto;">Visualizar PDF</button></a>
-        </div>
+                        <div class="dashboard-card" style="cursor: default; text-align: left; align-items: flex-start; flex-direction: column;">
+                            <i class="ri-article-line" style="font-size: 2.8rem; margin-bottom: 15px; color: #dc3545;"></i>
+                            <h5 style="margin:0; font-size:1.1em; line-height: 1.2;">Emenda Constitucional<br><b>Nº 103/2019</b></h5>
+                            <p style="font-size:0.9em; margin-top: 10px; margin-bottom:15px; flex-grow:1; color: var(--text-secondary-color);">
+                                A "Reforma da Previdência". Altera o sistema de previdência, estabelecendo as regras de transição, cálculo e os requisitos de aposentadoria vigentes.
+                            </p>
+                            <a href="https://www.planalto.gov.br/ccivil_03/constituicao/emendas/emc/emc103.htm" target="_blank" rel="noopener noreferrer" style="text-decoration: none; width:100%;"><button style="width:100%; margin-top: auto;">Visualizar PDF</button></a>
+                        </div>
 
-        <div class="dashboard-card" style="cursor: default; text-align: left; align-items: flex-start; flex-direction: column;">
-            <i class="ri-file-text-line" style="font-size: 2.8rem; margin-bottom: 15px; color: #17a2b8;"></i>
-            <h5 style="margin:0; font-size:1.1em; line-height: 1.2;">Lei Federal<br><b>Nº 9.717/1998</b></h5>
-            <p style="font-size:0.9em; margin-top: 10px; margin-bottom:15px; flex-grow:1; color: var(--text-secondary-color);">
-                Dispõe sobre regras gerais para a organização e o funcionamento dos RPPS da União, dos Estados, do DF e dos Municípios.
-            </p>
-            <a href="pdfs/lei_9717_98.pdf" target="_blank" rel="noopener noreferrer" style="text-decoration: none; width:100%;"><button style="width:100%; margin-top: auto;">Visualizar PDF</button></a>
-        </div>
-    </div>
+                        <div class="dashboard-card" style="cursor: default; text-align: left; align-items: flex-start; flex-direction: column;">
+                            <i class="ri-file-text-line" style="font-size: 2.8rem; margin-bottom: 15px; color: #17a2b8;"></i>
+                            <h5 style="margin:0; font-size:1.1em; line-height: 1.2;">Lei Federal<br><b>Nº 9.717/1998</b></h5>
+                            <p style="font-size:0.9em; margin-top: 10px; margin-bottom:15px; flex-grow:1; color: var(--text-secondary-color);">
+                                Dispõe sobre regras gerais para a organização e o funcionamento dos RPPS da União, dos Estados, do DF e dos Municípios.
+                            </p>
+                            <a href="pdfs/lei_9717_98.pdf" target="_blank" rel="noopener noreferrer" style="text-decoration: none; width:100%;"><button style="width:100%; margin-top: auto;">Visualizar PDF</button></a>
+                        </div>
+                    </div>
 
-    <h4 style="margin-top: 40px;"><i class="ri-community-fill"></i> Normas Municipais (Itapipoca-CE)</h4>
-    <div class="dashboard-grid">
-        <div class="dashboard-card" style="cursor: default; text-align: left; align-items: flex-start; flex-direction: column;">
-            <i class="ri-building-line" style="font-size: 2.8rem; margin-bottom: 15px; color: #0d47a1;"></i>
-            <h5 style="margin:0; font-size:1.1em; line-height: 1.2;">Lei Municipal<br><b>Nº 047/2008</b></h5>
-            <p style="font-size:0.9em; margin-top: 10px; margin-bottom:15px; flex-grow:1; color: var(--text-secondary-color);">
-                A lei de criação do ITAPREV. Dispõe sobre a reestruturação do Regime Próprio de Previdência Social do Município de Itapipoca.
-            </p>
-            <a href="#" target="_blank" style="text-decoration: none; width:100%;"><button style="width:100%; margin-top: auto;">Visualizar PDF</button></a>
-        </div>
+                    <h4 style="margin-top: 40px;"><i class="ri-community-fill"></i> Normas Municipais (Itapipoca-CE)</h4>
+                    <div class="dashboard-grid">
+                        <div class="dashboard-card" style="cursor: default; text-align: left; align-items: flex-start; flex-direction: column;">
+                            <i class="ri-building-line" style="font-size: 2.8rem; margin-bottom: 15px; color: #0d47a1;"></i>
+                            <h5 style="margin:0; font-size:1.1em; line-height: 1.2;">Lei Municipal<br><b>Nº 047/2008</b></h5>
+                            <p style="font-size:0.9em; margin-top: 10px; margin-bottom:15px; flex-grow:1; color: var(--text-secondary-color);">
+                                A lei de criação do ITAPREV. Dispõe sobre a reestruturação do Regime Próprio de Previdência Social do Município de Itapipoca.
+                            </p>
+                            <a href="#" target="_blank" style="text-decoration: none; width:100%;"><button style="width:100%; margin-top: auto;">Visualizar PDF</button></a>
+                        </div>
 
-        <div class="dashboard-card" style="cursor: default; text-align: left; align-items: flex-start; flex-direction: column;">
-            <i class="ri-edit-2-line" style="font-size: 2.8rem; margin-bottom: 15px; color: #28a745;"></i>
-            <h5 style="margin:0; font-size:1.1em; line-height: 1.2;">Lei Municipal<br><b>Nº 035/2022</b></h5>
-            <p style="font-size:0.9em; margin-top: 10px; margin-bottom:15px; flex-grow:1; color: var(--text-secondary-color);">
-                A reforma municipal. Altera a legislação do RPPS para adequá-la às disposições da Emenda Constitucional nº 103/2019.
-            </p>
-            <a href="#" target="_blank" style="text-decoration: none; width:100%;"><button style="width:100%; margin-top: auto;">Visualizar PDF</button></a>
-        </div>
+                        <div class="dashboard-card" style="cursor: default; text-align: left; align-items: flex-start; flex-direction: column;">
+                            <i class="ri-edit-2-line" style="font-size: 2.8rem; margin-bottom: 15px; color: #28a745;"></i>
+                            <h5 style="margin:0; font-size:1.1em; line-height: 1.2;">Lei Municipal<br><b>Nº 035/2022</b></h5>
+                            <p style="font-size:0.9em; margin-top: 10px; margin-bottom:15px; flex-grow:1; color: var(--text-secondary-color);">
+                                A reforma municipal. Altera a legislação do RPPS para adequá-la às disposições da Emenda Constitucional nº 103/2019.
+                            </p>
+                            <a href="#" target="_blank" style="text-decoration: none; width:100%;"><button style="width:100%; margin-top: auto;">Visualizar PDF</button></a>
+                        </div>
 
-        <div class="dashboard-card" style="cursor: default; text-align: left; align-items: flex-start; flex-direction: column;">
-            <i class="ri-shield-check-line" style="font-size: 2.8rem; margin-bottom: 15px; color: #ffc107;"></i>
-            <h5 style="margin:0; font-size:1.1em; line-height: 1.2;">Portaria MTP<br><b>Nº 1.467/2022</b></h5>
-            <p style="font-size:0.9em; margin-top: 10px; margin-bottom:15px; flex-grow:1; color: var(--text-secondary-color);">
-                 Disciplina parâmetros e diretrizes gerais para organização e funcionamento dos RPPS, conforme a EC 103/2019.
-            </p>
-            <a href="pdfs/portaria_mps_1467_2022.pdf" target="_blank" style="text-decoration: none; width:100%;"><button style="width:100%; margin-top: auto;">Visualizar PDF</button></a>
-        </div>
-    </div>
-</div>
+                        <div class="dashboard-card" style="cursor: default; text-align: left; align-items: flex-start; flex-direction: column;">
+                            <i class="ri-shield-check-line" style="font-size: 2.8rem; margin-bottom: 15px; color: #ffc107;"></i>
+                            <h5 style="margin:0; font-size:1.1em; line-height: 1.2;">Portaria MTP<br><b>Nº 1.467/2022</b></h5>
+                            <p style="font-size:0.9em; margin-top: 10px; margin-bottom:15px; flex-grow:1; color: var(--text-secondary-color);">
+                                 Disciplina parâmetros e diretrizes gerais para organização e funcionamento dos RPPS, conforme a EC 103/2019.
+                            </p>
+                            <a href="pdfs/portaria_mps_1467_2022.pdf" target="_blank" style="text-decoration: none; width:100%;"><button style="width:100%; margin-top: auto;">Visualizar PDF</button></a>
+                        </div>
+                    </div>
+                </div>
 
                 <div id="telaConfiguracoes" style="display:none;">
                     <h2><i class="ri-settings-3-fill"></i> Configurações do Sistema</h2>
