@@ -5,6 +5,10 @@
 <title>ITAPREV - Sistema de Gestão Previdenciária v3.5 (Revisado)</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
+<!-- 🆕 PWA -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0d47a1">
+
 <link rel="stylesheet" href="style.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css">
 <link href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css" rel="stylesheet" />
@@ -418,5 +422,17 @@
 
 <script type="module" src="script.js"></script>
 
+  <!-- 🆕 Registro do Service Worker -->
+<script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("./service-worker.js")
+      .then(() => console.log("Service Worker registrado com sucesso."))
+      .catch(err => console.error("Erro ao registrar Service Worker:", err));
+  });
+}
+</script>
+
 </body>
 </html>
+
