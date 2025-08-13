@@ -28,7 +28,7 @@ const app = initializeApp(firebaseConfig);
 const _auth = getAuth(app);
 const provider = new GoogleAuthProvider();
 
-const EMAILS_AUTORIZADOS = ["domingosbarroson@gmail.com", "setordebeneficiositaprev@gmail.com"].map(e => e.toLowerCase());
+const EMAILS_AUTORIZADOS = ["josyy.ns1010@gmail.com","domingosbarroson@gmail.com", "setordebeneficiositaprev@gmail.com"].map(e => e.toLowerCase());
 const ADMIN_EMAILS = ["domingosbarroson@gmail.com"].map(e => e.toLowerCase());
 
 // =================================================================================
@@ -1441,3 +1441,4 @@ Object.assign(window, {
     salvarConfiguracoes,
     calcularTempoEntreDatas, limparCalculoTempo
 });
+
