@@ -5,10 +5,6 @@
 <title>ITAPREV - Sistema de Gestão Previdenciária v3.5 (Revisado)</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-<!-- 🆕 PWA -->
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#0d47a1">
-
 <link rel="stylesheet" href="style.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css">
 <link href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css" rel="stylesheet" />
@@ -120,17 +116,17 @@
                                 </div>
                         </div>
 
+                        <div class="dashboard-card" style="cursor: default;"><i class="ri-file-list-3-line"></i><span>Total de Simulações</span><h3 id="kpi-total-simulacoes" style="margin:5px 0 0 0; border:none;">0</h3></div>
+                        <div class="dashboard-card" style="cursor: default;"><i class="ri-file-text-line"></i><span>Total de CTCs</span><h3 id="kpi-total-ctcs" style="margin:5px 0 0 0; border:none;">0</h3></div>
+                        <div class="dashboard-card" style="cursor: default;"><i class="ri-money-dollar-circle-line"></i><span>Valor Médio (Benefício)</span><h3 id="kpi-valor-medio" style="margin:5px 0 0 0; border:none;">R$ 0,00</h3></div>
+
                         <div class="dashboard-card" style="grid-column: 1 / span 3; align-items: flex-start; text-align: left;">
                             <h4 style="margin-top:0; display:flex; align-items:center; gap:8px; border:none; font-size: 1.1em;">
-                                <i class="ri-rocket-line" style="font-size: 1.5rem; margin-bottom:0; color: #ffc107;"></i>
-                                <span style="color: var(--text-color);">Acesso Rápido aos Módulos</span>
+                                <i class="ri-pie-chart-2-line" style="font-size: 1.5rem; margin-bottom:0; color: #28a745;"></i>
+                                <span>Distribuição de Tipos de Benefícios</span>
                             </h4>
-                            <p style="font-size:0.9em; margin-top: 5px; margin-bottom:15px; color: var(--text-secondary-color);">Navegue diretamente para os principais módulos de gestão do sistema.</p>
-                            <div style="width: 100%; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-items: stretch;">
-                                <button onclick="handleNavClick(event, 'telaCadastro')" class="secondary" style="margin-top:0; padding: 12px; text-align:left; display:flex; align-items:center; gap:8px;"><i class="ri-user-settings-line"></i> Gestão Cadastral</button>
-                                <button onclick="handleNavClick(event, 'telaProcessos')" class="secondary" style="margin-top:0; padding: 12px; text-align:left; display:flex; align-items:center; gap:8px;"><i class="ri-node-tree"></i> Acomp. de Processos</button>
-                                <button onclick="handleNavClick(event, 'telaFinanceiro')" class="secondary" style="margin-top:0; padding: 12px; text-align:left; display:flex; align-items:center; gap:8px;"><i class="ri-line-chart-line"></i> Financeiro</button>
-                                <button onclick="handleNavClick(event, 'telaRelatorios')" class="secondary" style="margin-top:0; padding: 12px; text-align:left; display:flex; align-items:center; gap:8px;"><i class="ri-file-chart-line"></i> Relatórios e BI</button>
+                            <div style="width: 100%; height: 250px; position: relative;">
+                                <canvas id="graficoTiposBeneficio"></canvas>
                             </div>
                         </div>
 
@@ -422,17 +418,5 @@
 
 <script type="module" src="script.js"></script>
 
-  <!-- 🆕 Registro do Service Worker -->
-<script>
-if ("serviceWorker" in navigator) {
-  window.addEventListener("load", () => {
-    navigator.serviceWorker.register("./service-worker.js")
-      .then(() => console.log("Service Worker registrado com sucesso."))
-      .catch(err => console.error("Erro ao registrar Service Worker:", err));
-  });
-}
-</script>
-
 </body>
 </html>
-
