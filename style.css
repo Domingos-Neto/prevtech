@@ -244,10 +244,11 @@ body.dark-mode .user-info {
 /* --- PADRONIZAÇÃO DOS BOTÕES DE RELATÓRIOS --- */
 .list-group-item button {
   flex-shrink: 0;         /* Impede que o botão encolha */
-  min-width: 120px;       /* Define uma largura mínima para padronização */
+  min-width: 10px;       /* Define uma largura mínima para padronização */
   margin-top: 0;          /* Remove a margem superior padrão do botão */
   text-align: center;     /* Garante o alinhamento do texto no centro */
 }
+
 
 
 
