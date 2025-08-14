@@ -7,6 +7,10 @@ import {
   getAuth,
   GoogleAuthProvider,
   signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
+  setPersistence,
+  browserLocalPersistence,
   onAuthStateChanged,
   signOut
 } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
@@ -24,15 +28,25 @@ const firebaseConfig = {
     messagingSenderId: "869254299826",
     appId: "1:869254299826:web:b75c03595311a12e9789ab",
     measurementId: "G-RCG1XLRQYV"
-  };
+};
 
 const app = initializeApp(firebaseConfig);
 const analytics = getAnalytics(app);
 const _auth = getAuth(app);
 const provider = new GoogleAuthProvider();
 
-const EMAILS_AUTORIZADOS = ["samarabarroson@gmail.com", "samiaalvesbarroso@gmail.com", "domingosbarroson@gmail.com", "setordebeneficiositaprev@gmail.com"].map(e => e.toLowerCase());
-const ADMIN_EMAILS = ["domingosbarroson@gmail.com"].map(e => e.toLowerCase());
+await setPersistence(_auth, browserLocalPersistence);
+
+const EMAILS_AUTORIZADOS = [
+    "samarabarroson@gmail.com",
+    "samiaalvesbarroso@gmail.com",
+    "domingosbarroson@gmail.com",
+    "setordebeneficiositaprev@gmail.com"
+].map(e => e.toLowerCase());
+
+const ADMIN_EMAILS = [
+    "domingosbarroson@gmail.com"
+].map(e => e.toLowerCase());
 
 // =================================================================================
 //  CONFIGURAÇÕES GLOBAIS E CONSTANTES LEGAIS
@@ -1444,6 +1458,7 @@ Object.assign(window, {
     salvarConfiguracoes,
     calcularTempoEntreDatas, limparCalculoTempo
 });
+
 
 
 
