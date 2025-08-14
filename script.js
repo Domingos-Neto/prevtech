@@ -34,12 +34,12 @@ const ADMIN_EMAILS = ["domingosbarroson@gmail.com"].map(e => e.toLowerCase());
 // =================================================================================
 //  CONFIGURAÇÕES GLOBAIS E CONSTANTES LEGAIS
 // =================================================================================
-// ATENÇÃO: Este valor deve ser atualizado anualmente conforme o novo salário mínimo nacional.
 const SALARIO_MINIMO = 1518.00; 
 
 const AppState = {
     usuarioAtual: null,
     salarioChart: null,
+    tiposBeneficioChart: null,
     simulacaoResultados: {},
     dashboardViewMode: 'meus_registros',
     currentStep: 1,
@@ -193,6 +193,7 @@ function handleNavClick(event, targetView) {
         case 'dashboard':
             listarHistorico();
             listarCTCsSalvas();
+            atualizarIndicadoresDashboard();
             break;
         case 'simulacao':
             limparFormularioCompleto();
@@ -204,6 +205,91 @@ function handleNavClick(event, targetView) {
         case 'telaConfiguracoes':
             popularCamposConfiguracoes();
             break;
+    }
+}
+
+function atualizarIndicadoresDashboard() {
+    if (!AppState.usuarioAtual) return;
+
+    const canvas = document.getElementById('graficoTiposBeneficio');
+    if (!canvas) {
+        return; 
+    }
+
+    const historicoKey = `historicoSimulacoes_${AppState.usuarioAtual.uid}`;
+    const ctcsKey = `ctcs_salvas_${AppState.usuarioAtual.uid}`;
+    const historico = JSON.parse(localStorage.getItem(historicoKey) || "[]");
+    const ctcs = JSON.parse(localStorage.getItem(ctcsKey) || "[]");
+
+    const totalSimulacoes = historico.length;
+    const totalCtcs = ctcs.length;
+    
+    let somaValores = 0;
+    historico.forEach(item => {
+        const valor = item.dados?.resultados?.valorBeneficioFinal || 0;
+        somaValores += parseFloat(valor);
+    });
+    const valorMedio = totalSimulacoes > 0 ? somaValores / totalSimulacoes : 0;
+
+    document.getElementById('kpi-total-simulacoes').innerText = totalSimulacoes;
+    document.getElementById('kpi-total-ctcs').innerText = totalCtcs;
+    document.getElementById('kpi-valor-medio').innerText = formatarDinheiro(valorMedio);
+
+    const contagemTipos = {};
+    historico.forEach(item => {
+        const tipo = item.dados?.resultados?.tipo || "Não definido";
+        contagemTipos[tipo] = (contagemTipos[tipo] || 0) + 1;
+    });
+
+    const labelsGrafico = Object.keys(contagemTipos);
+    const dadosGrafico = Object.values(contagemTipos);
+    
+    const ctx = canvas.getContext('2d');
+    const isDarkMode = document.body.classList.contains('dark-mode');
+    const fontColor = isDarkMode ? '#eee' : '#333';
+
+    if (AppState.tiposBeneficioChart) {
+        AppState.tiposBeneficioChart.destroy();
+    }
+    
+    if (labelsGrafico.length > 0) {
+        AppState.tiposBeneficioChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: labelsGrafico,
+                datasets: [{
+                    label: 'Quantidade',
+                    data: dadosGrafico,
+                    backgroundColor: ['#0d47a1', '#1e88e5', '#64b5f6', '#ffc107', '#dc3545', '#6f42c1'],
+                    borderColor: isDarkMode ? '#1e1e1e' : '#fff',
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'right',
+                        labels: { color: fontColor, boxWidth: 20, padding: 15 }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: (context) => `${context.label || ''}: ${context.parsed || 0}`
+                        }
+                    }
+                }
+            }
+        });
+    } else {
+         ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+         ctx.save();
+         ctx.textAlign = 'center';
+         ctx.textBaseline = 'middle';
+         ctx.fillStyle = fontColor;
+         ctx.font = "16px 'Segoe UI'";
+         ctx.fillText("Nenhuma simulação salva para exibir o gráfico.", ctx.canvas.width / 2, ctx.canvas.height / 2);
+         ctx.restore();
     }
 }
 
@@ -235,18 +321,10 @@ function atualizarDataHora() {
     const container = document.getElementById('datetime-container');
     if (container) {
         const agora = new Date();
-
-        // Formata o dia da semana por extenso (ex: "terça-feira")
         const diaSemana = new Intl.DateTimeFormat('pt-BR', { weekday: 'long' }).format(agora);
-        // Formata a data como DD/MM (ex: "12/08")
         const data = new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit' }).format(agora);
-        // Formata a hora como HH:MM (ex: "19:13")
         const hora = new Intl.DateTimeFormat('pt-BR', { hour: '2-digit', minute: '2-digit' }).format(agora);
-
-        // Garante que a primeira letra do dia da semana seja maiúscula
         const diaSemanaCapitalized = diaSemana.charAt(0).toUpperCase() + diaSemana.slice(1);
-
-        // Monta o HTML final com ícones e o novo formato
         container.innerHTML = `<span><i class="ri-calendar-2-line"></i> ${diaSemanaCapitalized}, ${data}</span> <span style="opacity: 0.5">|</span> <span><i class="ri-time-line"></i> ${hora}</span>`;
     }
 }
@@ -447,6 +525,7 @@ function alternarTema() {
     if (AppState.salarioChart && AppState.simulacaoResultados.salariosParaGrafico) {
         desenharGrafico(AppState.simulacaoResultados.salariosParaGrafico, AppState.simulacaoResultados.mediaSalarial);
     }
+    atualizarIndicadoresDashboard();
 }
 
 function adicionarLinha(mes = '', fator = '', salario = '') {
@@ -651,28 +730,18 @@ function calcularBeneficio(n = true, b = null) {
 // FUNÇÕES DE GESTÃO DE CONFIGURAÇÕES
 // =================================================================================
 
-/**
- * Carrega as configurações do localStorage para a memória do App (AppState).
- * É seguro chamar esta função na inicialização.
- */
 function carregarConfiguracoes() {
     const configsSalvas = localStorage.getItem('itaprevConfiguracoes');
     if (configsSalvas) {
         try {
-            // Tenta carregar as configurações salvas
             AppState.configuracoes = JSON.parse(configsSalvas);
         } catch (e) {
             console.error("Erro ao ler as configurações do localStorage. Usando valores padrão.", e);
-            // Se houver um erro (JSON corrompido), usa os valores padrão
             AppState.configuracoes = { nomePrefeito: '', nomePresidente: '' };
         }
     }
 }
 
-/**
- * Popula os campos do formulário na tela de Configurações com os dados da memória (AppState).
- * Deve ser chamada apenas quando a tela de configurações for exibida.
- */
 function popularCamposConfiguracoes() {
     const nomePrefeitoInput = document.getElementById('config-nome-prefeito');
     const nomePresidenteInput = document.getElementById('config-nome-presidente');
@@ -1104,13 +1173,14 @@ function salvarSimulacaoHistorico(nF) {
     let n = typeof nF === "string" ? nF : document.getElementById("nomeSimulacao").value.trim();
     if (!n) return ui.showToast("Digite um nome para a simulação.", false);
     if (!AppState.usuarioAtual) return ui.showToast("Você precisa estar logado.", false);
-    const d = { id: crypto.randomUUID(), nome: n, dados: coletarDadosSimulacao(), data: new Date().toISOString() },
-        c = `historicoSimulacoes_${AppState.usuarioAtual.uid}`,
-        h = JSON.parse(localStorage.getItem(c) || "[]");
+    const d = { id: crypto.randomUUID(), nome: n, dados: coletarDadosSimulacao(), data: new Date().toISOString() };
+    const c = `historicoSimulacoes_${AppState.usuarioAtual.uid}`;
+    const h = JSON.parse(localStorage.getItem(c) || "[]");
     h.unshift(d);
     localStorage.setItem(c, JSON.stringify(h));
     ui.showToast("Simulação salva no histórico!", true);
     listarHistorico();
+    atualizarIndicadoresDashboard();
 }
 
 function coletarDadosSimulacao() {
@@ -1138,14 +1208,14 @@ function listarHistorico() {
     tR.sort((a, b) => new Date(b.data) - new Date(a.data));
     if (tR.length === 0) {
         l.innerHTML = "<li>Nenhuma simulação encontrada.</li>";
-        return;
+    } else {
+        tR.forEach(r => {
+            const i = document.createElement("li"),
+                dF = new Date(r.data || Date.now()).toLocaleString('pt-BR');
+            i.innerHTML = `<div class="item-info"><span>${r.nome}</span><small>${dF}</small></div><div class="item-actions"><button onclick="carregarDoHistorico('${r.id}')" title="Carregar"><i class="ri-folder-open-line"></i></button><button class="danger" onclick="excluirDoHistorico('${r.id}')" title="Excluir"><i class="ri-delete-bin-line"></i></button></div>`;
+            l.appendChild(i);
+        });
     }
-    tR.forEach(r => {
-        const i = document.createElement("li"),
-            dF = new Date(r.data || Date.now()).toLocaleString('pt-BR');
-        i.innerHTML = `<div class="item-info"><span>${r.nome}</span><small>${dF}</small></div><div class="item-actions"><button onclick="carregarDoHistorico('${r.id}')" title="Carregar"><i class="ri-folder-open-line"></i></button><button class="danger" onclick="excluirDoHistorico('${r.id}')" title="Excluir"><i class="ri-delete-bin-line"></i></button></div>`;
-        l.appendChild(i);
-    });
 }
 
 function carregarDoHistorico(id) {
@@ -1191,6 +1261,7 @@ function excluirDoHistorico(id) {
         localStorage.setItem(c, JSON.stringify(nH));
         listarHistorico();
         ui.showToast("Simulação excluída.", true);
+        atualizarIndicadoresDashboard();
     }
 }
 
@@ -1223,6 +1294,7 @@ function salvarCTC() {
     localStorage.setItem(ch, JSON.stringify(cs));
     listarCTCsSalvas();
     ui.showToast("CTC salva!", true);
+    atualizarIndicadoresDashboard();
 }
 
 function listarCTCsSalvas() {
@@ -1238,15 +1310,15 @@ function listarCTCsSalvas() {
     tC.sort((a, b) => new Date(b.data) - new Date(a.data));
     if (tC.length === 0) {
         l.innerHTML = "<li>Nenhuma CTC salva.</li>";
-        return;
+    } else {
+        tC.forEach(c => {
+            const li = document.createElement("li"),
+                dF = new Date(c.data || Date.now()).toLocaleString('pt-BR'),
+                nS = c.dados.nomeServidor || 'Não informado';
+            li.innerHTML = `<div class="item-info"><span>${c.nome}</span><small>${nS} - ${dF}</small></div><div class="item-actions"><button onclick="carregarCTC('${c.id}')" title="Carregar"><i class="ri-folder-open-line"></i></button><button class="danger" onclick="excluirCTC('${c.id}')" title="Excluir"><i class="ri-delete-bin-line"></i></button></div>`;
+            l.appendChild(li);
+        });
     }
-    tC.forEach(c => {
-        const li = document.createElement("li"),
-            dF = new Date(c.data || Date.now()).toLocaleString('pt-BR'),
-            nS = c.dados.nomeServidor || 'Não informado';
-        li.innerHTML = `<div class="item-info"><span>${c.nome}</span><small>${nS} - ${dF}</small></div><div class="item-actions"><button onclick="carregarCTC('${c.id}')" title="Carregar"><i class="ri-folder-open-line"></i></button><button class="danger" onclick="excluirCTC('${c.id}')" title="Excluir"><i class="ri-delete-bin-line"></i></button></div>`;
-        l.appendChild(li);
-    });
 }
 
 function carregarCTC(id) {
@@ -1255,7 +1327,7 @@ function carregarCTC(id) {
     const cs = JSON.parse(localStorage.getItem(ch) || "[]");
     const cE = cs.find(c => c.id === id);
     if (!cE) return ui.showToast("Erro: CTC não encontrada.", false);
-    handleNavClick(null, 'ctc');
+    handleNavClick(null, 'geradorCTC');
     setTimeout(() => {
         const d = cE.dados;
         document.getElementById('ctc-nomeServidor').value = d.nomeServidor;
@@ -1287,6 +1359,7 @@ function excluirCTC(id) {
     localStorage.setItem(ch, JSON.stringify(nC));
     listarCTCsSalvas();
     ui.showToast("CTC excluída.", true);
+    atualizarIndicadoresDashboard();
 }
 
 function limparFormularioCTC() {
@@ -1386,9 +1459,6 @@ function exportarTudoZIP(b) {
     }, 50);
 }
 
-// =================================================================================
-// FUNÇÕES DA CALCULADORA DE TEMPO
-// =================================================================================
 function calcularTempoEntreDatas() {
     const dataInicioStr = document.getElementById('calc-data-inicio').value;
     const dataFimStr = document.getElementById('calc-data-fim').value;
@@ -1427,9 +1497,6 @@ function limparCalculoTempo() {
 }
 
 
-// =================================================================================
-// Expondo funções para o escopo global (para uso no HTML onclick)
-// =================================================================================
 Object.assign(window, {
     auth, ui, handleNavClick, atualizarDashboardView, irParaPasso, alternarCamposBeneficio,
     adicionarLinha, limparTabela, exportarExcel, importarExcel, atualizarSalarioLinha, excluirLinha,
