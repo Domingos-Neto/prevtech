@@ -49,7 +49,7 @@ const AppState = {
 const auth = {
     loginGoogle: async () => {
         try {
-            await signInWithPopup(_auth, provider);
+            await signInWithRedirect(_auth, provider);
         } catch (err) {
             console.error("Erro no popup de login Google:", err);
             const msg = err.code === 'auth/popup-closed-by-user' ? 'A janela de login foi fechada.' : 'Erro ao autenticar com Google.';
@@ -1441,6 +1441,7 @@ Object.assign(window, {
     salvarConfiguracoes,
     calcularTempoEntreDatas, limparCalculoTempo
 });
+
 
 
 
