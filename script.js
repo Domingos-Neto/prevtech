@@ -223,7 +223,26 @@ function atualizarIndicadoresDashboard() {
 
     const totalSimulacoes = historico.length;
     const totalCtcs = ctcs.length;
-    
+    let totalDiasCtc = 0;
+    ctcs.forEach(ctc => {
+        if (ctc.dados && ctc.dados.periodos) {
+            ctc.dados.periodos.forEach(periodo => {
+                if (periodo.inicio && periodo.fim) {
+                    const dataInicio = new Date(periodo.inicio + 'T00:00:00');
+                    const dataFim = new Date(periodo.fim + 'T00:00:00');
+                    if (dataFim >= dataInicio) {
+                        const diffTime = Math.abs(dataFim - dataInicio);
+                        const tempoBruto = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+                        const deducoes = parseInt(periodo.deducoes) || 0;
+                        totalDiasCtc += (tempoBruto - deducoes);
+                    }
+                }
+            });
+        }
+    });
+
+    document.getElementById('kpi-total-dias-ctc').innerText = totalDiasCtc.toLocaleString('pt-BR');
+       
     let somaValores = 0;
     historico.forEach(item => {
         const valor = item.dados?.resultados?.valorBeneficioFinal || 0;
@@ -1508,3 +1527,4 @@ Object.assign(window, {
     salvarConfiguracoes,
     calcularTempoEntreDatas, limparCalculoTempo
 });
+
