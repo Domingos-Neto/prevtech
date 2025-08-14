@@ -1469,6 +1469,8 @@ Object.assign(window, {
     calcularTempoEntreDatas, limparCalculoTempo
 });
 
+window.auth = auth;
+
 
 
 
