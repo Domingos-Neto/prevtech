@@ -17,7 +17,7 @@ import {
 // 2. No Console do Firebase, ative o App Check para proteger contra abuso.
 // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 const firebaseConfig = {
-    apiKey: "AIzaSyDq9GFOM3HhxsXLPIg4EaxHuQX9ugztT4I",
+    apiKey: "AIzaSyCf4t63pNIg6Eq43jLw1Aer3WtMH_DNlXY",
     authDomain: "prevtech-a3727.firebaseapp.com",
     projectId: "prevtech-a3727",
     storageBucket: "prevtech-a3727.firebasestorage.app",
@@ -1444,6 +1444,7 @@ Object.assign(window, {
     salvarConfiguracoes,
     calcularTempoEntreDatas, limparCalculoTempo
 });
+
 
 
 
