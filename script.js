@@ -22,7 +22,8 @@ const firebaseConfig = {
     storageBucket: "prevtech-ca050.firebasestorage.app",
     messagingSenderId: "847747677288",
     appId: "1:847747677288:web:f1efa50e9e8b93e60bcfdd"
-};
+    measurementId: "G-SK8SXSS4R3"
+  };
 
 const app = initializeApp(firebaseConfig);
 const _auth = getAuth(app);
@@ -1441,6 +1442,7 @@ Object.assign(window, {
     salvarConfiguracoes,
     calcularTempoEntreDatas, limparCalculoTempo
 });
+
 
 
 
