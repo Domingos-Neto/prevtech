@@ -1,14 +1,15 @@
 // =================================================================================
 // MÓDULO DE AUTENTICAÇÃO E CONFIGURAÇÃO (Firebase)
 // =================================================================================
-import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-analytics.js";
 import {
   getAuth,
   GoogleAuthProvider,
   signInWithPopup,
   onAuthStateChanged,
   signOut
-} from "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js";
+} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
 
 // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!! ALERTA DE SEGURANÇA !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 // SUAS CHAVES NUNCA DEVEM SER EXPOSTAS DIRETAMENTE NO CÓDIGO.
@@ -16,16 +17,17 @@ import {
 // 2. No Console do Firebase, ative o App Check para proteger contra abuso.
 // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 const firebaseConfig = {
-    apiKey: "AIzaSyCkzX_5GuNjizbbgzWNgYx3hvEhj2Hr3pM",
-    authDomain: "prevtech-ca050.firebaseapp.com",
-    projectId: "prevtech-ca050",
-    storageBucket: "prevtech-ca050.firebasestorage.app",
-    messagingSenderId: "847747677288",
-    appId: "1:847747677288:web:f1efa50e9e8b93e60bcfdd"
-    measurementId: "G-SK8SXSS4R3"
+    apiKey: "AIzaSyDq9GFOM3HhxsXLPIg4EaxHuQX9ugztT4I",
+    authDomain: "prevtech-a3727.firebaseapp.com",
+    projectId: "prevtech-a3727",
+    storageBucket: "prevtech-a3727.firebasestorage.app",
+    messagingSenderId: "869254299826",
+    appId: "1:869254299826:web:b75c03595311a12e9789ab",
+    measurementId: "G-RCG1XLRQYV"
   };
 
 const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
 const _auth = getAuth(app);
 const provider = new GoogleAuthProvider();
 
@@ -1442,6 +1444,7 @@ Object.assign(window, {
     salvarConfiguracoes,
     calcularTempoEntreDatas, limparCalculoTempo
 });
+
 
 
 
