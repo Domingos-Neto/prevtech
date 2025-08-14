@@ -1,143 +1,169 @@
 // =================================================================================
-// MÓDULO DE AUTENTICAÇÃO E CONFIGURAÇÃO (Firebase)
+// MÓDULO DE AUTENTICAÇÃO + DIAGNÓSTICO (Firebase) — ROBUSTO
 // =================================================================================
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
 import {
   getAuth,
   GoogleAuthProvider,
   signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
+  setPersistence,
+  browserLocalPersistence,
   onAuthStateChanged,
   signOut
 } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js";
 
-// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!! ALERTA DE SEGURANÇA !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-// SUAS CHAVES NUNCA DEVEM SER EXPOSTAS DIRETAMENTE NO CÓDIGO.
-// 1. No Console do Google Cloud, restrinja o uso desta API Key para o domínio do seu site.
-// 2. No Console do Firebase, ative o App Check para proteger contra abuso.
-// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+// !!! Atenção: mantenha este config do MESMO projeto que você está usando no Console !!!
 const firebaseConfig = {
-    apiKey: "AIzaSyCkzX_5GuNjizbbgzWNgYx3hvEhj2Hr3pM",
-    authDomain: "prevtech-ca050.firebaseapp.com",
-    projectId: "prevtech-ca050",
-    storageBucket: "prevtech-ca050.firebasestorage.app",
-    messagingSenderId: "847747677288",
-    appId: "1:847747677288:web:f1efa50e9e8b93e60bcfdd"
+  apiKey: "AIzaSyCkzX_5GuNjizbbgzWNgYx3hvEhj2Hr3pM",
+  authDomain: "prevtech-ca050.firebaseapp.com",
+  projectId: "prevtech-ca050",
+  storageBucket: "prevtech-ca050.firebasestorage.app",
+  messagingSenderId: "847747677288",
+  appId: "1:847747677288:web:f1efa50e9e8b93e60bcfdd"
 };
 
 const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
 const _auth = getAuth(app);
 const provider = new GoogleAuthProvider();
 
-const EMAILS_AUTORIZADOS = ["samarabarroson@gmail.com", "samiaalvesbarroso@gmail.com", "josyy.ns1010@gmail.com", "domingosbarroson@gmail.com", "setordebeneficiositaprev@gmail.com"].map(e => e.toLowerCase());
+// ======== DIAGNÓSTICO VERBAL NO CONSOLE ========
+function printEnvDiagnostics(stage, extra = {}) {
+  const info = {
+    stage,
+    pageURL: window.location.href,
+    host: window.location.host,
+    origin: window.location.origin,
+    protocol: window.location.protocol,
+    firebaseAuthDomain: firebaseConfig.authDomain,
+    userAgent: navigator.userAgent,
+    thirdPartyCookiesLikelyBlocked: /Safari/.test(navigator.userAgent) && !/Chrome|Chromium|CriOS|Edg/.test(navigator.userAgent),
+    ...extra
+  };
+  console.group("%c[Auth Diagnostics] " + stage, "color:#0d47a1;font-weight:bold");
+  console.table(info);
+  console.groupEnd();
+}
+
+function explainAuthError(err) {
+  const map = {
+    "auth/unauthorized-domain": "Domínio NÃO está em Authentication > Settings > Authorized domains.",
+    "auth/operation-not-allowed": "Provedor Google NÃO habilitado em Authentication > Sign-in method.",
+    "auth/popup-blocked": "Popup bloqueado pelo navegador — usando fallback redirect.",
+    "auth/popup-closed-by-user": "Usuário fechou o popup.",
+    "auth/cancelled-popup-request": "Outra tentativa de popup foi cancelada.",
+    "auth/invalid-api-key": "apiKey inválida/incompatível com o projeto.",
+    "auth/invalid-credential": "Credencial inválida no retorno do provedor.",
+  };
+  return map[err.code] || "Erro não mapeado. Ver console para detalhes.";
+}
+
+// ======== CONTROLE DE ACESSO (mantido do seu projeto) ========
+const EMAILS_AUTORIZADOS = [
+  "samarabarroson@gmail.com", "samiaalvesbarroso@gmail.com",
+  "josyy.ns1010@gmail.com", "domingosbarroson@gmail.com",
+  "setordebeneficiositaprev@gmail.com"
+].map(e => e.toLowerCase());
+
 const ADMIN_EMAILS = ["domingosbarroson@gmail.com"].map(e => e.toLowerCase());
 
-// =================================================================================
-//  CONFIGURAÇÕES GLOBAIS E CONSTANTES LEGAIS
-// =================================================================================
-// ATENÇÃO: Este valor deve ser atualizado anualmente conforme o novo salário mínimo nacional.
-const SALARIO_MINIMO = 1518.00; 
-
-const AppState = {
-    usuarioAtual: null,
-    salarioChart: null,
-    simulacaoResultados: {},
-    dashboardViewMode: 'meus_registros',
-    currentStep: 1,
-    configuracoes: { nomePrefeito: '', nomePresidente: '' }
-};
-
+// ======== AUTH API COM FALLBACK E LOGS ========
 const auth = {
-    loginGoogle: async () => {
-        try {
-            await signInWithRedirect(_auth, provider);
-        } catch (err) {
-            console.error("Erro no popup de login Google:", err);
-            const msg = err.code === 'auth/popup-closed-by-user' ? 'A janela de login foi fechada.' : 'Erro ao autenticar com Google.';
-            ui.showToast(msg, false);
-        }
-    },
-    logout: async () => {
-        try {
-            await signOut(_auth);
-            window.location.reload(); 
-        } catch (err) {
-            console.error("Erro ao fazer logout:", err);
-            ui.showToast("Erro ao tentar sair.", false);
-        }
-    },
-    init: () => {
-        onAuthStateChanged(_auth, (user) => {
-            if (user) {
-                const email = (user.email || "").toLowerCase();
-                if (!EMAILS_AUTORIZADOS.includes(email)) {
-                    ui.showToast("⚠️ E-mail não autorizado para acessar o sistema.", false);
-                    signOut(_auth);
-                    return;
-                }
-                AppState.usuarioAtual = {
-                    uid: user.uid,
-                    email: email,
-                    displayName: user.displayName || email,
-                    tipo: ADMIN_EMAILS.includes(email) ? "admin" : "comum",
-                };
-                ui.showApp();
-                initSistemaPosLogin();
-            } else {
-                AppState.usuarioAtual = null;
-                ui.showLogin();
-            }
-        });
+  loginGoogle: async () => {
+    printEnvDiagnostics("Antes do loginGoogle()");
+    // Bloqueio rápido para file:// (sempre falha)
+    if (location.protocol === "file:") {
+      console.error("[Auth] Você está executando via file:// — OAuth não funciona fora de http(s). Use localhost ou GitHub Pages.");
+      ui.showToast("Abra o site via http(s). file:// não suporta login Google.", false);
+      return;
     }
+    try {
+      const result = await signInWithPopup(_auth, provider);
+      printEnvDiagnostics("loginGoogle() popup OK", { userEmail: result?.user?.email });
+    } catch (err) {
+      console.error("[Auth] Erro no popup:", err);
+      const hint = explainAuthError(err);
+      console.warn("[Auth Hint]", hint);
+
+      // Diagnóstico específico para unauthorized-domain
+      if (err.code === "auth/unauthorized-domain") {
+        console.warn(
+          "[Auth] PROVÁVEL CAUSA: Falta autorizar domínio no Firebase.\n" +
+          "Acesse Console > Authentication > Settings > Authorized domains e adicione:\n" +
+          `- ${location.host}\n- localhost (para testes locais)`
+        );
+      }
+
+      // Fallback quando o popup é bloqueado
+      if (err.code === "auth/popup-blocked") {
+        printEnvDiagnostics("Popup bloqueado — aplicando signInWithRedirect()");
+        await signInWithRedirect(_auth, provider);
+        return;
+      }
+      ui.showToast(hint, false);
+    }
+  },
+
+  logout: async () => {
+    try {
+      await signOut(_auth);
+      window.location.reload();
+    } catch (err) {
+      console.error("Erro ao fazer logout:", err);
+      ui.showToast("Erro ao tentar sair.", false);
+    }
+  },
+
+  init: async () => {
+    printEnvDiagnostics("init(): início");
+    // Persistência local para manter sessão
+    try {
+      await setPersistence(_auth, browserLocalPersistence);
+      printEnvDiagnostics("Persistência configurada", { persistence: "browserLocalPersistence" });
+    } catch (err) {
+      console.error("[Auth] Falha ao definir persistência:", err);
+    }
+
+    // Trata retorno do redirect (iOS/Safari)
+    try {
+      const red = await getRedirectResult(_auth);
+      if (red?.user) {
+        printEnvDiagnostics("getRedirectResult(): usuário retornou do redirect", { userEmail: red.user.email });
+      }
+    } catch (err) {
+      console.error("[Auth] Erro ao processar getRedirectResult:", err);
+      console.warn("[Auth Hint]", explainAuthError(err));
+    }
+
+    // Observa o estado
+    onAuthStateChanged(_auth, (user) => {
+      printEnvDiagnostics("onAuthStateChanged()", { loggedIn: !!user, email: user?.email || null });
+      if (user) {
+        const email = (user.email || "").toLowerCase();
+        if (!EMAILS_AUTORIZADOS.includes(email)) {
+          console.warn("[Auth] E-mail não autorizado pelo sistema:", email);
+          ui.showToast("⚠️ E-mail não autorizado para acessar o sistema.", false);
+          signOut(_auth);
+          return;
+        }
+        AppState.usuarioAtual = {
+          uid: user.uid,
+          email: email,
+          displayName: user.displayName || email,
+          tipo: ADMIN_EMAILS.includes(email) ? "admin" : "comum",
+        };
+        ui.showApp();
+        initSistemaPosLogin();
+      } else {
+        AppState.usuarioAtual = null;
+        ui.showLogin();
+      }
+    });
+  }
 };
 
-const ui = {
-    showToast: (text, isSuccess = true) => {
-        Toastify({ text, duration: 3500, close: true, gravity: "top", position: "right", stopOnFocus: true, style: { background: isSuccess ? "linear-gradient(to right, #00b09b, #96c93d)" : "linear-gradient(to right, #ff5f6d, #ffc371)", }}).showToast();
-    },
-    toggleSpinner: (button, show) => {
-        if (button) {
-            button.disabled = show;
-            button.classList.toggle('button-loading', show);
-        }
-    },
-    updateUserInfo: () => {
-        if (!AppState.usuarioAtual) return;
-        const { displayName, tipo } = AppState.usuarioAtual;
-        const userInitial = displayName.substring(0, 2).toUpperCase();
-        document.getElementById("usuarioLogado").innerText = displayName;
-        document.getElementById("usuarioLogadoSidebar").innerText = displayName;
-        document.getElementById("usuarioTipoSidebar").innerText = tipo === "admin" ? "Administrador" : "Usuário Comum";
-        document.getElementById("user-avatar").innerText = userInitial;
-    },
-    showLogin: () => {
-        document.getElementById("telaLogin").style.display = "flex";
-        document.querySelector(".app-container").style.display = "none";
-        document.getElementById("floating-buttons-container").style.display = "none";
-    },
-    showApp: () => {
-        document.getElementById("telaLogin").style.display = "none";
-        document.querySelector(".app-container").style.display = "flex";
-        document.getElementById("floating-buttons-container").style.display = "flex";
-    },
-    showView: (viewId) => {
-        const views = ['dashboard', 'simulacao', 'geradorCTC', 'telaLegislacao', 'telaConfiguracoes', 'telaCadastro', 'telaProcessos', 'telaFinanceiro', 'telaRelatorios', 'telaUsuarios'];
-        views.forEach(id => {
-            const viewElement = document.getElementById(id);
-            if (viewElement) viewElement.style.display = 'none';
-        });
-        const viewToShow = document.getElementById(viewId);
-        if (viewToShow) viewToShow.style.display = 'block';
-    },
-    updateActiveNav: (targetView) => {
-        document.querySelectorAll('#main-nav a').forEach(a => a.classList.remove('active'));
-        const activeLink = document.querySelector(`#main-nav a[onclick*="'${targetView}'"]`);
-        if (activeLink) activeLink.classList.add('active');
-    }
-};
-
-const EXPECTATIVA_SOBREVIDA_IBGE = { M: { 55: 25.5, 56: 24.7, 57: 23.9, 58: 23.1, 59: 22.3, 60: 21.6, 61: 20.8, 62: 20.1, 63: 19.4, 64: 18.7, 65: 18.0 }, F: { 52: 30.1, 53: 29.2, 54: 28.4, 55: 27.5, 56: 26.7, 57: 25.8, 58: 25.0, 59: 24.1, 60: 23.3, 61: 22.5, 62: 21.7 } };
-
+// Gatilho inicial
 document.addEventListener("DOMContentLoaded", auth.init);
 
 function initSistemaPosLogin() {
@@ -1442,6 +1468,7 @@ Object.assign(window, {
     salvarConfiguracoes,
     calcularTempoEntreDatas, limparCalculoTempo
 });
+
 
 
 
