@@ -71,19 +71,41 @@ const auth = {
             console.error("Erro no popup de login Google:", err);
             const msg = err.code === 'auth/popup-closed-by-user' ? 'A janela de login foi fechada.' : 'Erro ao autenticar com Google.';
             ui.showToast(msg, false);
+        }const auth = {
+    // Login com fallback para redirect
+    loginGoogle: async () => {
+        try {
+            await signInWithPopup(_auth, provider);
+        } catch (err) {
+            if (err.code === "auth/popup-blocked") {
+                // Fallback se popup for bloqueado
+                await signInWithRedirect(_auth, provider);
+            } else {
+                console.error("Erro no login Google:", err);
+                ui.showToast("Erro ao autenticar com Google.", false);
+            }
         }
     },
     logout: async () => {
         try {
             await signOut(_auth);
-            window.location.reload(); 
+            window.location.reload();
         } catch (err) {
             console.error("Erro ao fazer logout:", err);
             ui.showToast("Erro ao tentar sair.", false);
         }
     },
-    init: () => {
-        onAuthStateChanged(_auth, (user) => {
+    init: async () => {
+        // Trata retorno de login por redirect (necessário para iOS/Safari)
+        try {
+            const result = await getRedirectResult(_auth);
+            if (result && result.user) {
+                console.log("Login via redirect concluído:", result.user.email);
+            }
+        } catch (err) {
+            console.error("Erro ao processar retorno do redirect:", err);
+        }
+          onAuthStateChanged(_auth, (user) => {
             if (user) {
                 const email = (user.email || "").toLowerCase();
                 if (!EMAILS_AUTORIZADOS.includes(email)) {
@@ -1458,6 +1480,7 @@ Object.assign(window, {
     salvarConfiguracoes,
     calcularTempoEntreDatas, limparCalculoTempo
 });
+
 
 
 
