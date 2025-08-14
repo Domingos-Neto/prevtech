@@ -2,7 +2,8 @@
   "name": "PREVTECH - Sistema de Gestão Previdenciária v3.5",
   "short_name": "PREVTECH",
   "description": "Sistema de Gestão do RPPS - Itapipoca",
-  "start_url": "./index.html",
+  "start_url": "/prevtech/index.html"
+  "scope": "/prevtech/"
   "display": "standalone",
   "background_color": "#0d47a1",
   "theme_color": "#0d47a1",
