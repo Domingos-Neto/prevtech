@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8" />
-<title>ITAPREV - Sistema de Gestão Previdenciária v3.5 (Revisado)</title>
+<title>PREVTECH - Sistema de Gestão Previdenciária v3.5 (Revisado)</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -171,10 +171,11 @@
                             <label>Cargo (com referência): <input type="text" id="cargoServidor" placeholder="Ex: Professora de Educação Básica II Ref. 16" /></label>
                             <label>Carga Horária: <input type="text" id="cargaHorariaServidor" placeholder="Ex: 20hrs. semanais" /></label>
                             <label>Lotação (Secretaria): <input type="text" id="lotacaoServidor" placeholder="Ex: Secretaria de Educação de Itapipoca-CE" /></label>
+                            <label>Magistério (Lei 11.301/2006)? <select id="isMagisterio"><option value="nao" selected>Não</option><option value="sim">Sim</option></select></label>
                             <label>Data de Admissão: <input type="date" id="dataAdmissao" /></label>
+                            <label>Data de Nascimento: <input type="date" id="dataNascimento" /></label>
                             <label>Data do Requerimento: <input type="date" id="dataRequerimento" /></label>
                             <label>Data do Cálculo: <input type="date" id="dataCalculo" /></label>
-                            <label>Data de Nascimento: <input type="date" id="dataNascimento" /></label>
                             <label>Sexo: <select id="sexo"><option value="M">Masculino</option><option value="F">Feminino</option></select></label>
                             <label>Tempo de Contribuição Externo (dias): <input type="number" id="tempoExterno" value="0" min="0" /></label>
                             <label><div class="tooltip-container">Tempo Especial Convertido (dias):<span class="tooltip">?<span class="tooltiptext">Informe o tempo de atividade especial já convertido em tempo comum. Ex: 10 anos de atividade especial de um homem (fator 1.4) se convertem em 14 anos de tempo comum (5110 dias), ou seja, 4 anos (1460 dias) a serem informados aqui.</span></span></div><input type="number" id="tempoEspecial" value="0" min="0" /></label>
@@ -193,10 +194,10 @@
                         <label>Matrícula: <input type="text" id="ctc-matricula"></label>
                         <label>CPF: <input type="text" id="ctc-cpf" placeholder="000.000.000-00"><small id="ctc-cpf-status" class="status-message"></small></label>
                         <label>RG (com órgão emissor): <input type="text" id="ctc-rg"></label>
-                        <label>Data de Nascimento: <input type="date" id="ctc-dataNascimento"></label>
                         <label>Sexo: <select id="ctc-sexo"><option value="M">Masculino</option><option value="F">Feminino</option></select></label>
                         <label>Cargo Efetivo: <input type="text" id="ctc-cargo" placeholder="Ex: Professor de Educação Básica II"></label>
                         <label>Lotação (Secretaria): <input type="text" id="ctc-lotacao" placeholder="Ex: Secretaria de Educação"></label>
+                        <label>Data de Nascimento: <input type="date" id="ctc-dataNascimento"></label>
                         <label>Data de Admissão: <input type="date" id="ctc-dataAdmissao"></label>
                         <label>Data de Exoneração: <input type="date" id="ctc-dataExoneracao"></label>
                         <label>Nº do Processo: <input type="text" id="ctc-processo"></label>
@@ -268,4 +269,5 @@
 
 </body>
 </html>
+
 
