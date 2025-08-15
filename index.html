@@ -2,12 +2,12 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8" />
-<title>PREVTECH - Sistema de Gestão Previdenciária v3.5</title>
+<title>ITAPREV - Sistema de Gestão Previdenciária v3.5 (Revisado)</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-<!-- 🆕 PWA -->
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#0d47a1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
 <link rel="stylesheet" href="style.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css">
@@ -26,6 +26,8 @@
       </div>
     </div>
     <div class="login-form" id="login-form-container">
+      <img src="Logo PrevTech arredondada.jpg" alt="Logo PrevTech" class="login-logo">
+      
       <h2>Acesse sua Conta</h2>
       <p>Bem-vindo(a) de volta! Use sua conta Google autorizada para acessar.</p>
       
@@ -97,17 +99,18 @@
                             <option value="todos_usuarios">Todos os Usuários</option>
                         </select>
                     </div>
+                    
                     <div class="dashboard-grid">
-                        <div class="dashboard-card" onclick="handleNavClick(event, 'simulacao')"><i class="ri-add-circle-line" style="color: #0d47a1;"></i><span>Nova Simulação de Benefício</span></div>
-                        <div class="dashboard-card" onclick="handleNavClick(event, 'geradorCTC')"><i class="ri-file-text-line" style="color: #17a2b8;"></i><span>Gerar Certidão (CTC)</span></div>
-                        <div class="dashboard-card" onclick="handleNavClick(event, 'telaLegislacao')"><i class="ri-book-open-line" style="color: #6f42c1;"></i><span>Acessar Legislação</span></div>
+                        <div class="dashboard-card" onclick="handleNavClick(event, 'simulacao')"><i class="ri-add-circle-line"></i><span>Nova Simulação de Benefício</span></div>
+                        <div class="dashboard-card" onclick="handleNavClick(event, 'geradorCTC')"><i class="ri-file-text-line"></i><span>Gerar Certidão (CTC)</span></div>
+                        <div class="dashboard-card" onclick="handleNavClick(event, 'telaLegislacao')"><i class="ri-book-open-line"></i><span>Acessar Legislação</span></div>
                         
-                        <div class="dashboard-card" style="text-align: left; align-items: flex-start; cursor: default; grid-column: 4; grid-row: 1 / span 2;">
+                        <div class="dashboard-card" style="text-align: left; align-items: flex-start; cursor: default;">
                             <h4 style="margin-top:0; display:flex; align-items:center; gap:8px; border:none; font-size: 1.1em;">
-                                <i class="ri-time-line" style="font-size: 1.5rem; margin-bottom:0; color: #dc3545;"></i>
-                                <span style="color: var(--text-color);">Calculadora de Tempo</span>
+                                <i class="ri-time-line" style="font-size: 1.5rem; margin-bottom:0;"></i>
+                                <span style="color: var(--cor-texto);">Calculadora de Tempo</span>
                             </h4>
-                            <p style="font-size:0.9em; margin-top: 5px; margin-bottom:15px; color: var(--text-secondary-color);">Calcule o tempo entre duas datas para fins previdenciários.</p>
+                            <p style="font-size:0.9em; margin-top: 5px; margin-bottom:15px; color: var(--cor-texto-secundario);">Calcule o tempo entre duas datas.</p>
                             <div style="width:100%; display:grid; gap:10px;">
                                 <label style="font-size:0.9em;">Data Início: <input type="date" id="calc-data-inicio" style="padding:8px;"></label>
                                 <label style="font-size:0.9em;">Data Fim: <input type="date" id="calc-data-fim" style="padding:8px;"></label>
@@ -116,25 +119,25 @@
                                     <button id="btn-calcular-tempo" class="danger" style="margin-top:0;">Calcular</button>
                                 </div>
                             </div>
-                            <div id="resultado-calculo-tempo" style="margin-top:15px; background: var(--secondary-color); padding:10px; border-radius:6px; width:100%; min-height:75px; font-size: 0.9em;">
-                                </div>
+                            <div id="resultado-calculo-tempo" style="margin-top:15px; background: var(--cor-fundo); padding:10px; border-radius:6px; width:100%; min-height:75px; font-size: 0.9em;"></div>
                         </div>
 
-                        <div class="dashboard-card" style="grid-column: 1 / span 3; align-items: flex-start; text-align: left;">
+                        <div class="dashboard-card" style="grid-column: 1 / -1; align-items: flex-start; text-align: left;">
                             <h4 style="margin-top:0; display:flex; align-items:center; gap:8px; border:none; font-size: 1.1em;">
-                                <i class="ri-rocket-line" style="font-size: 1.5rem; margin-bottom:0; color: #ffc107;"></i>
-                                <span style="color: var(--text-color);">Acesso Rápido aos Módulos</span>
+                                <i class="ri-pie-chart-2-line" style="font-size: 1.5rem; margin-bottom:0;"></i>
+                                <span>Distribuição de Tipos de Benefícios</span>
                             </h4>
-                            <p style="font-size:0.9em; margin-top: 5px; margin-bottom:15px; color: var(--text-secondary-color);">Navegue diretamente para os principais módulos de gestão do sistema.</p>
-                            <div style="width: 100%; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-items: stretch;">
-                                <button onclick="handleNavClick(event, 'telaCadastro')" class="secondary" style="margin-top:0; padding: 12px; text-align:left; display:flex; align-items:center; gap:8px;"><i class="ri-user-settings-line"></i> Gestão Cadastral</button>
-                                <button onclick="handleNavClick(event, 'telaProcessos')" class="secondary" style="margin-top:0; padding: 12px; text-align:left; display:flex; align-items:center; gap:8px;"><i class="ri-node-tree"></i> Acomp. de Processos</button>
-                                <button onclick="handleNavClick(event, 'telaFinanceiro')" class="secondary" style="margin-top:0; padding: 12px; text-align:left; display:flex; align-items:center; gap:8px;"><i class="ri-line-chart-line"></i> Financeiro</button>
-                                <button onclick="handleNavClick(event, 'telaRelatorios')" class="secondary" style="margin-top:0; padding: 12px; text-align:left; display:flex; align-items:center; gap:8px;"><i class="ri-file-chart-line"></i> Relatórios e BI</button>
+                            <div style="width: 100%; height: 280px; position: relative;">
+                                <canvas id="graficoTiposBeneficio"></canvas>
                             </div>
                         </div>
-
+                        
+                        <div class="dashboard-card" style="cursor: default;"><i class="ri-file-list-3-line"></i><span>Total de Simulações</span><h3 id="kpi-total-simulacoes" style="margin:5px 0 0 0; border:none;">0</h3></div>
+                        <div class="dashboard-card" style="cursor: default;"><i class="ri-file-text-line"></i><span>Total de CTCs</span><h3 id="kpi-total-ctcs" style="margin:5px 0 0 0; border:none;">0</h3></div>
+                        <div class="dashboard-card" style="cursor: default;"><i class="ri-money-dollar-circle-line"></i><span>Valor Médio (Benefício)</span><h3 id="kpi-valor-medio" style="margin:5px 0 0 0; border:none;">R$ 0,00</h3></div>
+                        <div class="dashboard-card" style="cursor: default;"><i class="ri-calendar-check-line"></i><span>Total de Dias (CTC)</span><h3 id="kpi-total-dias-ctc" style="margin:5px 0 0 0; border:none;">0</h3></div>
                     </div>
+
                     <h3 class="accordion-toggle"><i class="ri-folder-history-fill"></i> Histórico de Simulações Salvas</h3>
                     <ul id="listaHistorico" class="accordion-content"></ul>
                     <h3 class="accordion-toggle"><i class="ri-file-copy-2-fill"></i> CTCs Salvas</h3>
@@ -172,9 +175,16 @@
                             <label>Data do Requerimento: <input type="date" id="dataRequerimento" /></label>
                             <label>Data do Cálculo: <input type="date" id="dataCalculo" /></label>
                             <label>Data de Nascimento: <input type="date" id="dataNascimento" /></label>
-                            <label>Sexo: <select id="sexo"><option value="M">Masculino</option><option value="F">Feminino</option></select></label>
+                            <label>Sexo: <select id="sexo"><option value="M">Masculino</option><option value="F">Feminino</option></select>
+<label>
+  Magistério (Lei 11.301/2006)?
+  <select id="isMagisterio">
+    <option value="nao" selected>Não</option>
+    <option value="sim">Sim</option>
+  </select>
+</label></label>
                             <label>Tempo de Contribuição Externo (dias): <input type="number" id="tempoExterno" value="0" min="0" /></label>
-                            <label><div class="tooltip-container">Tempo Especial Convertido (dias):<span class="tooltip">?<span class="tooltiptext">Informe o tempo de atividade especial já convertido em tempo comum. Ex: 10 anos de atividade especial de um homem (fator 1.4) se convertem em 14 anos de tempo comum (5110 dias), ou seja, 4 anos (1460 dias) a mais a serem informados aqui.</span></span></div><input type="number" id="tempoEspecial" value="0" min="0" /></label>
+                            <label><div class="tooltip-container">Tempo Especial Convertido (dias):<span class="tooltip">?<span class="tooltiptext">Informe o tempo de atividade especial já convertido em tempo comum. Ex: 10 anos de atividade especial de um homem (fator 1.4) se convertem em 14 anos de tempo comum (5110 dias), ou seja, 4 anos (1460 dias) a serem informados aqui.</span></span></div><input type="number" id="tempoEspecial" value="0" min="0" /></label>
                         </div>
                         <div id="camposAtoAposentadoria" style="display:none;"><h4>Informações para o Ato de Aposentadoria</h4><div class="form-grid"><label>Nº do Processo Administrativo: <input type="text" id="processoAposentadoria" /></label><label>Nº do Ato de Aposentadoria: <input type="number" id="atoNumeroAposentadoria" /></label></div><label>Fundamento Legal (para o Ato de Aposentadoria):<textarea id="fundamentoLegalPersonalizado"></textarea></label></div>
                         <div id="camposAtoPensao" style="display:none;"><h4>Informações para o Ato de Pensão</h4><div class="form-grid"><label>Nome do Pensionista Principal (Beneficiário): <input type="text" id="nomePensionista" /></label><label>Relação de Parentesco (do Principal): <input type="text"id="relacaoPensionista" /></label><label>Data do Óbito do Servidor: <input type="date" id="dataObito" /></label><label>Nº do Processo Administrativo: <input type="text" id="processoAdministrativo" /></label><label>Nº do Ato de Pensão: <input type="number" id="atoNumero" /></label></div></div>
@@ -197,203 +207,42 @@
                         <label>Data de Admissão: <input type="date" id="ctc-dataAdmissao"></label>
                         <label>Data de Exoneração: <input type="date" id="ctc-dataExoneracao"></label>
                         <label>Nº do Processo: <input type="text" id="ctc-processo"></label>
-                    </div><h4>Períodos de Contribuição</h4><table id="tabela-periodos-ctc"><thead><tr><th style="width: 150px;">Data Início</th><th style="width: 150px;">Data Fim</th><th style="width: 100px;">Tempo Bruto (dias)</th><th style="width: 100px;">Deduções (dias)</th><th style="width: 120px;">Tempo Líquido (dias)</th><th>Fonte / Observação</th><th style="width: 100px;">Ações</th></tr></thead><tbody id="corpo-tabela-periodos-ctc"></tbody></table><button type="button" onclick="adicionarLinhaPeriodoCTC()">+ Adicionar Período</button><h4 id="total-tempo-ctc" style="text-align: right; border-top: 2px solid var(--primary-color); padding-top: 10px; margin-top:20px;">Total: 0 dias</h4><div class="wizard-nav"><button class="secondary" onclick="handleNavClick(event, 'dashboard')">Voltar ao Painel</button><button onclick="salvarCTC()" class="secondary">💾 Salvar CTC</button><button class="success" onclick="gerarDocumentoCTC(this)"><span class="button-text">🏛️ Gerar Documento CTC</span><span class="spinner"></span></button></div>
+                    </div><h4>Períodos de Contribuição</h4><table id="tabela-periodos-ctc"><thead><tr><th style="width: 150px;">Data Início</th><th style="width: 150px;">Data Fim</th><th style="width: 100px;">Tempo Bruto (dias)</th><th style="width: 100px;">Deduções (dias)</th><th style="width: 120px;">Tempo Líquido (dias)</th><th>Fonte / Observação</th><th style="width: 100px;">Ações</th></tr></thead><tbody id="corpo-tabela-periodos-ctc"></tbody></table><button type="button" onclick="adicionarLinhaPeriodoCTC()">+ Adicionar Período</button><h4 id="total-tempo-ctc" style="text-align: right; border-top: 2px solid var(--prevtech-azul-escuro); padding-top: 10px; margin-top:20px;">Total: 0 dias</h4><div class="wizard-nav"><button class="secondary" onclick="handleNavClick(event, 'dashboard')">Voltar ao Painel</button><button onclick="salvarCTC()" class="secondary">💾 Salvar CTC</button><button class="success" onclick="gerarDocumentoCTC(this)"><span class="button-text">🏛️ Gerar Documento CTC</span><span class="spinner"></span></button></div>
                 </div>
 
                 <div id="telaLegislacao" style="display:none;">
-    <h2><i class="ri-book-open-fill"></i> Legislação Aplicável ao RPPS</h2>
-    <p style="font-size: 1.05em; color: var(--text-secondary-color); margin-top:-5px; margin-bottom: 30px;">
-        Consulte as principais normas que regem o Regime Próprio de Previdência Social de Itapipoca. Mantenha-se atualizado sobre os fundamentos legais para a concessão e cálculo de benefícios.
-    </p>
-
-    <h4><i class="ri-government-fill"></i> Normas Federais</h4>
-    <div class="dashboard-grid">
-        <div class="dashboard-card" style="cursor: default; text-align: left; align-items: flex-start; flex-direction: column;">
-            <i class="ri-scales-3-line" style="font-size: 2.8rem; margin-bottom: 15px; color: #6f42c1;"></i>
-            <h5 style="margin:0; font-size:1.1em; line-height: 1.2;">Constituição Federal<br><b>Artigo 40</b></h5>
-            <p style="font-size:0.9em; margin-top: 10px; margin-bottom:15px; flex-grow:1; color: var(--text-secondary-color);">
-                A base de todo o sistema. Estabelece as diretrizes constitucionais para os Regimes Próprios de Previdência Social (RPPS) dos servidores públicos.
-            </p>
-            <a href="https://www.planalto.gov.br/ccivil_03/constituicao/constituicao.htm" target="_blank" rel="noopener noreferrer" style="text-decoration: none; width:100%;"><button style="width:100%; margin-top: auto;">Consultar Artigo</button></a>
-        </div>
-
-        <div class="dashboard-card" style="cursor: default; text-align: left; align-items: flex-start; flex-direction: column;">
-            <i class="ri-article-line" style="font-size: 2.8rem; margin-bottom: 15px; color: #dc3545;"></i>
-            <h5 style="margin:0; font-size:1.1em; line-height: 1.2;">Emenda Constitucional<br><b>Nº 103/2019</b></h5>
-            <p style="font-size:0.9em; margin-top: 10px; margin-bottom:15px; flex-grow:1; color: var(--text-secondary-color);">
-                A "Reforma da Previdência". Altera o sistema de previdência, estabelecendo as regras de transição, cálculo e os requisitos de aposentadoria vigentes.
-            </p>
-            <a href="https://www.planalto.gov.br/ccivil_03/constituicao/emendas/emc/emc103.htm" target="_blank" rel="noopener noreferrer" style="text-decoration: none; width:100%;"><button style="width:100%; margin-top: auto;">Visualizar PDF</button></a>
-        </div>
-
-        <div class="dashboard-card" style="cursor: default; text-align: left; align-items: flex-start; flex-direction: column;">
-            <i class="ri-file-text-line" style="font-size: 2.8rem; margin-bottom: 15px; color: #17a2b8;"></i>
-            <h5 style="margin:0; font-size:1.1em; line-height: 1.2;">Lei Federal<br><b>Nº 9.717/1998</b></h5>
-            <p style="font-size:0.9em; margin-top: 10px; margin-bottom:15px; flex-grow:1; color: var(--text-secondary-color);">
-                Dispõe sobre regras gerais para a organização e o funcionamento dos RPPS da União, dos Estados, do DF e dos Municípios.
-            </p>
-            <a href="pdfs/lei_9717_98.pdf" target="_blank" rel="noopener noreferrer" style="text-decoration: none; width:100%;"><button style="width:100%; margin-top: auto;">Visualizar PDF</button></a>
-        </div>
-    </div>
-
-    <h4 style="margin-top: 40px;"><i class="ri-community-fill"></i> Normas Municipais (Itapipoca-CE)</h4>
-    <div class="dashboard-grid">
-        <div class="dashboard-card" style="cursor: default; text-align: left; align-items: flex-start; flex-direction: column;">
-            <i class="ri-building-line" style="font-size: 2.8rem; margin-bottom: 15px; color: #0d47a1;"></i>
-            <h5 style="margin:0; font-size:1.1em; line-height: 1.2;">Lei Municipal<br><b>Nº 047/2008</b></h5>
-            <p style="font-size:0.9em; margin-top: 10px; margin-bottom:15px; flex-grow:1; color: var(--text-secondary-color);">
-                A lei de criação do ITAPREV. Dispõe sobre a reestruturação do Regime Próprio de Previdência Social do Município de Itapipoca.
-            </p>
-            <a href="#" target="_blank" style="text-decoration: none; width:100%;"><button style="width:100%; margin-top: auto;">Visualizar PDF</button></a>
-        </div>
-
-        <div class="dashboard-card" style="cursor: default; text-align: left; align-items: flex-start; flex-direction: column;">
-            <i class="ri-edit-2-line" style="font-size: 2.8rem; margin-bottom: 15px; color: #28a745;"></i>
-            <h5 style="margin:0; font-size:1.1em; line-height: 1.2;">Lei Municipal<br><b>Nº 035/2022</b></h5>
-            <p style="font-size:0.9em; margin-top: 10px; margin-bottom:15px; flex-grow:1; color: var(--text-secondary-color);">
-                A reforma municipal. Altera a legislação do RPPS para adequá-la às disposições da Emenda Constitucional nº 103/2019.
-            </p>
-            <a href="#" target="_blank" style="text-decoration: none; width:100%;"><button style="width:100%; margin-top: auto;">Visualizar PDF</button></a>
-        </div>
-
-        <div class="dashboard-card" style="cursor: default; text-align: left; align-items: flex-start; flex-direction: column;">
-            <i class="ri-shield-check-line" style="font-size: 2.8rem; margin-bottom: 15px; color: #ffc107;"></i>
-            <h5 style="margin:0; font-size:1.1em; line-height: 1.2;">Portaria MTP<br><b>Nº 1.467/2022</b></h5>
-            <p style="font-size:0.9em; margin-top: 10px; margin-bottom:15px; flex-grow:1; color: var(--text-secondary-color);">
-                 Disciplina parâmetros e diretrizes gerais para organização e funcionamento dos RPPS, conforme a EC 103/2019.
-            </p>
-            <a href="pdfs/portaria_mps_1467_2022.pdf" target="_blank" style="text-decoration: none; width:100%;"><button style="width:100%; margin-top: auto;">Visualizar PDF</button></a>
-        </div>
-    </div>
-</div>
+                    <h2><i class="ri-book-open-fill"></i> Legislação Aplicável ao RPPS</h2>
+                    <p> ... </p>
+                </div>
 
                 <div id="telaConfiguracoes" style="display:none;">
                     <h2><i class="ri-settings-3-fill"></i> Configurações do Sistema</h2>
-                    <p style="font-size: 1.05em; color: var(--text-secondary-color); margin-top:-5px; margin-bottom: 30px;">
-                        Gerencie aqui as informações que são utilizadas globalmente no sistema, como os nomes para assinatura nos documentos oficiais.
-                    </p>
-                
-                    <h4>Nomes para Assinatura</h4>
-                    <div class="form-grid">
-                        <label>Nome do Prefeito(a) Municipal:
-                            <input type="text" id="config-nome-prefeito" placeholder="Digite o nome completo do Prefeito(a)">
-                        </label>
-                        <label>Nome do(a) Presidente do Instituto:
-                            <input type="text" id="config-nome-presidente" placeholder="Digite o nome completo do(a) Presidente">
-                        </label>
-                    </div>
-                
-                    <div class="wizard-nav" style="justify-content: flex-end;">
-                        <button onclick="salvarConfiguracoes(this)" class="success">
-                            <span class="button-text">💾 Salvar Configurações</span>
-                            <span class="spinner"></span>
-                        </button>
-                    </div>
+                    <p> ... </p>
                 </div>
 
                 <div id="telaCadastro" style="display:none;">
                     <h2><i class="ri-user-settings-fill"></i> Módulo de Gestão Cadastral</h2>
-                    <p>Gerencie as informações de todos os servidores e pensionistas do RPPS.</p>
-                    <div class="form-grid" style="align-items: flex-end; margin-bottom: 20px;">
-                        <input type="text" placeholder="Buscar por nome, CPF ou matrícula...">
-                        <button>Buscar Servidor</button>
-                        <button class="success">Adicionar Novo Servidor</button>
-                    </div>
-                    
-                    <div id="fichaCadastralServidor">
-                        <h4>Ficha Cadastral: <span style="color: var(--primary-light);">Maria Oliveira Santos</span></h4>
-                        <div class="tab-nav">
-                            <button class="active">Dados Pessoais</button>
-                            <button>Dados Funcionais</button>
-                            <button>Dependentes</button>
-                            <button>Histórico de Contribuições</button>
-                        </div>
-                        <div class="tab-content active">
-                            <div class="form-grid">
-                                <label>Nome Completo: <input type="text" value="Maria Oliveira Santos" readonly></label>
-                                <label>CPF: <input type="text" value="999.888.777-66" readonly></label>
-                                <label>Data de Nascimento: <input type="date" value="1970-05-20" readonly></label>
-                                <label>Endereço: <input type="text" value="Rua das Flores, 123" readonly></label>
-                            </div>
-                        </div>
-                    </div>
+                    <p> ... </p>
                 </div>
                 
                 <div id="telaProcessos" style="display:none;">
                     <h2><i class="ri-node-tree"></i> Módulo de Acompanhamento de Processos</h2>
-                    <p>Acompanhe o andamento dos processos de concessão de benefícios de forma visual e organizada.</p>
-                     <div class="kanban-board">
-                        <div class="kanban-column">
-                            <h4><i class="ri-inbox-line"></i> Novos Pedidos</h4>
-                            <div class="kanban-card">
-                                <p>Aposentadoria Voluntária</p>
-                                <small>Requerente: CARLOS SOUZA</small>
-                                <small>Processo: 2025/00123</small>
-                                <small>Data de Entrada: 25/07/2025</small>
-                            </div>
-                        </div>
-                        <div class="kanban-column">
-                            <h4><i class="ri-file-search-line"></i> Em Análise</h4>
-                             <div class="kanban-card">
-                                <p>Pensão por Morte</p>
-                                <small>Requerente: ANA LIMA (Dependente)</small>
-                                <small>Processo: 2025/00119</small>
-                                <small>Data de Entrada: 22/07/2025</small>
-                            </div>
-                             <div class="kanban-card">
-                                <p>Emissão de CTC</p>
-                                <small>Requerente: JOSÉ ALMEIDA</small>
-                                <small>Processo: 2025/00121</small>
-                                <small>Data de Entrada: 23/07/2025</small>
-                            </div>
-                        </div>
-                        <div class="kanban-column">
-                            <h4><i class="ri-check-double-line"></i> Concluídos</h4>
-                             <div class="kanban-card">
-                                <p>Aposentadoria por Incapacidade</p>
-                                <small>Requerente: RITA DE CÁSSIA</small>
-                                <small>Processo: 2025/00115</small>
-                                <small>Data de Entrada: 15/07/2025</small>
-                            </div>
-                        </div>
-                    </div>
+                    <p> ... </p>
                 </div>
 
                 <div id="telaFinanceiro" style="display:none;">
                     <h2><i class="ri-line-chart-fill"></i> Módulo Financeiro e Contribuições</h2>
-                    <p>Controle a arrecadação, despesas e a saúde financeira do fundo de previdência.</p>
-                    <div class="dashboard-grid">
-                        <div class="dashboard-card"><i class="ri-arrow-down-line" style="color:#28a745"></i><span>Arrecadação do Mês<br><b>R$ 1.500.000,00</b></span></div>
-                        <div class="dashboard-card"><i class="ri-arrow-up-line" style="color:#dc3545"></i><span>Despesas com Benefícios<br><b>R$ 1.250.000,00</b></span></div>
-                        <div class="dashboard-card"><i class="ri-scales-3-line" style="color:#17a2b8"></i><span>Saldo do Fundo<br><b>R$ 50.000.000,00</b></span></div>
-                    </div>
-                    <h4>Controle de Folhas de Pagamento</h4>
-                    <table>
-                        <thead><tr><th>Competência</th><th>Data de Importação</th><th>Valor Total</th><th>Status</th></tr></thead>
-                        <tbody>
-                            <tr><td>06/2025</td><td>05/07/2025</td><td>R$ 1.480.754,30</td><td>Conciliado</td></tr>
-                            <tr><td>05/2025</td><td>06/06/2025</td><td>R$ 1.475.012,88</td><td>Conciliado</td></tr>
-                            <tr><td>04/2025</td><td>06/06/2025</td><td>R$ 1.452.325,21</td><td>Conciliado</td></tr>
-                            <tr><td>03/2025</td><td>06/06/2025</td><td>R$ 1.402.850,00</td><td>Conciliado</td></tr>
-                        </tbody>
-                    </table>
+                    <p> ... </p>
                 </div>
 
                 <div id="telaRelatorios" style="display:none;">
                     <h2><i class="ri-file-chart-fill"></i> Módulo de Relatórios e BI</h2>
-                    <p>Gere relatórios gerenciais, estatísticos e para os órgãos de controle.</p>
-                    <ul class="list-group">
-                        <li class="list-group-item"><div><b>Extrato de Contribuições do Servidor</b><br><small>Gera o extrato individual com todas as contribuições de um servidor.</small></div><button>Gerar</button></li>
-                        <li class="list-group-item"><div><b>Relação de Aposentados e Pensionistas</b><br><small>Lista todos os beneficiários atuais e o valor de seus proventos.</small></div><button>Gerar</button></li>
-                        <li class="list-group-item"><div><b>Dados para Avaliação Atuarial</b><br><small>Exporta a base de dados consolidada para a realização do cálculo atuarial.</small></div><button>Gerar</button></li>
-                        <li class="list-group-item"><div><b>Relatório para o COMPREV</b><br><small>Gera os dados necessários para a Compensação Previdenciária.</small></div><button>Gerar</button></li>
-                        <li class="list-group-item"><div><b>Relatórios para o TCE</b><br><small>Exporta informações nos leiautes exigidos pelo Tribunal de Contas.</small></div><button>Gerar</button></li>
-                    </ul>
+                    <p> ... </p>
                 </div>
                 
                 <div id="telaUsuarios" style="display:none;">
                     <h2><i class="ri-shield-user-fill"></i> Gerenciamento de Usuários</h2>
-                    <p>O gerenciamento de usuários foi desativado nesta versão do cliente por motivos de segurança. A adição e remoção de e-mails autorizados deve ser feita diretamente no código-fonte ou em um painel de administração seguro.</p>
+                    <p> ... </p>
                 </div>
 
                 <input type="file" id="arquivoExcel" accept=".xlsx, .xls" style="display:none;" onchange="importarExcel()" />
@@ -401,8 +250,8 @@
 
             </div> 
             <footer>
-                <p>PREVTECH - Sistema de Gestão Previdenciária. Itapipoca-CE, 2025.</p>
-                <p><small>Desenvolvedor: Domingos Barroso Neto v3.5</small></p>
+                <p>ITAPREV - Sistema de Gestão Previdenciária. Itapipoca-CE, 2025.</p>
+                <p><small>Desenvolvedor: Domingos Barroso Neto v3.1</small></p>
             </footer>
         </div>
 
@@ -424,19 +273,6 @@
 
 <script type="module" src="script.js"></script>
 
-  <!-- 🆕 Registro do Service Worker -->
-<script>
-if ("serviceWorker" in navigator) {
-  window.addEventListener("load", () => {
-    navigator.serviceWorker.register("./service-worker.js")
-      .then(() => console.log("Service Worker registrado com sucesso."))
-      .catch(err => console.error("Erro ao registrar Service Worker:", err));
-  });
-}
-</script>
-
 </body>
 </html>
-
-
 
