@@ -634,7 +634,33 @@ function calcularMediaSalarial() {
     return { media: med, salarios: sM };
 }
 
+// =================================================================================
+// CÓDIGO NOVO: FUNÇÃO PARA CALCULAR MÉDIA DOS 80% MAIORES SALÁRIOS (REGRA ANTIGA)
+// =================================================================================
+function calcularMedia80Maiores(salarios) {
+    if (!salarios || salarios.length === 0) {
+        return 0;
+    }
 
+    // Extrai apenas os valores dos salários e os ordena do maior para o menor
+    const valoresOrdenados = salarios.map(s => s.value).sort((a, b) => b - a);
+    
+    // Calcula quantos salários correspondem a 80% do total
+    const quantidade80p = Math.ceil(valoresOrdenados.length * 0.8);
+    
+    // Pega apenas os 80% maiores salários
+    const maioresSalarios = valoresOrdenados.slice(0, quantidade80p);
+    
+    // Calcula a média aritmética simples desses salários
+    const somaMaioresSalarios = maioresSalarios.reduce((acc, val) => acc + val, 0);
+    
+    return somaMaioresSalarios / maioresSalarios.length;
+}
+
+
+// =================================================================================
+// CÓDIGO MODIFICADO: FUNÇÃO DE CÁLCULO DE BENEFÍCIO
+// =================================================================================
 function calcularBeneficio(n = true, b = null) {
     const t = document.getElementById('tipoBeneficio').value;
     if ((t === 'voluntaria' || t === 'incapacidade' || t === 'compulsoria') && (!document.getElementById('dataNascimento').value || !document.getElementById('dataAdmissao').value)) {
@@ -674,16 +700,40 @@ function calcularBeneficio(n = true, b = null) {
 
                 } else if (t === 'incapacidade') {
                     const isGrave = document.getElementById('incapacidadeGrave').value === 'sim';
+                    const dataInicioIncapacidadeInput = document.getElementById('dataInicioIncapacidade').value;
+                    
+                    if (!dataInicioIncapacidadeInput) {
+                        ui.showToast("Por favor, informe a Data de Início da Incapacidade (DII).", false);
+                        return; // Interrompe o cálculo
+                    }
+
+                    const dataInicioIncapacidade = new Date(dataInicioIncapacidadeInput + 'T00:00:00');
+                    const dataReforma = new Date('2019-11-13T00:00:00');
 
                     if (isGrave) {
-                        vB = m;
-                        dC = `Cálculo com base no Art. 7º, §3º do Decreto 113/2022. O valor corresponde a 100% da média salarial, por se tratar de incapacidade decorrente de acidente de trabalho, doença profissional ou do trabalho.`;
+                        vB = m; // Para casos graves, é 100% da média em qualquer regra
+                        dC = `Cálculo com base em 100% da média salarial, por se tratar de incapacidade decorrente de acidente de trabalho, doença profissional ou do trabalho.`;
                     } else {
-                        const anosExcedentes = Math.max(0, Math.floor(tempoContribTotalAnos) - 20);
-                        const percentual = Math.min(1, 0.60 + (anosExcedentes * 0.02));
-                        vB = m * percentual;
-                        dC = `Cálculo com base no Art. 7º, §2º do Decreto 113/2022. O valor corresponde a ${ (percentual * 100).toFixed(0) }% da média salarial (60% + 2% por ano de contribuição que exceder 20 anos).`;
+                        // Condição para aplicar a REGRA ANTIGA (DII anterior a 13/11/2019)
+                        if (dataInicioIncapacidade < dataReforma) {
+                            const media80 = calcularMedia80Maiores(s);
+                            const tempoEmDias = tempoContribTotalAnos * 365.25;
+                            const tempoExigidoEmDias = 9125; // 25 anos, conforme exemplo
+                            const fatorProporcional = tempoEmDias / tempoExigidoEmDias;
+                            
+                            vB = media80 * fatorProporcional;
+                            
+                            dC = `Cálculo pela REGRA ANTIGA (EC 41/2003) por direito adquirido (DII < 13/11/2019). <br><b>Média dos 80% maiores salários:</b> ${formatarDinheiro(media80)}. <br><b>Fator de Proporcionalidade:</b> (${Math.round(tempoEmDias)} / ${tempoExigidoEmDias} dias).`;
+                        } 
+                        // Lógica para a REGRA NOVA (DII a partir de 13/11/2019)
+                        else {
+                            const anosExcedentes = Math.max(0, Math.floor(tempoContribTotalAnos) - 20);
+                            const percentual = Math.min(1, 0.60 + (anosExcedentes * 0.02));
+                            vB = m * percentual;
+                            dC = `Cálculo pela REGRA NOVA (EC 103/2019). O valor corresponde a ${ (percentual * 100).toFixed(0) }% da média salarial (60% + 2% por ano de contribuição que exceder 20 anos).`;
+                        }
                     }
+
                      document.querySelectorAll("#corpo-tabela-proventos-ato .provento-valor").forEach(i => i.value = '');
                      const baseProventoInput = document.querySelector("#corpo-tabela-proventos-ato .provento-descricao[value='Salário Base']");
                      if(baseProventoInput) {
@@ -744,6 +794,7 @@ function calcularBeneficio(n = true, b = null) {
         }
     }, 50);
 }
+
 
 // =================================================================================
 // FUNÇÕES DE GESTÃO DE CONFIGURAÇÕES
