@@ -158,7 +158,17 @@
                         </select>
                       </label>
                         </div>
-                        <div id="camposIncapacidade" style="display:none;" class="form-grid"><label>A incapacidade decorre de acidente de trabalho, doença profissional ou doença grave?<select id="incapacidadeGrave"><option value="sim">Sim</option><option value="nao" selected>Não</option></select></label></div>
+                        <div id="camposIncapacidade" style="display:none;" class="form-grid"><label>A incapacidade decorre de acidente de trabalho, doença profissional ou doença grave?<select id="incapacidadeGrave"><option value="sim">Sim</option><option value="nao" selected>Não</option></select></label></div><label>
+    A incapacidade decorre de acidente de trabalho, doença profissional ou doença grave?
+    <select id="incapacidadeGrave">
+        <option value="sim">Sim</option>
+        <option value="nao" selected>Não</option>
+    </select>
+</label>
+<label>
+    Data de Início da Incapacidade (DII):
+    <input type="date" id="dataInicioIncapacidade" />
+</label>
                         <div id="containerGestaoDependentes" style="display:none;"><h4>Dependentes para Pensão</h4><table id="tabela-dependentes"><thead><tr><th>Nome Completo</th><th style="width: 150px;">Data de Nasc.</th><th style="width: 180px;">Parentesco</th><th style="width: 110px;">Inválido?</th><th style="width: 100px;">Ações</th></tr></thead><tbody id="corpo-tabela-dependentes"></tbody></table><button type="button" onclick="adicionarLinhaDependente()">+ Adicionar Dependente</button></div>
                         <div id="camposPensaoAtivo" style="display:none;"></div>
                         <div id="camposPensaoAposentado" style="display:none;" class="form-grid"><label>Valor do Provento Bruto do Aposentado (R$): <input type="number" id="proventoAposentado" value="0" /></label></div>
@@ -269,5 +279,6 @@
 
 </body>
 </html>
+
 
 
