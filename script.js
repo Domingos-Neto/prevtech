@@ -716,43 +716,24 @@ function calcularBeneficio(n = true, b = null) {
                     } else {
                         // Condição para aplicar a REGRA ANTIGA (DII anterior a 13/11/2019)
                         if (dataInicioIncapacidade < dataReforma) {
-    // === Média dos 80% maiores salários ===
-    const salarios = obterSalariosContribuicaoAteData(dataInicioIncapacidade); // função deve retornar array de salários até DII
-    const totalSalarios = salarios.length;
-    const qtdDescartar = Math.floor(totalSalarios * 0.20);
-    const salariosOrdenados = salarios.slice().sort((a, b) => b - a);
-    const salariosConsiderados = salariosOrdenados.slice(0, totalSalarios - qtdDescartar);
-    const media80 = salariosConsiderados.reduce((sum, val) => sum + val, 0) / salariosConsiderados.length;
+    const media80 = calcularMedia80Maiores(s);
 
-    // === Tempo até a DII ===
+    // Tempo até a DII em dias (RPPS + externo + especial)
     const diasNoServicoPublico = Math.max(0, Math.floor((dataInicioIncapacidade - dataAdmissao) / 86400000));
     const diasExterno = parseInt(document.getElementById('tempoExterno').value) || 0;
     const diasEspecial = parseInt(document.getElementById('tempoEspecial').value) || 0;
     const tempoEmDias = diasNoServicoPublico + diasExterno + diasEspecial;
 
-    // === Tempo exigido para integralidade ===
+    // Tempo exigido para integralidade na REGRA ANTIGA (varia por sexo e Magistério)
     const sexo = document.getElementById('sexo').value;
     const isMagisterio = document.getElementById('isMagisterio').value === 'sim';
-    let tempoExigidoEmDias;
-    if (sexo === 'F' && isMagisterio) {
-        tempoExigidoEmDias = 9125; // fixa 25 anos x 365 dias
-    } else {
-        const anosExigidos = isMagisterio ? (sexo === 'M' ? 30 : 25) : (sexo === 'M' ? 35 : 30);
-        tempoExigidoEmDias = anosExigidos * 365;
-    }
+    const anosExigidos = isMagisterio ? (sexo === 'M' ? 30 : 25) : (sexo === 'M' ? 35 : 30);
+    const tempoExigidoEmDias = anosExigidos * 365; // Mantém 365 para compatibilizar com 9.125 = 25*365 do exemplo
 
-    // === Proporcionalidade ===
     const fatorProporcional = Math.max(0, Math.min(1, tempoEmDias / tempoExigidoEmDias));
-    const valorProporcional = media80 * fatorProporcional;
+    vB = media80 * fatorProporcional;
 
-    // === Valor final ===
-    vB = valorProporcional;
-    dC = `Cálculo pela REGRA ANTIGA (EC 41/2003) por direito adquirido (DII < 13/11/2019):<br>
-          Quantidade de salários: ${totalSalarios}<br>
-          Quantidade de salários que correspondem aos 80% maiores: ${salariosConsiderados.length}<br>
-          Valor Apurado da Média: ${formatarDinheiro(media80)}<br>
-          Valor do Benefício Proporcional: (${tempoEmDias} / ${tempoExigidoEmDias}) ${formatarDinheiro(media80)}: ${formatarDinheiro(valorProporcional)}<br>
-          Valor do Benefício de Aposentadoria: ${formatarDinheiro(vB)}`;
+    dC = `Cálculo pela REGRA ANTIGA (EC 41/2003) por direito adquirido (DII < 13/11/2019). <br><b>Média dos 80% maiores salários:</b> ${formatarDinheiro(media80)}. <br><b>Tempo considerado:</b> ${tempoEmDias} dias (até a DII). <br><b>Tempo exigido para integral:</b> ${tempoExigidoEmDias} dias (${anosExigidos} anos${isMagisterio ? " — magistério" : ""}, sexo: ${sexo}). <br><b>Fator de Proporcionalidade:</b> (${tempoEmDias} / ${tempoExigidoEmDias}).`;
 } 
 // Lógica para a REGRA NOVA (DII a partir de 13/11/2019) (DII a partir de 13/11/2019)
                         else {
