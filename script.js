@@ -719,11 +719,11 @@ function calcularBeneficio(n = true, b = null) {
                             const media80 = calcularMedia80Maiores(s);
                             const tempoEmDias = tempoContribTotalAnos * 365.25;
                             const tempoExigidoEmDias = 9125; // 25 anos, conforme exemplo
-                            const fatorProporcional = tempoEmDias / tempoExigidoEmDias;
+                            const fatorProporcional = tempoContribTotalAnos / tempoExigidoEmDias;
                             
                             vB = media80 * fatorProporcional;
                             
-                            dC = `Cálculo pela REGRA ANTIGA (EC 41/2003) por direito adquirido (DII < 13/11/2019). <br><b>Média dos 80% maiores salários:</b> ${formatarDinheiro(media80)}. <br><b>Fator de Proporcionalidade:</b> (${Math.round(tempoEmDias)} / ${tempoExigidoEmDias} dias).`;
+                            dC = `Cálculo pela REGRA ANTIGA (EC 41/2003) por direito adquirido (DII < 13/11/2019). <br><b>Média dos 80% maiores salários:</b> ${formatarDinheiro(media80)}. <br><b>Fator de Proporcionalidade:</b> (${Math.round(tempoContribTotalAnos)} / ${tempoExigidoEmDias} dias).`;
                         } 
                         // Lógica para a REGRA NOVA (DII a partir de 13/11/2019)
                         else {
@@ -1617,3 +1617,4 @@ Object.assign(window, {
     salvarConfiguracoes,
     calcularTempoEntreDatas, limparCalculoTempo
 });
+
