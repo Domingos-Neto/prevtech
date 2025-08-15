@@ -991,6 +991,7 @@ function calculateValorLiquido(pB) {
 }
 
 
+// ############# INÍCIO DO CÓDIGO CORRIGIDO #############
 function projetarAposentadoria(mS) {
     const rPD = document.getElementById('resultadoProjecao'),
         dN = new Date(document.getElementById('dataNascimento').value + 'T00:00:00'),
@@ -1006,10 +1007,19 @@ function projetarAposentadoria(mS) {
         tCR = (dR - dA) / 31557600000 + tED / 365.25 + tSD / 365.25;
     let p = {},
         rA = null;
+
+    // --- INÍCIO DA CORREÇÃO ---
+    const isMagisterio = document.getElementById('isMagisterio').value === 'sim';
+    const redutorIdade = isMagisterio ? 5 : 0;
+    const redutorTempo = isMagisterio ? 5 : 0;
+    // --- FIM DA CORREÇÃO ---
+
     const vRG = mS * Math.min(1, 0.6 + Math.max(0, Math.floor(tCT) - 20) * 0.02);
-    const tMP50 = s === 'M' ? 33 : 28;
+    
+    // Regra Pedágio 50%
+    const tMP50 = (s === 'M' ? 33 : 28) - redutorTempo; // Corrigido
     if (tCR >= tMP50) {
-        const tN = s === 'M' ? 35 : 30,
+        const tN = (s === 'M' ? 35 : 30) - redutorTempo, // Corrigido
             tF = Math.max(0, tN - tCR),
             ped = tF * 0.5;
         if (tCT >= tN + ped) {
@@ -1020,8 +1030,10 @@ function projetarAposentadoria(mS) {
             p['Pedágio 50%'] = { data: 'Não cumpriu', valor: 0, obs: 'Requer tempo + pedágio' };
         }
     }
-    const iMP100 = s === 'M' ? 60 : 57,
-        tNP100 = s === 'M' ? 35 : 30;
+
+    // Regra Pedágio 100%
+    const iMP100 = (s === 'M' ? 60 : 57) - redutorIdade, // Corrigido
+        tNP100 = (s === 'M' ? 35 : 30) - redutorTempo; // Corrigido
     if (iA >= iMP100 && tCT >= tNP100) {
         p['Pedágio 100%'] = { data: 'Já cumpriu!', valor: mS, obs: '100% da média', legal: "Art. 20 EC 103/19" };
         if (!rA) rA = p['Pedágio 100%'].legal;
@@ -1035,21 +1047,27 @@ function projetarAposentadoria(mS) {
             p['Pedágio 100%'] = { data: `~ ${dP.toLocaleDateString('pt-BR')}`, valor: mS, obs: '100% da média' };
         }
     }
+
+    // Regra Idade Progressiva
     const aA = h.getFullYear(),
-        iMP = (s === 'M' ? 61 : 56) + Math.floor((aA - 2019) * 0.5),
-        tMP = s === 'M' ? 35 : 30;
+        iMP = ((s === 'M' ? 61 : 56) - redutorIdade) + Math.floor((aA - 2019) * 0.5), // Corrigido
+        tMP = (s === 'M' ? 35 : 30) - redutorTempo; // Corrigido
     if (iA >= iMP && tCT >= tMP) {
         p['Idade Progressiva'] = { data: 'Já cumpriu!', valor: vRG, obs: '60% + 2% por ano', legal: "Art. 4º EC 103/19 c/c Lei 047/08" };
         if (!rA) rA = p['Idade Progressiva'].legal;
     }
+
+    // Regra dos Pontos
     let pA = iA + tCT,
-        pN = (s === 'M' ? 96 : 86) + h.getFullYear() - 2019;
+        pN = ((s === 'M' ? 96 : 86) - (isMagisterio ? 10 : 0)) + (h.getFullYear() - 2019); // A soma de idade e tempo reduz 10 (5 de cada)
     if (pA >= pN) {
         p['Pontos'] = { data: 'Já cumpriu!', valor: vRG, obs: '60% + 2% por ano', legal: "Art. 4º EC 103/19 c/c Lei 047/08" };
         if (!rA) rA = p['Pontos'].legal;
     }
-    const R_IM_M = 65,
-        R_IM_F = 62;
+
+    // Regra Permanente
+    const R_IM_M = 65 - redutorIdade, // Corrigido
+        R_IM_F = 62 - redutorIdade; // Corrigido
     if (iA >= (s === 'M' ? R_IM_M : R_IM_F) && tCT >= 25) {
         p['Regra Permanente'] = { data: 'Já cumpriu!', valor: vRG, obs: '60% + 2% por ano', legal: "Art. 10 EC 103/19 c/c Lei 047/08" };
         if (!rA) rA = p['Regra Permanente'].legal;
@@ -1079,6 +1097,11 @@ function calcularFatorPrevidenciario(i, t, s) {
 }
 
 function verificarAbonoPermanencia() {
+    // --- INÍCIO DA CORREÇÃO ---
+    const isMagisterio = document.getElementById('isMagisterio').value === 'sim';
+    const redutor = isMagisterio ? 5 : 0;
+    // --- FIM DA CORREÇÃO ---
+
     const rAD = document.getElementById('resultadoAbono'),
         dN = new Date(document.getElementById('dataNascimento').value + 'T00:00:00'),
         dA = new Date(document.getElementById('dataAdmissao').value + 'T00:00:00'),
@@ -1086,10 +1109,15 @@ function verificarAbonoPermanencia() {
         h = new Date(),
         i = (h - dN) / 31557600000,
         tC = (h - dA) / 31557600000 + parseInt(document.getElementById('tempoExterno').value) / 365.25 + parseInt(document.getElementById('tempoEspecial').value) / 365.25,
-        iM = s === 'M' ? 62 : 57,
-        tM = s === 'M' ? 35 : 30;
-    rAD.innerHTML = i >= iM && tC >= tM ? `<h3>✅ Abono de Permanência</h3><p>O servidor <b>cumpriu os requisitos</b> e, ao permanecer em atividade, tem direito ao Abono de Permanência.</p>` : '';
+        
+        // Requisitos de idade e tempo corrigidos com o redutor
+        iM = (s === 'M' ? 62 : 57) - redutor,
+        tM = (s === 'M' ? 35 : 30) - redutor;
+
+    rAD.innerHTML = i >= iM && tC >= tM ? `<h3>✅ Abono de Permanência</h3><p>O servidor <b>cumpriu os requisitos</b> para aposentadoria voluntária e, ao permanecer em atividade, tem direito ao Abono de Permanência.</p>` : '';
 }
+// ############# FIM DO CÓDIGO CORRIGIDO #############
+
 
 function desenharGrafico(s, m) {
     const ctx = document.getElementById("graficoSalarios").getContext("2d");
@@ -1527,4 +1555,3 @@ Object.assign(window, {
     salvarConfiguracoes,
     calcularTempoEntreDatas, limparCalculoTempo
 });
-
