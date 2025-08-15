@@ -839,7 +839,7 @@ function gerarAtoDePensao(b) {
 function gerarAtoDeAposentadoria(b) {
     ui.toggleSpinner(b, true);
     try {
-        const s = document.getElementById('sexo').value,
+        const s = document.getElementById('sexo').value, isMagisterio = (document.getElementById('isMagisterio')?.value === 'sim'), REDUTOR_TC = isMagisterio ? 5 : 0,
             tP = calculateTotalProventos(),
             tB = document.getElementById('tipoBeneficio').value,
             aD = s === 'F' ? 'A' : 'O',
@@ -995,15 +995,27 @@ function projetarAposentadoria(mS) {
     const rPD = document.getElementById('resultadoProjecao'),
         dN = new Date(document.getElementById('dataNascimento').value + 'T00:00:00'),
         dA = new Date(document.getElementById('dataAdmissao').value + 'T00:00:00'),
-        s = document.getElementById('sexo').value,
+        s = document.getElementById('sexo').value, isMagisterio = (document.getElementById('isMagisterio')?.value === 'sim'), REDUTOR_TC = isMagisterio ? 5 : 0,
         tED = parseInt(document.getElementById('tempoExterno').value) || 0,
         tSD = parseInt(document.getElementById('tempoEspecial').value) || 0,
-        h = new Date(),
+        dRI = (document.getElementById('dataRequerimento')?.value || ''), dCI = (document.getElementById('dataCalculo')?.value || ''), h = dRI ? new Date(dRI + 'T00:00:00') : (dCI ? new Date(dCI + 'T00:00:00') : new Date()),
         dR = new Date('2019-11-13T00:00:00'),
         iA = (h - dN) / 31557600000,
         tSP = (h - dA) / 31557600000,
         tCT = tSP + tED / 365.25 + tSD / 365.25,
         tCR = (dR - dA) / 31557600000 + tED / 365.25 + tSD / 365.25;
+    // Diferença precisa em anos/meses/dias
+    function diffYMD(inicio, fim) {
+        let a = fim.getFullYear() - inicio.getFullYear();
+        let m = fim.getMonth() - inicio.getMonth();
+        let d = fim.getDate() - inicio.getDate();
+        if (d < 0) { const pm = new Date(fim.getFullYear(), fim.getMonth(), 0).getDate(); d += pm; m -= 1; }
+        if (m < 0) { m += 12; a -= 1; }
+        return { anos: a, meses: m, dias: d };
+    }
+    const idadeYMD = diffYMD(dN, h);
+    const servYMD = diffYMD(dA, h);
+
     let p = {},
         rA = null;
     const vRG = mS * Math.min(1, 0.6 + Math.max(0, Math.floor(tCT) - 20) * 0.02);
@@ -1021,7 +1033,7 @@ function projetarAposentadoria(mS) {
         }
     }
     const iMP100 = s === 'M' ? 60 : 57,
-        tNP100 = s === 'M' ? 35 : 30;
+        tNP100 = (s === 'M' ? 35 : 30) - REDUTOR_TC;
     if (iA >= iMP100 && tCT >= tNP100) {
         p['Pedágio 100%'] = { data: 'Já cumpriu!', valor: mS, obs: '100% da média', legal: "Art. 20 EC 103/19" };
         if (!rA) rA = p['Pedágio 100%'].legal;
@@ -1030,14 +1042,14 @@ function projetarAposentadoria(mS) {
             aPT = Math.max(0, tNP100 - tCT),
             aF = Math.max(aPI, aPT);
         if (aF < 40) {
-            const dP = new Date();
+            const dP = new Date(h);
             dP.setFullYear(dP.getFullYear() + Math.ceil(aF));
             p['Pedágio 100%'] = { data: `~ ${dP.toLocaleDateString('pt-BR')}`, valor: mS, obs: '100% da média' };
         }
     }
     const aA = h.getFullYear(),
         iMP = (s === 'M' ? 61 : 56) + Math.floor((aA - 2019) * 0.5),
-        tMP = s === 'M' ? 35 : 30;
+        tMP = (s === 'M' ? 35 : 30) - REDUTOR_TC;
     if (iA >= iMP && tCT >= tMP) {
         p['Idade Progressiva'] = { data: 'Já cumpriu!', valor: vRG, obs: '60% + 2% por ano', legal: "Art. 4º EC 103/19 c/c Lei 047/08" };
         if (!rA) rA = p['Idade Progressiva'].legal;
@@ -1056,7 +1068,7 @@ function projetarAposentadoria(mS) {
     } else {
         const aPI = Math.max(0, (s === 'M' ? R_IM_M : R_IM_F) - iA);
         if (aPI < 40) {
-            const dP = new Date();
+            const dP = new Date(h);
             dP.setFullYear(dP.getFullYear() + Math.ceil(aPI));
             p['Regra Permanente'] = { data: `~ ${dP.toLocaleDateString('pt-BR')}`, valor: vRG, obs: 'Requer 25a contrib.' };
         }
@@ -1067,6 +1079,7 @@ function projetarAposentadoria(mS) {
         for (const r in p) html += `<tr><td>${r}</td><td>${p[r].data}</td><td>${p[r].valor>0?formatarDinheiro(p[r].valor):'-'}</td><td>${p[r].obs||''}</td></tr>`;
     } else html += `<tr><td colspan="4">Nenhuma regra cumprida.</td></tr>`;
     html += '</tbody></table><small>Nota: Projeções são estimativas.</small>';
+    if (isMagisterio) { html += `<p><small>Aplicado redutor de <b>5 anos</b> no tempo de contribuição (Lei nº 11.301/2006).</small></p>`; }
     rPD.innerHTML = html;
 }
 
@@ -1079,18 +1092,16 @@ function calcularFatorPrevidenciario(i, t, s) {
 }
 
 function verificarAbonoPermanencia() {
-    const isMagisterio = (document.getElementById('isMagisterio')?.value === 'sim');
-    const redutor = isMagisterio ? 5 : 0;
     const rAD = document.getElementById('resultadoAbono'),
         dN = new Date(document.getElementById('dataNascimento').value + 'T00:00:00'),
         dA = new Date(document.getElementById('dataAdmissao').value + 'T00:00:00'),
-        s = document.getElementById('sexo').value,
-        h = new Date(),
+        s = document.getElementById('sexo').value, isMagisterio = (document.getElementById('isMagisterio')?.value === 'sim'), redutor = isMagisterio ? 5 : 0, isMagisterio = (document.getElementById('isMagisterio')?.value === 'sim'), REDUTOR_TC = isMagisterio ? 5 : 0,
+        dRI = (document.getElementById('dataRequerimento')?.value || ''), dCI = (document.getElementById('dataCalculo')?.value || ''), h = dRI ? new Date(dRI + 'T00:00:00') : (dCI ? new Date(dCI + 'T00:00:00') : new Date()),
         i = (h - dN) / 31557600000,
         tC = (h - dA) / 31557600000 + parseInt(document.getElementById('tempoExterno').value) / 365.25 + parseInt(document.getElementById('tempoEspecial').value) / 365.25,
         iM = s === 'M' ? 62 : 57,
-        tM = s === 'M' ? 35 : 30;
-    rAD.innerHTML = i >= iM && tC >= tM ? `<h3>✅ Abono de Permanência</h3><p>O servidor <b>cumpriu os requisitos</b> e, ao permanecer em atividade, tem direito ao Abono de Permanência.</p>` : '';
+        tM = (s === 'M' ? 35 : 30) - redutor;
+    rAD.innerHTML = i >= iM && tC >= tM ? `<h3>✅ Abono de Permanência</h3><p>O servidor <b>cumpriu os requisitos</b> e, ao permanecer em atividade, tem direito ao Abono de Permanência${isMagisterio ? ' (aplicado redutor do magistério).' : '.'}</p>` : '';
 }
 
 function desenharGrafico(s, m) {
