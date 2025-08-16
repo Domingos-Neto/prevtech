@@ -516,6 +516,9 @@ function limparFormularioCompleto() {
     document.getElementById("tempoExterno").value = "0";
     document.getElementById("tempoEspecial").value = "0";
     
+    // LINHA NOVA PARA LIMPAR O CAMPO NOVO
+    document.getElementById("tempoContribuicaoEfetivoDias").value = "0";
+
     document.getElementById('corpo-tabela-proventos-ato').innerHTML = '';
     calculateTotalProventos();
     
@@ -704,38 +707,37 @@ function calcularBeneficio(n = true, b = null) {
                     
                     if (!dataInicioIncapacidadeInput) {
                         ui.showToast("Por favor, informe a Data de Início da Incapacidade (DII).", false);
-                        return; // Interrompe o cálculo
+                        if (b) ui.toggleSpinner(b, false);
+                        return;
                     }
 
                     const dataInicioIncapacidade = new Date(dataInicioIncapacidadeInput + 'T00:00:00');
                     const dataReforma = new Date('2019-11-13T00:00:00');
 
                     if (isGrave) {
-                        vB = m; // Para casos graves, é 100% da média em qualquer regra
+                        vB = m;
                         dC = `Cálculo com base em 100% da média salarial, por se tratar de incapacidade decorrente de acidente de trabalho, doença profissional ou do trabalho.`;
                     } else {
-                        // Condição para aplicar a REGRA ANTIGA (DII anterior a 13/11/2019)
                         if (dataInicioIncapacidade < dataReforma) {
-    const media80 = calcularMedia80Maiores(s);
+                            // CORREÇÃO: Busca o valor do novo campo de tempo efetivo em dias.
+                            const tempoEmDias = parseInt(document.getElementById('tempoContribuicaoEfetivoDias').value) || 0;
 
-    // Tempo até a DII em dias (RPPS + externo + especial)
-    const diasNoServicoPublico = Math.max(0, Math.floor((dataInicioIncapacidade - dataAdmissao) / 86400000));
-    const diasExterno = parseInt(document.getElementById('tempoExterno').value) || 0;
-    const diasEspecial = parseInt(document.getElementById('tempoEspecial').value) || 0;
-    const tempoEmDias = diasNoServicoPublico + diasExterno + diasEspecial;
+                            // Adiciona uma verificação para garantir que o campo foi preenchido
+                            if (tempoEmDias === 0) {
+                                ui.showToast("Para a regra antiga, informe o 'Tempo de Contribuição Efetivo (dias)'.", false);
+                                if (b) ui.toggleSpinner(b, false);
+                                return; // Interrompe o cálculo
+                            }
 
-    // Tempo exigido para integralidade na REGRA ANTIGA (varia por sexo e Magistério)
-    const sexo = document.getElementById('sexo').value;
-    const isMagisterio = document.getElementById('isMagisterio').value === 'sim';
-    const anosExigidos = isMagisterio ? (sexo === 'M' ? 30 : 25) : (sexo === 'M' ? 35 : 30);
-    const tempoExigidoEmDias = anosExigidos * 365; // Mantém 365 para compatibilizar com 9.125 = 25*365 do exemplo
-
-    const fatorProporcional = Math.max(0, Math.min(1, tempoEmDias / tempoExigidoEmDias));
-    vB = media80 * fatorProporcional;
-
-    dC = `Cálculo pela REGRA ANTIGA (EC 41/2003) por direito adquirido (DII < 13/11/2019). <br><b>Média dos 80% maiores salários:</b> ${formatarDinheiro(media80)}. <br><b>Tempo considerado:</b> ${tempoEmDias} dias (até a DII). <br><b>Tempo exigido para integral:</b> ${tempoExigidoEmDias} dias (${anosExigidos} anos${isMagisterio ? " — magistério" : ""}, sexo: ${sexo}). <br><b>Fator de Proporcionalidade:</b> (${tempoEmDias} / ${tempoExigidoEmDias}).`;
-} 
-// Lógica para a REGRA NOVA (DII a partir de 13/11/2019) (DII a partir de 13/11/2019)
+                            const media80 = calcularMedia80Maiores(s);
+                            const tempoExigidoEmDias = 9125; // 25 anos
+                            const fatorProporcional = tempoEmDias / tempoExigidoEmDias;
+                            
+                            vB = media80 * fatorProporcional;
+                            
+                            // O texto do resultado agora usará o tempo em dias correto
+                            dC = `Cálculo pela REGRA ANTIGA (EC 41/2003) por direito adquirido (DII < 13/11/2019). <br><b>Média dos 80% maiores salários:</b> ${formatarDinheiro(media80)}. <br><b>Fator de Proporcionalidade:</b> (${tempoEmDias} / ${tempoExigidoEmDias} dias).`;
+                        }
                         else {
                             const anosExcedentes = Math.max(0, Math.floor(tempoContribTotalAnos) - 20);
                             const percentual = Math.min(1, 0.60 + (anosExcedentes * 0.02));
@@ -1627,7 +1629,3 @@ Object.assign(window, {
     salvarConfiguracoes,
     calcularTempoEntreDatas, limparCalculoTempo
 });
-
-
-
-
