@@ -1617,6 +1617,101 @@ function limparCalculoTempo() {
     document.getElementById('resultado-calculo-tempo').innerHTML = '';
 }
 
+// =================================================================================
+// NOVA FUNÇÃO: BUSCAR E PREENCHER FATORES DE ATUALIZAÇÃO VIA API IBGE
+// =================================================================================
+async function buscarEPreencherFatores(button) {
+    ui.toggleSpinner(button, true);
+    ui.showToast("Buscando índices no IBGE. Isso pode levar um momento...", true);
+
+    try {
+        // 1. OBTER A DATA DE CÁLCULO E OS MESES DA TABELA
+        const dataCalculoStr = document.getElementById('dataCalculo').value;
+        if (!dataCalculoStr) {
+            ui.showToast("Por favor, preencha a 'Data do Cálculo' primeiro.", false);
+            throw new Error("Data do cálculo não informada.");
+        }
+        const dataCalculo = new Date(dataCalculoStr + 'T00:00:00');
+        // O fator de atualização é baseado no índice do mês anterior ao do cálculo
+        dataCalculo.setMonth(dataCalculo.getMonth() - 1);
+        const mesCompetenciaFinal = `${dataCalculo.getFullYear()}${String(dataCalculo.getMonth() + 1).padStart(2, '0')}`;
+        
+        const linhasTabela = document.querySelectorAll("#corpo-tabela tr");
+        if (linhasTabela.length === 0) {
+            ui.showToast("Adicione pelo menos uma linha de salário antes de atualizar.", false);
+            throw new Error("Tabela vazia.");
+        }
+
+        // 2. CHAMAR A API DO IBGE (SIDRA) PARA BUSCAR O INPC MENSAL
+        // Tabela 1737 = INPC, Variável 66 = Variação Mensal (%)
+        // Pegamos todos os dados desde o início do Plano Real (Julho/1994)
+        const urlApi = `https://apisidra.ibge.gov.br/values/t/1737/v/66/p/199407-${mesCompetenciaFinal}/n1/1`;
+        const response = await fetch(urlApi);
+        if (!response.ok) {
+            throw new Error(`Erro ao conectar com a API do IBGE: ${response.statusText}`);
+        }
+        const dadosApi = await response.json();
+        
+        // Remove o cabeçalho da resposta da API
+        const indicesMensais = dadosApi.slice(1);
+
+        // 3. CALCULAR OS ÍNDICES CUMULATIVOS
+        // O IBGE nos dá a variação mensal. Precisamos calcular o índice cumulativo para encontrar o fator.
+        const indicesCumulativos = {};
+        let indiceAcumulado = 1.0; // Base inicial
+
+        for (const dado of indicesMensais) {
+            const mesAnoApi = dado.D3C; // Formato "YYYYMM"
+            const variacaoPercentual = parseFloat(dado.V);
+            
+            // Ignora meses sem valor (pode acontecer com o mês mais recente)
+            if (isNaN(variacaoPercentual)) continue;
+
+            // Para o primeiro mês da série (Jul/1994), o índice é 1
+            if (mesAnoApi !== "199407") {
+                 indiceAcumulado = indiceAcumulado * (1 + variacaoPercentual / 100);
+            }
+            indicesCumulativos[mesAnoApi] = indiceAcumulado;
+        }
+
+        const indiceDaCompetenciaFinal = indicesCumulativos[mesCompetenciaFinal];
+        if (!indiceDaCompetenciaFinal) {
+            ui.showToast("O índice para a data de cálculo ainda não foi divulgado pelo IBGE. Tente um mês anterior.", false);
+            throw new Error("Índice final não encontrado.");
+        }
+
+        // 4. PREENCHER A TABELA COM OS FATORES CALCULADOS
+        linhasTabela.forEach(linha => {
+            const inputMesAno = linha.querySelector("input[placeholder='MM/AAAA']");
+            const inputFator = linha.querySelector(".fator");
+
+            if (inputMesAno && inputFator) {
+                const [mes, ano] = inputMesAno.value.split('/');
+                if (mes && ano && ano.length === 4) {
+                    const competenciaSalario = `${ano}${mes.padStart(2, '0')}`;
+                    const indiceDoSalario = indicesCumulativos[competenciaSalario];
+                    
+                    if (indiceDoSalario) {
+                        const fator = indiceDaCompetenciaFinal / indiceDoSalario;
+                        inputFator.value = fator.toFixed(7); // Alta precisão
+                        atualizarSalarioLinha(inputFator); // Atualiza o salário na linha
+                    }
+                }
+            }
+        });
+
+        ui.showToast("Fatores de atualização preenchidos com sucesso!", true);
+
+    } catch (error) {
+        console.error("Erro ao buscar fatores do IBGE:", error);
+        // Não mostra o toast de erro se for um erro "controlado" (ex: data não preenchida)
+        if (error.message.includes("API do IBGE")) {
+            ui.showToast("Não foi possível buscar os dados do IBGE. Verifique sua conexão.", false);
+        }
+    } finally {
+        ui.toggleSpinner(button, false);
+    }
+}
 
 Object.assign(window, {
     auth, ui, handleNavClick, atualizarDashboardView, irParaPasso, alternarCamposBeneficio,
@@ -1627,5 +1722,7 @@ Object.assign(window, {
     adicionarLinhaPeriodoCTC, calcularTempoPeriodosCTC, removerLinhaPeriodoCTC, salvarCTC, gerarDocumentoCTC,
     carregarCTC, excluirCTC, alternarTema,
     salvarConfiguracoes,
-    calcularTempoEntreDatas, limparCalculoTempo
+    calcularTempoEntreDatas, limparCalculoTempo,
+    buscarEPreencherFatores
 });
+
