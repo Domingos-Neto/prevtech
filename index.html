@@ -26,7 +26,8 @@
       </div>
     </div>
     <div class="login-form" id="login-form-container">
-         
+      <img src="Logo PrevTech arredondada.jpg" alt="Logo PrevTech" class="login-logo">
+      
       <h2>Acesse sua Conta</h2>
       <p>Bem-vindo(a) de volta! Use sua conta Google autorizada para acessar.</p>
       
@@ -188,7 +189,15 @@
                             <label>Sexo: <select id="sexo"><option value="M">Masculino</option><option value="F">Feminino</option></select></label>
                             <label>Tempo de Contribuição Externo (dias): <input type="number" id="tempoExterno" value="0" min="0" /></label>
                             <label><div class="tooltip-container">Tempo Especial Convertido (dias):<span class="tooltip">?<span class="tooltiptext">Informe o tempo de atividade especial já convertido em tempo comum. Ex: 10 anos de atividade especial de um homem (fator 1.4) se convertem em 14 anos de tempo comum (5110 dias), ou seja, 4 anos (1460 dias) a serem informados aqui.</span></span></div><input type="number" id="tempoEspecial" value="0" min="0" /></label>
-                        </div>
+                            
+                            <label>
+                                <div class="tooltip-container">
+                                    Tempo de Contribuição Efetivo (dias):
+                                    <span class="tooltip">?<span class="tooltiptext">Informe o total de dias de contribuição real (líquido), desconsiderando faltas e licenças. Essencial para o cálculo proporcional da regra antiga de incapacidade (DII anterior a 13/11/2019).</span></span>
+                                </div>
+                                <input type="number" id="tempoContribuicaoEfetivoDias" value="0" min="0" />
+                            </label>
+                            </div>
                         <div id="camposAtoAposentadoria" style="display:none;"><h4>Informações para o Ato de Aposentadoria</h4><div class="form-grid"><label>Nº do Processo Administrativo: <input type="text" id="processoAposentadoria" /></label><label>Nº do Ato de Aposentadoria: <input type="number" id="atoNumeroAposentadoria" /></label></div><label>Fundamento Legal (para o Ato de Aposentadoria):<textarea id="fundamentoLegalPersonalizado"></textarea></label></div>
                         <div id="camposAtoPensao" style="display:none;"><h4>Informações para o Ato de Pensão</h4><div class="form-grid"><label>Nome do Pensionista Principal (Beneficiário): <input type="text" id="nomePensionista" /></label><label>Relação de Parentesco (do Principal): <input type="text"id="relacaoPensionista" /></label><label>Data do Óbito do Servidor: <input type="date" id="dataObito" /></label><label>Nº do Processo Administrativo: <input type="text" id="processoAdministrativo" /></label><label>Nº do Ato de Pensão: <input type="number" id="atoNumero" /></label></div></div>
                         <div class="wizard-nav"><button class="secondary" onclick="handleNavClick(event, 'dashboard')">Voltar ao Painel</button><button onclick="irParaPasso(2)">Próximo Passo ❯</button></div>
@@ -278,10 +287,3 @@
 
 </body>
 </html>
-
-
-
-
-
-
-
