@@ -92,7 +92,7 @@ const auth = {
 
 const ui = {
     showToast: (text, isSuccess = true) => {
-        Toastify({ text, duration: 3500, close: true, gravity: "top", position: "right", stopOnFocus: true, style: { background: isSuccess ? "linear-gradient(to right, #00b09b, #96c93d)" : "linear-gradient(to right, #ff5f6d, #ffc371)", }}).showToast();
+        Toastify({ text, duration: 4000, close: true, gravity: "top", position: "right", stopOnFocus: true, style: { background: isSuccess ? "linear-gradient(to right, #00b09b, #96c93d)" : "linear-gradient(to right, #ff5f6d, #ffc371)", }}).showToast();
     },
     toggleSpinner: (button, show) => {
         if (button) {
@@ -1618,11 +1618,11 @@ function limparCalculoTempo() {
 }
 
 // =================================================================================
-// INÍCIO DA FUNÇÃO CORRIGIDA: BUSCAR E PREENCHER FATORES DE ATUALIZAÇÃO VIA API IBGE
+// INÍCIO DA FUNÇÃO CORRIGIDA: USANDO API DO BANCO CENTRAL (BCB)
 // =================================================================================
 async function buscarEPreencherFatores(button) {
     ui.toggleSpinner(button, true);
-    ui.showToast("Buscando índices no IBGE. Isso pode levar um momento...", true);
+    ui.showToast("Buscando índices no Banco Central. Isso pode levar um momento...", true);
 
     try {
         // 1. OBTER A DATA DE CÁLCULO E VALIDAR CAMPOS
@@ -1631,72 +1631,49 @@ async function buscarEPreencherFatores(button) {
             ui.showToast("Por favor, preencha a 'Data do Cálculo' primeiro.", false);
             throw new Error("Data do cálculo não informada.");
         }
-        
+
         const linhasTabela = document.querySelectorAll("#corpo-tabela tr");
         if (linhasTabela.length === 0) {
             ui.showToast("Adicione pelo menos uma linha de salário antes de atualizar.", false);
             throw new Error("Tabela vazia.");
         }
 
-        let dadosApi = null;
-        let competenciaFinalUtilizada = '';
-        let dataReferencia = new Date(dataCalculoStr + 'T00:00:00');
-        let sucesso = false;
+        // 2. PREPARAR DATAS PARA A API DO BANCO CENTRAL
+        // A competência para o índice é o mês anterior à data de cálculo.
+        let dataCompetencia = new Date(dataCalculoStr + 'T00:00:00');
+        dataCompetencia.setMonth(dataCompetencia.getMonth() - 1);
+        const dataFinalStr = `${dataCompetencia.getDate().toString().padStart(2, '0')}/${(dataCompetencia.getMonth() + 1).toString().padStart(2, '0')}/${dataCompetencia.getFullYear()}`;
+        
+        // Código 433 = INPC (IBGE) no sistema SGS do Banco Central
+        const urlApiBCB = `https://api.bcb.gov.br/dados/serie/bcdata.sgs.433/dados?formato=json&dataInicial=01/07/1994&dataFinal=${dataFinalStr}`;
 
-        // 2. LOOP PARA TENTAR BUSCAR O ÍNDICE, RETROCEDENDO ATÉ 6 MESES
-        for (let i = 0; i < 6; i++) {
-            // A competência para o índice de atualização é o mês anterior à data de referência.
-            let dataCompetencia = new Date(dataReferencia.getFullYear(), dataReferencia.getMonth(), 1);
-            dataCompetencia.setMonth(dataCompetencia.getMonth() - 1);
-            
-            let mesCompetenciaFinal = `${dataCompetencia.getFullYear()}${String(dataCompetencia.getMonth() + 1).padStart(2, '0')}`;
-            
-            const urlApi = `https://apisidra.ibge.gov.br/values/t/1737/v/66/p/199407-${mesCompetenciaFinal}/n1/1`;
-            const response = await fetch(urlApi);
-
-            if (response.ok) {
-                dadosApi = await response.json();
-                competenciaFinalUtilizada = mesCompetenciaFinal;
-                const mes = String(dataCompetencia.getMonth() + 1).padStart(2, '0');
-                const ano = dataCompetencia.getFullYear();
-                
-                // Avisa o usuário apenas se uma data diferente da solicitada originalmente foi usada.
-                if (i > 0) {
-                     ui.showToast(`Índice de ${mes}/${ano} utilizado (o mais recente disponível).`, true);
-                }
-                sucesso = true;
-                break; // Sucesso, sai do loop.
-            } else if (response.status === 400) {
-                // Erro 400 indica que os dados para o mês não existem. Tenta o mês anterior.
-                console.warn(`Índice para ${mesCompetenciaFinal} não encontrado. Tentando mês anterior.`);
-                dataReferencia.setMonth(dataReferencia.getMonth() - 1);
-            } else {
-                // Outro tipo de erro (servidor, rede, etc.), lança exceção.
-                throw new Error(`Erro ao conectar com a API do IBGE: ${response.statusText}`);
-            }
+        // 3. CHAMAR A API DO BANCO CENTRAL
+        const response = await fetch(urlApiBCB);
+        if (!response.ok) {
+            throw new Error(`Erro ao conectar com a API do Banco Central: ${response.statusText}`);
         }
+        const dadosApi = await response.json();
 
-        if (!sucesso) {
-            throw new Error("Não foi possível encontrar um índice de referência válido nos últimos 6 meses.");
+        if (!dadosApi || dadosApi.length === 0) {
+            throw new Error("A API do Banco Central não retornou dados para o período.");
         }
         
-        // 3. CALCULAR OS ÍNDICES CUMULATIVOS E PREENCHER A TABELA
-        const indicesMensais = dadosApi.slice(1);
-        const indicesCumulativos = {};
-        let indiceAcumulado = 1.0; 
+        // 4. PROCESSAR DADOS E PREENCHER A TABELA
+        // Mapeia os dados para um formato mais fácil de usar: 'YYYYMM' -> valor
+        const indicesMensais = {};
+        dadosApi.forEach(item => {
+            const [dia, mes, ano] = item.data.split('/');
+            const chave = `${ano}${mes}`;
+            indicesMensais[chave] = parseFloat(item.valor);
+        });
 
-        for (const dado of indicesMensais) {
-            const mesAnoApi = dado.D3C; 
-            const variacaoPercentual = parseFloat(dado.V);
-            if (isNaN(variacaoPercentual)) continue;
-            
-            if (mesAnoApi !== "199407") {
-                 indiceAcumulado = indiceAcumulado * (1 + variacaoPercentual / 100);
-            }
-            indicesCumulativos[mesAnoApi] = indiceAcumulado;
+        const competenciaFinalChave = `${dataCompetencia.getFullYear()}${(dataCompetencia.getMonth() + 1).toString().padStart(2, '0')}`;
+        const indiceDaCompetenciaFinal = indicesMensais[competenciaFinalChave];
+
+        if (!indiceDaCompetenciaFinal) {
+             ui.showToast(`O índice para ${competenciaFinalChave.slice(4)}/${competenciaFinalChave.slice(0,4)} não foi encontrado. Tente uma data de cálculo anterior.`, false);
+             throw new Error(`Índice final para ${competenciaFinalChave} não localizado.`);
         }
-
-        const indiceDaCompetenciaFinal = indicesCumulativos[competenciaFinalUtilizada];
 
         linhasTabela.forEach(linha => {
             const inputMesAno = linha.querySelector("input[placeholder='MM/AAAA']");
@@ -1705,13 +1682,13 @@ async function buscarEPreencherFatores(button) {
             if (inputMesAno && inputFator) {
                 const [mes, ano] = inputMesAno.value.split('/');
                 if (mes && ano && ano.length === 4) {
-                    const competenciaSalario = `${ano}${mes.padStart(2, '0')}`;
-                    const indiceDoSalario = indicesCumulativos[competenciaSalario];
+                    const competenciaSalarioChave = `${ano}${mes.padStart(2, '0')}`;
+                    const indiceDoSalario = indicesMensais[competenciaSalarioChave];
                     
                     if (indiceDoSalario) {
                         const fator = indiceDaCompetenciaFinal / indiceDoSalario;
-                        inputFator.value = fator.toFixed(7);
-                        atualizarSalarioLinha(inputFator);
+                        inputFator.value = fator.toFixed(7); // Alta precisão
+                        atualizarSalarioLinha(inputFator); // Atualiza o salário na linha
                     }
                 }
             }
@@ -1720,11 +1697,9 @@ async function buscarEPreencherFatores(button) {
         ui.showToast("Fatores de atualização preenchidos com sucesso!", true);
 
     } catch (error) {
-        console.error("Erro ao buscar fatores do IBGE:", error);
-        if (error.message.includes("API do IBGE")) {
-            ui.showToast("Não foi possível buscar os dados do IBGE. Verifique sua conexão.", false);
-        } else if (error.message.includes("Não foi possível encontrar")) {
-             ui.showToast("Não foi encontrado um índice de referência nos últimos meses.", false);
+        console.error("Erro ao buscar fatores do BCB:", error);
+        if (error.message.includes("API do Banco Central")) {
+            ui.showToast("Não foi possível buscar os dados do Banco Central. Verifique sua conexão.", false);
         } else if (!error.message.includes("informada") && !error.message.includes("vazia")){
             ui.showToast("Ocorreu um erro ao processar os fatores.", false);
         }
@@ -1735,7 +1710,6 @@ async function buscarEPreencherFatores(button) {
 // =================================================================================
 // FIM DA FUNÇÃO CORRIGIDA
 // =================================================================================
-
 
 Object.assign(window, {
     auth, ui, handleNavClick, atualizarDashboardView, irParaPasso, alternarCamposBeneficio,
