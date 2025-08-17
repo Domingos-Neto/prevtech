@@ -1618,23 +1618,19 @@ function limparCalculoTempo() {
 }
 
 // =================================================================================
-// NOVA FUNÇÃO: BUSCAR E PREENCHER FATORES DE ATUALIZAÇÃO VIA API IBGE
+// INÍCIO DA FUNÇÃO CORRIGIDA: BUSCAR E PREENCHER FATORES DE ATUALIZAÇÃO VIA API IBGE
 // =================================================================================
 async function buscarEPreencherFatores(button) {
     ui.toggleSpinner(button, true);
     ui.showToast("Buscando índices no IBGE. Isso pode levar um momento...", true);
 
     try {
-        // 1. OBTER A DATA DE CÁLCULO E OS MESES DA TABELA
+        // 1. OBTER A DATA DE CÁLCULO E VALIDAR CAMPOS
         const dataCalculoStr = document.getElementById('dataCalculo').value;
         if (!dataCalculoStr) {
             ui.showToast("Por favor, preencha a 'Data do Cálculo' primeiro.", false);
             throw new Error("Data do cálculo não informada.");
         }
-        const dataCalculo = new Date(dataCalculoStr + 'T00:00:00');
-        // O fator de atualização é baseado no índice do mês anterior ao do cálculo
-        dataCalculo.setMonth(dataCalculo.getMonth() - 1);
-        const mesCompetenciaFinal = `${dataCalculo.getFullYear()}${String(dataCalculo.getMonth() + 1).padStart(2, '0')}`;
         
         const linhasTabela = document.querySelectorAll("#corpo-tabela tr");
         if (linhasTabela.length === 0) {
@@ -1642,45 +1638,66 @@ async function buscarEPreencherFatores(button) {
             throw new Error("Tabela vazia.");
         }
 
-        // 2. CHAMAR A API DO IBGE (SIDRA) PARA BUSCAR O INPC MENSAL
-        // Tabela 1737 = INPC, Variável 66 = Variação Mensal (%)
-        // Pegamos todos os dados desde o início do Plano Real (Julho/1994)
-        const urlApi = `https://apisidra.ibge.gov.br/values/t/1737/v/66/p/199407-${mesCompetenciaFinal}/n1/1`;
-        const response = await fetch(urlApi);
-        if (!response.ok) {
-            throw new Error(`Erro ao conectar com a API do IBGE: ${response.statusText}`);
-        }
-        const dadosApi = await response.json();
-        
-        // Remove o cabeçalho da resposta da API
-        const indicesMensais = dadosApi.slice(1);
+        let dadosApi = null;
+        let competenciaFinalUtilizada = '';
+        let dataReferencia = new Date(dataCalculoStr + 'T00:00:00');
+        let sucesso = false;
 
-        // 3. CALCULAR OS ÍNDICES CUMULATIVOS
-        // O IBGE nos dá a variação mensal. Precisamos calcular o índice cumulativo para encontrar o fator.
+        // 2. LOOP PARA TENTAR BUSCAR O ÍNDICE, RETROCEDENDO ATÉ 6 MESES
+        for (let i = 0; i < 6; i++) {
+            // A competência para o índice de atualização é o mês anterior à data de referência.
+            let dataCompetencia = new Date(dataReferencia.getFullYear(), dataReferencia.getMonth(), 1);
+            dataCompetencia.setMonth(dataCompetencia.getMonth() - 1);
+            
+            let mesCompetenciaFinal = `${dataCompetencia.getFullYear()}${String(dataCompetencia.getMonth() + 1).padStart(2, '0')}`;
+            
+            const urlApi = `https://apisidra.ibge.gov.br/values/t/1737/v/66/p/199407-${mesCompetenciaFinal}/n1/1`;
+            const response = await fetch(urlApi);
+
+            if (response.ok) {
+                dadosApi = await response.json();
+                competenciaFinalUtilizada = mesCompetenciaFinal;
+                const mes = String(dataCompetencia.getMonth() + 1).padStart(2, '0');
+                const ano = dataCompetencia.getFullYear();
+                
+                // Avisa o usuário apenas se uma data diferente da solicitada originalmente foi usada.
+                if (i > 0) {
+                     ui.showToast(`Índice de ${mes}/${ano} utilizado (o mais recente disponível).`, true);
+                }
+                sucesso = true;
+                break; // Sucesso, sai do loop.
+            } else if (response.status === 400) {
+                // Erro 400 indica que os dados para o mês não existem. Tenta o mês anterior.
+                console.warn(`Índice para ${mesCompetenciaFinal} não encontrado. Tentando mês anterior.`);
+                dataReferencia.setMonth(dataReferencia.getMonth() - 1);
+            } else {
+                // Outro tipo de erro (servidor, rede, etc.), lança exceção.
+                throw new Error(`Erro ao conectar com a API do IBGE: ${response.statusText}`);
+            }
+        }
+
+        if (!sucesso) {
+            throw new Error("Não foi possível encontrar um índice de referência válido nos últimos 6 meses.");
+        }
+        
+        // 3. CALCULAR OS ÍNDICES CUMULATIVOS E PREENCHER A TABELA
+        const indicesMensais = dadosApi.slice(1);
         const indicesCumulativos = {};
-        let indiceAcumulado = 1.0; // Base inicial
+        let indiceAcumulado = 1.0; 
 
         for (const dado of indicesMensais) {
-            const mesAnoApi = dado.D3C; // Formato "YYYYMM"
+            const mesAnoApi = dado.D3C; 
             const variacaoPercentual = parseFloat(dado.V);
-            
-            // Ignora meses sem valor (pode acontecer com o mês mais recente)
             if (isNaN(variacaoPercentual)) continue;
-
-            // Para o primeiro mês da série (Jul/1994), o índice é 1
+            
             if (mesAnoApi !== "199407") {
                  indiceAcumulado = indiceAcumulado * (1 + variacaoPercentual / 100);
             }
             indicesCumulativos[mesAnoApi] = indiceAcumulado;
         }
 
-        const indiceDaCompetenciaFinal = indicesCumulativos[mesCompetenciaFinal];
-        if (!indiceDaCompetenciaFinal) {
-            ui.showToast("O índice para a data de cálculo ainda não foi divulgado pelo IBGE. Tente um mês anterior.", false);
-            throw new Error("Índice final não encontrado.");
-        }
+        const indiceDaCompetenciaFinal = indicesCumulativos[competenciaFinalUtilizada];
 
-        // 4. PREENCHER A TABELA COM OS FATORES CALCULADOS
         linhasTabela.forEach(linha => {
             const inputMesAno = linha.querySelector("input[placeholder='MM/AAAA']");
             const inputFator = linha.querySelector(".fator");
@@ -1693,8 +1710,8 @@ async function buscarEPreencherFatores(button) {
                     
                     if (indiceDoSalario) {
                         const fator = indiceDaCompetenciaFinal / indiceDoSalario;
-                        inputFator.value = fator.toFixed(7); // Alta precisão
-                        atualizarSalarioLinha(inputFator); // Atualiza o salário na linha
+                        inputFator.value = fator.toFixed(7);
+                        atualizarSalarioLinha(inputFator);
                     }
                 }
             }
@@ -1704,14 +1721,21 @@ async function buscarEPreencherFatores(button) {
 
     } catch (error) {
         console.error("Erro ao buscar fatores do IBGE:", error);
-        // Não mostra o toast de erro se for um erro "controlado" (ex: data não preenchida)
         if (error.message.includes("API do IBGE")) {
             ui.showToast("Não foi possível buscar os dados do IBGE. Verifique sua conexão.", false);
+        } else if (error.message.includes("Não foi possível encontrar")) {
+             ui.showToast("Não foi encontrado um índice de referência nos últimos meses.", false);
+        } else if (!error.message.includes("informada") && !error.message.includes("vazia")){
+            ui.showToast("Ocorreu um erro ao processar os fatores.", false);
         }
     } finally {
         ui.toggleSpinner(button, false);
     }
 }
+// =================================================================================
+// FIM DA FUNÇÃO CORRIGIDA
+// =================================================================================
+
 
 Object.assign(window, {
     auth, ui, handleNavClick, atualizarDashboardView, irParaPasso, alternarCamposBeneficio,
@@ -1725,4 +1749,3 @@ Object.assign(window, {
     calcularTempoEntreDatas, limparCalculoTempo,
     buscarEPreencherFatores
 });
-
