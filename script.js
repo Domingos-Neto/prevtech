@@ -1618,91 +1618,98 @@ function limparCalculoTempo() {
 }
 
 // =================================================================================
-// INÍCIO DA FUNÇÃO CORRIGIDA: USANDO API DO BANCO CENTRAL (BCB)
+// INÍCIO DA FUNÇÃO CORRIGIDA: USANDO API DO BANCO CENTRAL (BCB) E COM VALIDAÇÃO
 // =================================================================================
 async function buscarEPreencherFatores(button) {
     ui.toggleSpinner(button, true);
-    ui.showToast("Buscando índices no Banco Central. Isso pode levar um momento...", true);
+    ui.showToast("Buscando índices no Banco Central (BCB)...", true);
 
     try {
-        // 1. OBTER A DATA DE CÁLCULO E VALIDAR CAMPOS
         const dataCalculoStr = document.getElementById('dataCalculo').value;
         if (!dataCalculoStr) {
-            ui.showToast("Por favor, preencha a 'Data do Cálculo' primeiro.", false);
+            ui.showToast("Preencha a 'Data do Cálculo' primeiro.", false);
             throw new Error("Data do cálculo não informada.");
         }
 
         const linhasTabela = document.querySelectorAll("#corpo-tabela tr");
         if (linhasTabela.length === 0) {
-            ui.showToast("Adicione pelo menos uma linha de salário antes de atualizar.", false);
+            ui.showToast("Adicione salários na tabela antes de atualizar.", false);
             throw new Error("Tabela vazia.");
         }
 
-        // 2. PREPARAR DATAS PARA A API DO BANCO CENTRAL
-        // A competência para o índice é o mês anterior à data de cálculo.
-        let dataCompetencia = new Date(dataCalculoStr + 'T00:00:00');
+        // Define a data de competência (mês anterior ao do cálculo) de forma segura
+        const dataCalculo = new Date(dataCalculoStr + 'T00:00:00');
+        let dataCompetencia = new Date(dataCalculo.getFullYear(), dataCalculo.getMonth(), 1);
         dataCompetencia.setMonth(dataCompetencia.getMonth() - 1);
-        const dataFinalStr = `${dataCompetencia.getDate().toString().padStart(2, '0')}/${(dataCompetencia.getMonth() + 1).toString().padStart(2, '0')}/${dataCompetencia.getFullYear()}`;
         
+        const anoCompetencia = dataCompetencia.getFullYear();
+        const mesCompetencia = dataCompetencia.getMonth() + 1;
+
+        // Formata a data final para a API (último dia do mês de competência)
+        const ultimoDiaCompetencia = new Date(anoCompetencia, mesCompetencia, 0).getDate();
+        const dataFinalParaAPI = `${ultimoDiaCompetencia}/${mesCompetencia}/${anoCompetencia}`;
+
         // Código 433 = INPC (IBGE) no sistema SGS do Banco Central
-        const urlApiBCB = `https://api.bcb.gov.br/dados/serie/bcdata.sgs.433/dados?formato=json&dataInicial=01/07/1994&dataFinal=${dataFinalStr}`;
+        const urlApiBCB = `https://api.bcb.gov.br/dados/serie/bcdata.sgs.433/dados?formato=json&dataInicial=01/07/1994&dataFinal=${dataFinalParaAPI}`;
 
-        // 3. CHAMAR A API DO BANCO CENTRAL
         const response = await fetch(urlApiBCB);
-        if (!response.ok) {
-            throw new Error(`Erro ao conectar com a API do Banco Central: ${response.statusText}`);
-        }
-        const dadosApi = await response.json();
-
-        if (!dadosApi || dadosApi.length === 0) {
-            throw new Error("A API do Banco Central não retornou dados para o período.");
-        }
+        if (!response.ok) throw new Error(`API do BCB respondeu com erro: ${response.statusText}`);
         
-        // 4. PROCESSAR DADOS E PREENCHER A TABELA
-        // Mapeia os dados para um formato mais fácil de usar: 'YYYYMM' -> valor
-        const indicesMensais = {};
+        const dadosApi = await response.json();
+        if (!dadosApi || dadosApi.length === 0) throw new Error("API do BCB não retornou dados.");
+
+        // Usa um Map para maior performance e segurança na busca de chaves
+        const indicesMap = new Map();
         dadosApi.forEach(item => {
             const [dia, mes, ano] = item.data.split('/');
-            const chave = `${ano}${mes}`;
-            indicesMensais[chave] = parseFloat(item.valor);
+            const chave = `${ano}${mes}`; // Chave no formato YYYYMM
+            indicesMap.set(chave, parseFloat(item.valor));
         });
 
-        const competenciaFinalChave = `${dataCompetencia.getFullYear()}${(dataCompetencia.getMonth() + 1).toString().padStart(2, '0')}`;
-        const indiceDaCompetenciaFinal = indicesMensais[competenciaFinalChave];
+        const chaveCompetenciaFinal = `${anoCompetencia}${String(mesCompetencia).padStart(2, '0')}`;
+        const indiceCompetenciaFinal = indicesMap.get(chaveCompetenciaFinal);
 
-        if (!indiceDaCompetenciaFinal) {
-             ui.showToast(`O índice para ${competenciaFinalChave.slice(4)}/${competenciaFinalChave.slice(0,4)} não foi encontrado. Tente uma data de cálculo anterior.`, false);
-             throw new Error(`Índice final para ${competenciaFinalChave} não localizado.`);
+        if (!indiceCompetenciaFinal) {
+            ui.showToast(`Índice para ${mesCompetencia}/${anoCompetencia} não disponível. Use uma data de cálculo anterior.`, false);
+            throw new Error(`Índice final para ${chaveCompetenciaFinal} não encontrado.`);
         }
 
+        let errosNoCalculo = 0;
         linhasTabela.forEach(linha => {
             const inputMesAno = linha.querySelector("input[placeholder='MM/AAAA']");
             const inputFator = linha.querySelector(".fator");
 
-            if (inputMesAno && inputFator) {
+            if (inputMesAno && inputFator && inputMesAno.value) {
                 const [mes, ano] = inputMesAno.value.split('/');
                 if (mes && ano && ano.length === 4) {
-                    const competenciaSalarioChave = `${ano}${mes.padStart(2, '0')}`;
-                    const indiceDoSalario = indicesMensais[competenciaSalarioChave];
+                    const chaveSalario = `${ano}${String(mes).padStart(2, '0')}`;
+                    const indiceSalario = indicesMap.get(chaveSalario);
                     
-                    if (indiceDoSalario) {
-                        const fator = indiceDaCompetenciaFinal / indiceDoSalario;
-                        inputFator.value = fator.toFixed(7); // Alta precisão
-                        atualizarSalarioLinha(inputFator); // Atualiza o salário na linha
+                    if (indiceSalario) {
+                        let fator = indiceCompetenciaFinal / indiceSalario;
+                        
+                        // Validação para evitar valores inválidos (negativos, zero, ou absurdamente altos)
+                        if (isNaN(fator) || fator <= 0 || fator > 50) {
+                            console.warn(`Fator inválido calculado para ${chaveSalario}: ${fator}. Usando 1.0 como padrão.`);
+                            fator = 1.0; // Valor padrão em caso de erro
+                            errosNoCalculo++;
+                        }
+                        
+                        inputFator.value = fator.toFixed(7);
+                        atualizarSalarioLinha(inputFator);
                     }
                 }
             }
         });
 
+        if (errosNoCalculo > 0) {
+            ui.showToast(`Atenção: ${errosNoCalculo} fator(es) foram calculados com valores inválidos e ajustados.`, false);
+        }
         ui.showToast("Fatores de atualização preenchidos com sucesso!", true);
 
     } catch (error) {
-        console.error("Erro ao buscar fatores do BCB:", error);
-        if (error.message.includes("API do Banco Central")) {
-            ui.showToast("Não foi possível buscar os dados do Banco Central. Verifique sua conexão.", false);
-        } else if (!error.message.includes("informada") && !error.message.includes("vazia")){
-            ui.showToast("Ocorreu um erro ao processar os fatores.", false);
-        }
+        console.error("Erro final ao buscar/processar fatores:", error);
+        ui.showToast("Erro ao buscar ou processar os fatores de correção.", false);
     } finally {
         ui.toggleSpinner(button, false);
     }
@@ -1710,6 +1717,7 @@ async function buscarEPreencherFatores(button) {
 // =================================================================================
 // FIM DA FUNÇÃO CORRIGIDA
 // =================================================================================
+
 
 Object.assign(window, {
     auth, ui, handleNavClick, atualizarDashboardView, irParaPasso, alternarCamposBeneficio,
