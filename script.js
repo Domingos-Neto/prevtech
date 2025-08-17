@@ -679,11 +679,9 @@ function calcularBeneficio(n = true, b = null) {
 
             if (t !== 'pensao_aposentado') {
                 const mR = calcularMediaSalarial();
+                m = mR.media;
                 s = mR.salarios;
-                m = calcularMedia80Maiores(s);
                 AppState.simulacaoResultados.salariosParaGrafico = s;
-                AppState.simulacaoResultados.mediaSalarial = m;
-                dC += `<br><b>Média Salarial de Contribuição (80% maiores):</b> ${formatarDinheiro(m)}`;
             }
 
             const isA = t === 'voluntaria' || t === 'incapacidade' || t === 'compulsoria';
