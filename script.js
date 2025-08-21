@@ -155,7 +155,7 @@ const drive = {
     appFolderId: null,
 
     // ⚠️ IMPORTANTE: Substitua a string abaixo pelo ID de cliente que você gerou no Google Cloud Console.
-    CLIENT_ID: "SEU_ID_DE_CLIENTE_OAUTH_VAI_AQUI.apps.googleusercontent.com",
+    CLIENT_ID: "847747677288-110jhcfcltfonvte86ji4mhokug8dgp2.apps.googleusercontent.com",
     
     API_KEY: firebaseConfig.apiKey,
     SCOPES: "https://www.googleapis.com/auth/drive.file",
@@ -2130,4 +2130,5 @@ Object.assign(window, {
     buscarEPreencherFatores,
     adicionarPeriodoExterno, removerPeriodoExterno
 });
+
 
