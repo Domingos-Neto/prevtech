@@ -81,7 +81,8 @@ const auth = {
     },
     init: () => {
         onAuthStateChanged(_auth, (user) => {
-            if (user) {
+          console.log("onAuthStateChanged disparado! Usuário:", user);  
+          if (user) {
                 const email = (user.email || "").toLowerCase();
                 if (!EMAILS_AUTORIZADOS.includes(email)) {
                     ui.showToast("⚠️ E-mail não autorizado para acessar o sistema.", false);
@@ -2187,6 +2188,7 @@ Object.assign(window, {
     buscarEPreencherFatores,
     adicionarPeriodoExterno, removerPeriodoExterno
 });
+
 
 
 
