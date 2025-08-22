@@ -158,7 +158,7 @@ const drive = {
     // ⚠️ IMPORTANTE: Substitua a string abaixo pelo ID de cliente que você gerou no Google Cloud Console.
     CLIENT_ID: "847747677288-110jhcfcltfonvte86ji4mhokug8dgp2.apps.googleusercontent.com",
     
-    API_KEY: firebaseConfig.apiKey,
+    API_KEY: "AIzaSyCkzX_5GuNjizbbgzWNgYx3hvEhj2Hr3pM",
     SCOPES: "https://www.googleapis.com/auth/drive.file",
 
     // ETAPA 1: Inicia o cliente da API do Google (GAPI)
@@ -2184,3 +2184,4 @@ Object.assign(window, {
     buscarEPreencherFatores,
     adicionarPeriodoExterno, removerPeriodoExterno
 });
+
