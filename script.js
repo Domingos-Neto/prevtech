@@ -147,12 +147,13 @@ const ui = {
 };
 
 // =================================================================================
-// MÓDULO DE INTEGRAÇÃO COM GOOGLE DRIVE
+// MÓDULO DE INTEGRAÇÃO COM GOOGLE DRIVE (ATUALIZADO PARA GOOGLE IDENTITY SERVICES)
 // =================================================================================
 const drive = {
-    gapiLoaded: false,
-    autenticado: false,
     appFolderId: null,
+    tokenClient: null,
+    isGapiInitialized: false,
+    isGisInitialized: false,
 
     // ⚠️ IMPORTANTE: Substitua a string abaixo pelo ID de cliente que você gerou no Google Cloud Console.
     CLIENT_ID: "847747677288-110jhcfcltfonvte86ji4mhokug8dgp2.apps.googleusercontent.com",
@@ -160,66 +161,100 @@ const drive = {
     API_KEY: firebaseConfig.apiKey,
     SCOPES: "https://www.googleapis.com/auth/drive.file",
 
-    // Inicia o cliente da API do Google. Esta função é o CALLBACK do gapi.load
-    init: async () => {
-        const saveButton = document.getElementById('btnSaveToDrive');
-        try {
-            await window.gapi.client.init({
-                apiKey: drive.API_KEY,
-                clientId: drive.CLIENT_ID,
-                scope: drive.SCOPES,
-                discoveryDocs: ["https://www.googleapis.com/discovery/v1/apis/drive/v3/rest"],
-            });
-            drive.gapiLoaded = true;
-            console.log("Google Drive API Client inicializado.");
-            
-            const authInstance = window.gapi.auth2.getAuthInstance();
-            if (authInstance.isSignedIn.get()) {
-                drive.autenticado = true;
-                console.log("Usuário já autenticado com o Google Drive.");
-            }
+    // ETAPA 1: Inicia o cliente da API do Google (GAPI)
+    initGapiClient: () => {
+        gapi.client.init({
+            apiKey: drive.API_KEY,
+            discoveryDocs: ["https://www.googleapis.com/discovery/v1/apis/drive/v3/rest"],
+        })
+        .then(() => {
+            console.log("Google Drive API Client (GAPI) inicializado.");
+            drive.isGapiInitialized = true;
+            drive.checkApisReady();
+        })
+        .catch(error => {
+            console.error("Erro ao inicializar GAPI client:", error);
+            ui.showToast("Não foi possível conectar ao Google Drive.", false);
+        });
+    },
 
-            // MODIFICADO AQUI: Ativa o botão quando a API estiver pronta
+    // ETAPA 2: Inicia o cliente de identidade do Google (GIS)
+    initGisClient: () => {
+        try {
+            drive.tokenClient = google.accounts.oauth2.initTokenClient({
+                client_id: drive.CLIENT_ID,
+                scope: drive.SCOPES,
+                callback: (tokenResponse) => {
+                    // Este callback é chamado após o usuário conceder permissão.
+                    // O gapi.client.setToken já é gerenciado pela biblioteca.
+                    console.log("Token de acesso obtido via GIS.");
+                },
+            });
+            console.log("Google Identity Services (GIS) Client inicializado.");
+            drive.isGisInitialized = true;
+            drive.checkApisReady();
+        } catch (error) {
+            console.error("Erro ao inicializar GIS client:", error);
+            ui.showToast("Falha ao inicializar o serviço de identidade do Google.", false);
+        }
+    },
+
+    // ETAPA 3: Verifica se ambas as APIs estão prontas para habilitar o botão
+    checkApisReady: () => {
+        const saveButton = document.getElementById('btnSaveToDrive');
+        if (drive.isGapiInitialized && drive.isGisInitialized) {
+            console.log("APIs do Google prontas para uso.");
             if (saveButton) {
                 saveButton.disabled = false;
                 saveButton.title = "Salvar simulação no Google Drive";
             }
-
-        } catch (error) {
-            console.error("Erro ao inicializar GAPI client:", error);
-            ui.showToast("Não foi possível conectar ao Google Drive.", false);
-
-            // MODIFICADO AQUI: Mantém o botão desativado e informa o erro
-            if (saveButton) {
-                saveButton.title = "Falha ao conectar com o Google Drive. Verifique o console para erros.";
+        } else {
+             if (saveButton) {
+                saveButton.title = "Aguardando conexão com as APIs do Google...";
             }
         }
     },
 
-    // Solicita o login e a permissão do usuário para o Drive
-    signIn: async () => {
-        if (!drive.gapiLoaded) {
-            ui.showToast("A API do Google Drive ainda está carregando. Tente novamente em alguns segundos.", false);
-            return false;
-        }
-        try {
-            await window.gapi.auth2.getAuthInstance().signIn();
-            drive.autenticado = true;
-            ui.showToast("Acesso ao Google Drive autorizado!", true);
-            return true;
-        } catch (error) {
-            console.error("Erro ao autenticar com Google Drive:", error);
-            ui.showToast("Falha ao autorizar o acesso ao Google Drive.", false);
-            return false;
-        }
+    // ETAPA 4: Lida com a autorização, solicitando um token se necessário
+    handleAuth: () => {
+        return new Promise((resolve, reject) => {
+            if (gapi.client.getToken()) {
+                console.log("Token já existente, pulando solicitação.");
+                return resolve();
+            }
+
+            if (drive.tokenClient) {
+                // Solicita o token. A biblioteca GIS gerencia o popup e o callback.
+                drive.tokenClient.requestAccessToken({ prompt: 'consent' });
+                
+                // O fluxo da biblioteca GIS é assíncrono e baseado em callbacks.
+                // A melhor forma de saber se funcionou é verificar periodicamente se o token foi setado.
+                let attempts = 0;
+                const maxAttempts = 15; // Tenta por até 15 segundos
+                const interval = setInterval(() => {
+                    attempts++;
+                    if (gapi.client.getToken()) {
+                        clearInterval(interval);
+                        console.log("Autorização concedida com sucesso.");
+                        resolve();
+                    } else if (attempts >= maxAttempts) {
+                        clearInterval(interval);
+                        console.log("Tempo limite de autorização excedido.");
+                        reject(new Error("O usuário demorou para conceder a permissão ou fechou a janela."));
+                    }
+                }, 1000);
+
+            } else {
+                reject(new Error("Cliente de autenticação do Google não inicializado."));
+            }
+        });
     },
 
     // Procura pela pasta "PrevTech" no Drive do usuário ou a cria se não existir
     findOrCreateAppFolder: async () => {
         if (drive.appFolderId) return drive.appFolderId;
-
         try {
-            const response = await window.gapi.client.drive.files.list({
+            const response = await gapi.client.drive.files.list({
                 q: "mimeType='application/vnd.google-apps.folder' and name='PrevTech' and trashed=false",
                 fields: 'files(id, name)',
             });
@@ -232,7 +267,7 @@ const drive = {
                     'name': 'PrevTech',
                     'mimeType': 'application/vnd.google-apps.folder'
                 };
-                const createResponse = await window.gapi.client.drive.files.create({
+                const createResponse = await gapi.client.drive.files.create({
                     resource: fileMetadata,
                     fields: 'id'
                 });
@@ -248,9 +283,12 @@ const drive = {
 
     // Função principal para fazer o upload de um arquivo
     uploadFile: async (fileName, fileContent, mimeType) => {
-        if (!drive.autenticado) {
-            const success = await drive.signIn();
-            if (!success) return;
+        try {
+            await drive.handleAuth();
+        } catch (error) {
+            console.error("Falha na autorização:", error);
+            ui.showToast("A autorização para acessar o Google Drive falhou ou foi negada.", false);
+            return;
         }
 
         const folderId = await drive.findOrCreateAppFolder();
@@ -276,7 +314,7 @@ const drive = {
             close_delim;
 
         try {
-            await window.gapi.client.request({
+            await gapi.client.request({
                 'path': '/upload/drive/v3/files',
                 'method': 'POST',
                 'params': {'uploadType': 'multipart'},
@@ -295,18 +333,33 @@ const drive = {
         const nomeSimulacao = document.getElementById("nomeSimulacao").value.trim() || `Simulacao_${new Date().toISOString()}`;
         const dados = coletarDadosSimulacao();
         const conteudoJson = JSON.stringify(dados, null, 2); 
-
         await drive.uploadFile(`${nomeSimulacao}.json`, conteudoJson, 'application/json');
     },
 };
 
 const EXPECTATIVA_SOBREVIDA_IBGE = { M: { 55: 25.5, 56: 24.7, 57: 23.9, 58: 23.1, 59: 22.3, 60: 21.6, 61: 20.8, 62: 20.1, 63: 19.4, 64: 18.7, 65: 18.0 }, F: { 52: 30.1, 53: 29.2, 54: 28.4, 55: 27.5, 56: 26.7, 57: 25.8, 58: 25.0, 59: 24.1, 60: 23.3, 61: 22.5, 62: 21.7 } };
 
-document.addEventListener("DOMContentLoaded", auth.init);
 
-function onGapiLoad() {
-    window.gapi.load('client:auth2', drive.init);
+function inicializarAPIsExternas() {
+    const checkInterval = setInterval(() => {
+        const gapiReady = typeof gapi !== 'undefined' && gapi.load;
+        const gisReady = typeof google !== 'undefined' && google.accounts;
+
+        if (gapiReady && gisReady) {
+            clearInterval(checkInterval);
+            console.log("Scripts do Google GAPI e GIS carregados.");
+            gapi.load('client', drive.initGapiClient);
+            drive.initGisClient();
+        } else {
+            // console.log("Aguardando carregamento dos scripts do Google...");
+        }
+    }, 150);
 }
+
+document.addEventListener("DOMContentLoaded", () => {
+    auth.init();
+    inicializarAPIsExternas();
+});
 
 function initSistemaPosLogin() {
     ui.updateUserInfo();
@@ -518,7 +571,7 @@ function formatarDataBR(dataString) {
     try {
         const [year, month, day] = dataString.split('-');
         const date = new Date(year, month - 1, day);
-        return date.toLocaleDateString('pt-BR');
+        return date.toLocaleDateString('pt-BR', { timeZone: 'UTC' });
     } catch (e) {
         return dataString;
     }
@@ -542,7 +595,8 @@ function formatarDataPorExtenso(data) {
     return dateObj.toLocaleDateString('pt-BR', {
         day: 'numeric',
         month: 'long',
-        year: 'numeric'
+        year: 'numeric',
+        timeZone: 'UTC'
     });
 }
 
@@ -883,8 +937,8 @@ function calcularBeneficio(n = true, b = null) {
             const isP = t === 'pensao_ativo' || t === 'pensao_aposentado';
 
             if (isA) {
-                 const dataCalculo = document.getElementById('dataCalculo').value ? new Date(document.getElementById('dataCalculo').value + 'T00:00:00') : new Date();
-                 const dataAdmissao = new Date(document.getElementById('dataAdmissao').value + 'T00:00:00');
+                 const dataCalculo = document.getElementById('dataCalculo').value ? new Date(document.getElementById('dataCalculo').value + 'T00:00:00Z') : new Date();
+                 const dataAdmissao = new Date(document.getElementById('dataAdmissao').value + 'T00:00:00Z');
                  const tempoServicoPublico = (dataCalculo - dataAdmissao) / 31557600000;
                  const tempoExternoAnos = (parseInt(document.getElementById('tempoExterno').value) || 0) / 365.25;
                  const tempoEspecialAnos = (parseInt(document.getElementById('tempoEspecial').value) || 0) / 365.25;
@@ -906,8 +960,8 @@ function calcularBeneficio(n = true, b = null) {
                         return;
                     }
 
-                    const dataInicioIncapacidade = new Date(dataInicioIncapacidadeInput + 'T00:00:00');
-                    const dataReforma = new Date('2019-11-13T00:00:00');
+                    const dataInicioIncapacidade = new Date(dataInicioIncapacidadeInput + 'T00:00:00Z');
+                    const dataReforma = new Date('2019-11-13T00:00:00Z');
 
                     if (isGrave) {
                         vB = m;
@@ -1233,22 +1287,22 @@ async function gerarDocumentoCTC(button) {
 
         for (const periodo of periodosInput) {
             if (!periodo.inicio || !periodo.fim) continue;
-            let dataCorrente = new Date(periodo.inicio + 'T00:00:00');
-            const dataFinal = new Date(periodo.fim + 'T00:00:00');
+            let dataCorrente = new Date(periodo.inicio + 'T00:00:00Z');
+            const dataFinal = new Date(periodo.fim + 'T00:00:00Z');
             while (dataCorrente <= dataFinal) {
                 const ano = dataCorrente.getFullYear();
-                const inicioAno = new Date(ano, 0, 1);
-                const fimAno = new Date(ano, 11, 31);
+                const inicioAno = new Date(Date.UTC(ano, 0, 1));
+                const fimAno = new Date(Date.UTC(ano, 11, 31));
                 const periodoInicio = dataCorrente > inicioAno ? dataCorrente : inicioAno;
                 const periodoFim = dataFinal < fimAno ? dataFinal : fimAno;
                 const diffTime = periodoFim.getTime() - periodoInicio.getTime();
                 const tempoBruto = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
                 const deducaoNesteAno = (periodoFim.getFullYear() === dataFinal.getFullYear()) ? periodo.deducoes : 0;
                 const tempoLiquido = tempoBruto - deducaoNesteAno;
-                const linhaProcessada = { ano: ano, periodoStr: `${periodoInicio.toLocaleDateString('pt-BR')} a ${periodoFim.toLocaleDateString('pt-BR')}`, regime: periodo.regime, tempoApurado: tempoBruto, deducoes: deducaoNesteAno, tempoLiquido: tempoLiquido, fonte: periodo.fonte };
+                const linhaProcessada = { ano: ano, periodoStr: `${periodoInicio.toLocaleDateString('pt-BR', {timeZone: 'UTC'})} a ${periodoFim.toLocaleDateString('pt-BR', {timeZone: 'UTC'})}`, regime: periodo.regime, tempoApurado: tempoBruto, deducoes: deducaoNesteAno, tempoLiquido: tempoLiquido, fonte: periodo.fonte };
                 periodosProcessados[periodo.regime].push(linhaProcessada);
                 if(periodo.regime === 'RGPS') totalLiquidoRGPS += tempoLiquido; else totalLiquidoRPPS += tempoLiquido;
-                dataCorrente = new Date(ano + 1, 0, 1);
+                dataCorrente = new Date(Date.UTC(ano + 1, 0, 1));
             }
         }
         
@@ -1389,8 +1443,8 @@ function calculateValorLiquido(pB) {
 
 function projetarAposentadoria(mS) {
     const rPD = document.getElementById('resultadoProjecao');
-    const dN = new Date(document.getElementById('dataNascimento').value + 'T00:00:00');
-    const dA = new Date(document.getElementById('dataAdmissao').value + 'T00:00:00');
+    const dN = new Date(document.getElementById('dataNascimento').value + 'T00:00:00Z');
+    const dA = new Date(document.getElementById('dataAdmissao').value + 'T00:00:00Z');
     const s = document.getElementById('sexo').value;
     const tED = parseInt(document.getElementById('tempoExterno').value) || 0;
     const tSD = parseInt(document.getElementById('tempoEspecial').value) || 0;
@@ -1400,14 +1454,14 @@ function projetarAposentadoria(mS) {
     let dataReferencia;
 
     if (dataCalculoValue) {
-        dataReferencia = new Date(dataCalculoValue + 'T00:00:00');
+        dataReferencia = new Date(dataCalculoValue + 'T00:00:00Z');
     } else if (dataRequerimentoValue) {
-        dataReferencia = new Date(dataRequerimentoValue + 'T00:00:00');
+        dataReferencia = new Date(dataRequerimentoValue + 'T00:00:00Z');
     } else {
         dataReferencia = new Date();
     }
 
-    const dR = new Date('2019-11-13T00:00:00');
+    const dR = new Date('2019-11-13T00:00:00Z');
     
     const iA = (dataReferencia - dN) / 31557600000;
     const tempoServicoPublicoAnos = (dataReferencia - dA) / 31557600000;
@@ -1507,8 +1561,8 @@ function verificarAbonoPermanencia() {
     const redutor = isMagisterio ? 5 : 0;
     
     const rAD = document.getElementById('resultadoAbono');
-    const dN = new Date(document.getElementById('dataNascimento').value + 'T00:00:00');
-    const dA = new Date(document.getElementById('dataAdmissao').value + 'T00:00:00');
+    const dN = new Date(document.getElementById('dataNascimento').value + 'T00:00:00Z');
+    const dA = new Date(document.getElementById('dataAdmissao').value + 'T00:00:00Z');
     const s = document.getElementById('sexo').value;
 
     const dataReferencia = new Date();
@@ -1879,8 +1933,8 @@ function calcularTempoTotalCTC() {
         const deducoes = parseInt(linha.querySelector('.ctc-deducoes').value) || 0;
 
         if (inicioStr && fimStr) {
-            const inicio = new Date(inicioStr + 'T00:00:00');
-            const fim = new Date(fimStr + 'T00:00:00');
+            const inicio = new Date(inicioStr + 'T00:00:00Z');
+            const fim = new Date(fimStr + 'T00:00:00Z');
             if (fim >= inicio) {
                 const diffTime = Math.abs(fim - inicio);
                 const tempoBruto = Math.ceil(diffTime / 86400000) + 1;
@@ -1946,8 +2000,8 @@ function calcularTempoEntreDatas() {
         return;
     }
 
-    const dataInicio = new Date(dataInicioStr + 'T00:00:00');
-    const dataFim = new Date(dataFimStr + 'T00:00:00');
+    const dataInicio = new Date(dataInicioStr + 'T00:00:00Z');
+    const dataFim = new Date(dataFimStr + 'T00:00:00Z');
 
     if (dataFim < dataInicio) {
         resultadoContainer.innerHTML = `<p style="color: var(--cor-erro); margin: auto;">A data final não pode ser anterior à data inicial.</p>`;
@@ -1989,12 +2043,12 @@ async function buscarEPreencherFatores(button) {
             throw new Error("Tabela vazia.");
         }
 
-        const dataCalculo = new Date(dataCalculoStr + 'T00:00:00');
-        let dataCompetencia = new Date(dataCalculo.getFullYear(), dataCalculo.getMonth(), 1);
-        dataCompetencia.setMonth(dataCompetencia.getMonth() - 1);
+        const dataCalculo = new Date(dataCalculoStr + 'T00:00:00Z');
+        let dataCompetencia = new Date(dataCalculo.getUTCFullYear(), dataCalculo.getUTCMonth(), 1);
+        dataCompetencia.setUTCMonth(dataCompetencia.getUTCMonth() - 1);
         
-        const anoCompetencia = dataCompetencia.getFullYear();
-        const mesCompetencia = dataCompetencia.getMonth() + 1;
+        const anoCompetencia = dataCompetencia.getUTCFullYear();
+        const mesCompetencia = dataCompetencia.getUTCMonth() + 1;
 
         const ultimoDiaCompetencia = new Date(anoCompetencia, mesCompetencia, 0).getDate();
         const dataFinalParaAPI = `${ultimoDiaCompetencia}/${mesCompetencia}/${anoCompetencia}`;
@@ -2073,8 +2127,8 @@ function adicionarPeriodoExterno(inicio = '', fim = '') {
         return ui.showToast("Preencha a data de início e fim do período.", false);
     }
 
-    const dataInicio = new Date(dataInicioStr + 'T00:00:00');
-    const dataFim = new Date(dataFimStr + 'T00:00:00');
+    const dataInicio = new Date(dataInicioStr + 'T00:00:00Z');
+    const dataFim = new Date(dataFimStr + 'T00:00:00Z');
 
     if (dataFim < dataInicio) {
         return ui.showToast("A data final não pode ser anterior à data inicial.", false);
@@ -2118,7 +2172,7 @@ function atualizarTotalTempoExterno() {
 }
 
 Object.assign(window, {
-    auth, ui, drive, onGapiLoad, handleNavClick, atualizarDashboardView, irParaPasso, alternarCamposBeneficio,
+    auth, ui, drive, handleNavClick, atualizarDashboardView, irParaPasso, alternarCamposBeneficio,
     adicionarLinha, limparTabela, exportarExcel, importarExcel, atualizarSalarioLinha, excluirLinha,
     calcularBeneficio, adicionarLinhaProvento, calculateTotalProventos, excluirLinhaProvento,
     adicionarLinhaDependente, removerLinhaDependente, salvarSimulacaoHistorico, imprimirSimulacao,
@@ -2130,5 +2184,3 @@ Object.assign(window, {
     buscarEPreencherFatores,
     adicionarPeriodoExterno, removerPeriodoExterno
 });
-
-
