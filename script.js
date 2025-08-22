@@ -16,13 +16,14 @@ import {
 // 2. No Console do Firebase, ative o App Check para proteger contra abuso.
 // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 const firebaseConfig = {
-    apiKey: "AIzaSyCkzX_5GuNjizbbgzWNgYx3hvEhj2Hr3pM",
-    authDomain: "prevtech-ca050.firebaseapp.com",
-    projectId: "prevtech-ca050",
-    storageBucket: "prevtech-ca050.firebasestorage.app",
-    messagingSenderId: "847747677288",
-    appId: "1:847747677288:web:f1efa50e9e8b93e60bcfdd"
-};
+    apiKey: "AIzaSyAbePFHJpsxwdaKMkgaKimEmlEHmJ209QY",
+    authDomain: "prevtech-sistema.firebaseapp.com",
+    projectId: "prevtech-sistema",
+    storageBucket: "prevtech-sistema.firebasestorage.app",
+    messagingSenderId: "340278196378",
+    appId: "1:340278196378:web:7b7dc882fb63781a40c723",
+    measurementId: "G-TGXXLZWLLV"
+  };
 
 const app = initializeApp(firebaseConfig);
 const _auth = getAuth(app);
@@ -156,7 +157,7 @@ const drive = {
     isGisInitialized: false,
 
     // ⚠️ IMPORTANTE: Substitua a string abaixo pelo ID de cliente que você gerou no Google Cloud Console.
-    CLIENT_ID: "847747677288-110jhcfcltfonvte86ji4mhokug8dgp2.apps.googleusercontent.com",
+    CLIENT_ID: "340278196378-ppjulvmofr23gckuelj9bgofcr5topgv.apps.googleusercontent.com",
     
     API_KEY: firebaseConfig.apiKey,
     SCOPES: "https://www.googleapis.com/auth/drive.file",
@@ -2200,6 +2201,7 @@ Object.assign(window, {
     buscarEPreencherFatores,
     adicionarPeriodoExterno, removerPeriodoExterno
 });
+
 
 
 
