@@ -20,7 +20,7 @@ const firebaseConfig = {
     apiKey: "AIzaSyAbePFHJpsxwdaKMkgaKimEmlEHmJ209QY",
     authDomain: "prevtech-sistema.firebaseapp.com",
     projectId: "prevtech-sistema",
-    storageBucket: "prevtech-sistema.firebasestorage.app",
+    storageBucket: "prevtech-sistema.appspot.com",
     messagingSenderId: "340278196378",
     appId: "1:340278196378:web:7b7dc882fb63781a40c723",
     measurementId: "G-TGXXLZWLLV"
@@ -2203,6 +2203,7 @@ Object.assign(window, {
     buscarEPreencherFatores,
     adicionarPeriodoExterno, removerPeriodoExterno
 });
+
 
 
 
