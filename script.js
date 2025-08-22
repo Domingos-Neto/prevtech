@@ -1,7 +1,8 @@
 // =================================================================================
 // MÓDULO DE AUTENTICAÇÃO E CONFIGURAÇÃO (Firebase)
 // =================================================================================
-import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-analytics.js";
 import {
   getAuth,
   GoogleAuthProvider,
@@ -26,6 +27,7 @@ const firebaseConfig = {
   };
 
 const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
 const _auth = getAuth(app);
 const provider = new GoogleAuthProvider();
 
@@ -2201,6 +2203,7 @@ Object.assign(window, {
     buscarEPreencherFatores,
     adicionarPeriodoExterno, removerPeriodoExterno
 });
+
 
 
 
