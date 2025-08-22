@@ -216,36 +216,52 @@ const drive = {
     },
 
     // ETAPA 4: Lida com a autorização, solicitando um token se necessário
+    // ETAPA 4: Lida com a autorização, solicitando um token se necessário (VERSÃO CORRIGIDA)
     handleAuth: () => {
         return new Promise((resolve, reject) => {
+            // Se o token já existe na sessão atual, não precisa pedir de novo.
             if (gapi.client.getToken()) {
-                console.log("Token já existente, pulando solicitação.");
+                console.log("Token de acesso já existente.");
                 return resolve();
             }
 
-            if (drive.tokenClient) {
-                // Solicita o token. A biblioteca GIS gerencia o popup e o callback.
-                drive.tokenClient.requestAccessToken({ prompt: 'consent' });
-                
-                // O fluxo da biblioteca GIS é assíncrono e baseado em callbacks.
-                // A melhor forma de saber se funcionou é verificar periodicamente se o token foi setado.
-                let attempts = 0;
-                const maxAttempts = 15; // Tenta por até 15 segundos
-                const interval = setInterval(() => {
-                    attempts++;
-                    if (gapi.client.getToken()) {
-                        clearInterval(interval);
-                        console.log("Autorização concedida com sucesso.");
-                        resolve();
-                    } else if (attempts >= maxAttempts) {
-                        clearInterval(interval);
-                        console.log("Tempo limite de autorização excedido.");
-                        reject(new Error("O usuário demorou para conceder a permissão ou fechou a janela."));
-                    }
-                }, 1000);
+            // Se o cliente de token não foi inicializado, é um erro.
+            if (!drive.tokenClient) {
+                return reject(new Error("Cliente de identidade do Google (GIS) não foi inicializado."));
+            }
 
-            } else {
-                reject(new Error("Cliente de autenticação do Google não inicializado."));
+            // A forma correta de usar a biblioteca GIS é passar um callback que será
+            // executado QUANDO o usuário interagir com o popup.
+            try {
+                drive.tokenClient = google.accounts.oauth2.initTokenClient({
+                    client_id: drive.CLIENT_ID,
+                    scope: drive.SCOPES,
+                    callback: (tokenResponse) => {
+                        // Este callback é o coração da solução. Ele só é chamado DEPOIS
+                        // que o Google retorna com um token ou um erro.
+                        if (tokenResponse && tokenResponse.access_token) {
+                            console.log("Token de acesso obtido com sucesso via callback.");
+                            // O gapi.client já foi atualizado pela biblioteca.
+                            // Agora podemos resolver a Promise e continuar o fluxo.
+                            resolve(); 
+                        } else {
+                            // Se o usuário fechou o popup ou negou a permissão.
+                            console.error("Falha ao obter token de acesso.", tokenResponse);
+                            reject(new Error("A permissão para acessar o Google Drive foi negada ou a janela foi fechada."));
+                        }
+                    },
+                    error_callback: (error) => {
+                        // Callback específico para erros durante o processo.
+                        console.error("Erro no fluxo de autenticação do Google:", error);
+                        reject(new Error(`Erro de autenticação do Google: ${error.type || 'desconhecido'}`));
+                    }
+                });
+
+                // Agora que o cliente está configurado com os callbacks corretos, pedimos o token.
+                drive.tokenClient.requestAccessToken({ prompt: 'consent' });
+
+            } catch (error) {
+                reject(error);
             }
         });
     },
@@ -2184,5 +2200,6 @@ Object.assign(window, {
     buscarEPreencherFatores,
     adicionarPeriodoExterno, removerPeriodoExterno
 });
+
 
 
