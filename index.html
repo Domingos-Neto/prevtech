@@ -105,9 +105,9 @@
                     
                     <div class="dashboard-grid">
                         <div class="dashboard-card" onclick="handleNavClick(event, 'simulacao')"><i class="ri-add-circle-line"></i><span>Nova Simulação de Benefício</span></div>
+                        <div class="dashboard-card" onclick="document.getElementById('carregarSimulacaoInput').click()"><i class="ri-upload-2-line"></i><span>Carregar Simulação</span></div>
                         <div class="dashboard-card" onclick="handleNavClick(event, 'geradorCTC')"><i class="ri-file-text-line"></i><span>Gerar Certidão (CTC)</span></div>
                         <div class="dashboard-card" onclick="handleNavClick(event, 'telaLegislacao')"><i class="ri-book-open-line"></i><span>Acessar Legislação</span></div>
-                        <div class="dashboard-card" onclick="handleNavClick(event, 'telaConfiguracoes')"><i class="ri-settings-3-line"></i><span>Configurações</span></div>
 
                         <div class="dashboard-card" style="grid-column: 1 / -1; align-items: flex-start; text-align: left;">
                             <h4 style="margin-top:0; display:flex; align-items:center; gap:8px; border:none; font-size: 1.1em;">
@@ -261,9 +261,7 @@
                             </div>
                             <div class="grupo-acoes">
                                 <button class="secondary" onclick="imprimirSimulacao()">🖨️ Imprimir Relatório</button>
-                                <button id="btnSaveToDrive" class="secondary" onclick="drive.handleSaveSimulationClick()" disabled title="Aguardando conexão com o Google Drive...">
-                                    <i class="ri-upload-cloud-2-line"></i> Salvar Simulação no Drive
-                                </button>
+                                <button class="secondary" onclick="salvarSimulacaoLocal(this)"><i class="ri-computer-line"></i> Salvar no Computador</button>
                                 <button class="primary" onclick="exportarTudoZIP(this)">📦 Exportar ZIP</button>
                                 <button id="btnGerarAtoAposentadoria" class="success" onclick="gerarAtoDeAposentadoria(this)" style="display: none;">
                                     <span class="button-text">🏛️ Gerar Ato de Aposentadoria</span>
@@ -487,6 +485,7 @@
                 </div>
 
                 <input type="file" id="arquivoExcel" accept=".xlsx, .xls" style="display:none;" onchange="importarExcel()" />
+                <input type="file" id="carregarSimulacaoInput" accept=".json" style="display:none;" onchange="carregarSimulacaoLocal(event)" />
                 <div id="printableArea" style="display:none;"></div>
 
             </div> 
@@ -534,9 +533,6 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
-
-<script async defer src="https://accounts.google.com/gsi/client"></script>
-<script async defer src="https://apis.google.com/js/api.js"></script>
 
 <script type="module" src="script.js"></script>
 
