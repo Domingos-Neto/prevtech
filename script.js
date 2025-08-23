@@ -2236,6 +2236,10 @@ Object.assign(window, {
     buscarEPreencherFatores,
     adicionarPeriodoExterno, removerPeriodoExterno
 });
+function salvarSimulacaoLocal() {
+  simulacao.salvarLocal();
+}
+
 
 
 
