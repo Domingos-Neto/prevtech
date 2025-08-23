@@ -2226,7 +2226,8 @@ function atualizarTotalTempoExterno() {
 Object.assign(window, {
     auth, ui, drive, handleNavClick, atualizarDashboardView, irParaPasso, alternarCamposBeneficio,
     adicionarLinha, limparTabela, exportarExcel, importarExcel, atualizarSalarioLinha, excluirLinha,
-    calcularBeneficio, adicionarLinhaProvento, calculateTotalProventos, excluirLinhaProvento,
+    calcularBeneficio, adicionarLinhaProvento,
+    calculateTotalProventos, excluirLinhaProvento,
     adicionarLinhaDependente, removerLinhaDependente, salvarSimulacaoHistorico, imprimirSimulacao,
     exportarTudoZIP, gerarAtoDeAposentadoria, gerarAtoDePensao, carregarDoHistorico, excluirDoHistorico,
     adicionarLinhaPeriodoCTC, calcularTempoTotalCTC, removerLinhaPeriodoCTC, salvarCTC, gerarDocumentoCTC,
@@ -2236,9 +2237,12 @@ Object.assign(window, {
     buscarEPreencherFatores,
     adicionarPeriodoExterno, removerPeriodoExterno
 });
+// Torna acessível no HTML
+window.simulacao = simulacao;
 function salvarSimulacaoLocal() {
   simulacao.salvarLocal();
 }
+
 
 
 
