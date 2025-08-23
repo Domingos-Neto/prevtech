@@ -149,6 +149,54 @@ const ui = {
         if (activeLink) activeLink.classList.add('active');
     }
 };
+const simulacao = {
+  // Dados da simulação (exemplo: você pode ajustar de acordo com seu sistema)
+  coletarDados: () => {
+    return {
+      nome: document.getElementById('nomeSimulacao').value || "Sem nome",
+      data: new Date().toISOString(),
+      // Aqui você adiciona todos os outros campos da simulação
+      exemplo: "Outros dados da simulação vão aqui..."
+    };
+  },
+
+  restaurarDados: (dados) => {
+    // Recarregar os dados nos campos
+    document.getElementById('nomeSimulacao').value = dados.nome || "";
+    // Aqui você implementa o carregamento dos outros campos
+    alert("Simulação carregada com sucesso!");
+  },
+
+  salvarLocal: () => {
+    const dados = simulacao.coletarDados();
+    const blob = new Blob([JSON.stringify(dados, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `Simulacao_${dados.nome.replace(/\s+/g, "_")}.json`;
+    a.click();
+
+    URL.revokeObjectURL(url);
+    alert("Simulação salva no seu computador!");
+  },
+
+  carregarLocal: (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const dados = JSON.parse(e.target.result);
+        simulacao.restaurarDados(dados);
+      } catch (error) {
+        alert("Erro ao carregar o arquivo. Verifique se é um JSON válido.");
+      }
+    };
+    reader.readAsText(file);
+  }
+};
 
 // =================================================================================
 // MÓDULO DE INTEGRAÇÃO COM GOOGLE DRIVE (ATUALIZADO PARA GOOGLE IDENTITY SERVICES)
@@ -2188,6 +2236,7 @@ Object.assign(window, {
     buscarEPreencherFatores,
     adicionarPeriodoExterno, removerPeriodoExterno
 });
+
 
 
 
