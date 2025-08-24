@@ -1,5 +1,5 @@
 // =================================================================================
-// MÓDULO DE AUTENTICAÇÃO E CONFIGURAÇÃO (Firebase)
+// MÓDULO DE AUTENTICAção E CONFIGURAÇÃO (Firebase)
 // =================================================================================
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
 import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-analytics.js";
@@ -149,36 +149,84 @@ const ui = {
         if (activeLink) activeLink.classList.add('active');
     }
 };
+
 const simulacao = {
-  // Dados da simulação (exemplo: você pode ajustar de acordo com seu sistema)
   coletarDados: () => {
-    return {
-      nome: document.getElementById('nomeSimulacao').value || "Sem nome",
-      data: new Date().toISOString(),
-      // Aqui você adiciona todos os outros campos da simulação
-      exemplo: "Outros dados da simulação vão aqui..."
-    };
+    return coletarDadosSimulacao(); // Chama a função global de coleta de dados
   },
 
   restaurarDados: (dados) => {
-    // Recarregar os dados nos campos
-    document.getElementById('nomeSimulacao').value = dados.nome || "";
-    // Aqui você implementa o carregamento dos outros campos
-    alert("Simulação carregada com sucesso!");
+    handleNavClick(null, 'simulacao');
+    
+    setTimeout(() => {
+        try {
+            limparFormularioCompleto();
+
+            // Restaura Passo 1
+            if (dados.passo1) {
+                for (const key in dados.passo1) {
+                    const el = document.getElementById(key);
+                    if (el) el.value = dados.passo1[key];
+                }
+            }
+            // Nome da simulação para salvar
+            document.getElementById('nomeSimulacao').value = dados.nome || 'Simulação Carregada';
+
+            // Restaura Períodos Externos
+            if (dados.periodosExternos) {
+                dados.periodosExternos.forEach(p => adicionarPeriodoExterno(p.inicio, p.fim));
+            }
+
+            // Restaura Tabela de Salários
+            if (dados.tabela) {
+                dados.tabela.forEach(linha => adicionarLinha(linha[0], linha[1], linha[2]));
+            }
+
+            // Restaura Tabela de Dependentes
+            if (dados.dependentes) {
+                dados.dependentes.forEach(dep => adicionarLinhaDependente(dep.nome, dep.dataNasc, dep.parentesco, dep.invalido));
+            }
+            
+            // Restaura Detalhamento de Proventos
+            if (dados.proventosAto) {
+                document.getElementById('corpo-tabela-proventos-ato').innerHTML = ''; // Limpa antes de adicionar
+                dados.proventosAto.forEach(p => adicionarLinhaProvento(p.descricao, p.valor));
+            }
+
+            // Ajusta a UI conforme o tipo de benefício
+            alternarCamposBeneficio();
+            
+            // Recalcula e exibe o resultado
+            const tipoBeneficio = document.getElementById('tipoBeneficio').value;
+            if (tipoBeneficio !== 'pensao_aposentado') {
+                irParaPasso(2); // Vai para o passo 2 se precisar da tabela de salários
+            }
+            calcularBeneficio(true); // Recalcula e vai para o passo 3 (resultados)
+            
+            ui.showToast(`Simulação "${dados.nome || 'Sem nome'}" carregada com sucesso!`, true);
+
+        } catch (error) {
+            console.error("Erro ao restaurar dados da simulação:", error);
+            ui.showToast("Falha ao carregar dados da simulação. O arquivo pode estar corrompido.", false);
+        }
+    }, 150); // Pequeno delay para garantir que a UI mudou de tela
   },
 
   salvarLocal: () => {
+    const nomeSimulacao = document.getElementById('nomeSimulacao').value.trim() || `Simulacao_${new Date().toISOString().slice(0,10)}`;
     const dados = simulacao.coletarDados();
+    dados.nome = nomeSimulacao; // Garante que o nome está no objeto salvo
+    
     const blob = new Blob([JSON.stringify(dados, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
-
     const a = document.createElement("a");
     a.href = url;
-    a.download = `Simulacao_${dados.nome.replace(/\s+/g, "_")}.json`;
+    a.download = `${nomeSimulacao.replace(/[^a-z0-9]/gi, '_')}.json`;
+    document.body.appendChild(a);
     a.click();
-
+    document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    alert("Simulação salva no seu computador!");
+    ui.showToast("Simulação salva no seu computador!", true);
   },
 
   carregarLocal: (event) => {
@@ -191,8 +239,15 @@ const simulacao = {
         const dados = JSON.parse(e.target.result);
         simulacao.restaurarDados(dados);
       } catch (error) {
-        alert("Erro ao carregar o arquivo. Verifique se é um JSON válido.");
+        console.error("Erro ao ler o arquivo JSON:", error);
+        ui.showToast("Erro ao carregar o arquivo. Verifique se é um JSON válido.", false);
+      } finally {
+          event.target.value = ''; // Limpa o input para permitir carregar o mesmo arquivo novamente
       }
+    };
+    reader.onerror = () => {
+        ui.showToast("Não foi possível ler o arquivo selecionado.", false);
+        event.target.value = '';
     };
     reader.readAsText(file);
   }
@@ -1740,24 +1795,35 @@ function salvarSimulacaoHistorico(nF) {
 }
 
 function coletarDadosSimulacao() {
-    const d = { passo1: {}, tabela: [], proventosAto: [], dependentes: [], resultados: AppState.simulacaoResultados, periodosExternos: [] };
-    document.querySelectorAll('#passo1 input:not([type=hidden]),#passo1 select,#passo1 textarea').forEach(e => { if (e.id) d.passo1[e.id] = e.value; });
+    const dadosColetados = { 
+        passo1: {}, 
+        tabela: [], 
+        proventosAto: [], 
+        dependentes: [], 
+        resultados: AppState.simulacaoResultados, 
+        periodosExternos: [],
+        nome: document.getElementById('nomeSimulacao').value.trim()
+    };
+    
+    document.querySelectorAll('#passo1 input:not([type=hidden]),#passo1 select,#passo1 textarea').forEach(e => { if (e.id) dadosColetados.passo1[e.id] = e.value; });
     
     document.querySelectorAll("#corpo-tabela tr").forEach(l => {
         const i = l.querySelectorAll("input");
-        d.tabela.push([i[0].value, i[1].value, i[2].value]);
+        dadosColetados.tabela.push([i[0].value, i[1].value, i[2].value]);
     });
-    document.querySelectorAll("#corpo-tabela-proventos-ato tr").forEach(l => d.proventosAto.push({ descricao: l.querySelector(".provento-descricao").value, valor: l.querySelector(".provento-valor").value }));
-    document.querySelectorAll("#corpo-tabela-dependentes tr").forEach(l => d.dependentes.push({ nome: l.querySelector('.dependente-nome').value, dataNasc: l.querySelector('.dependente-dataNasc').value, parentesco: l.querySelector('.dependente-parentesco').value, invalido: l.querySelector('.dependente-invalido').value }));
+    
+    document.querySelectorAll("#corpo-tabela-proventos-ato tr").forEach(l => dadosColetados.proventosAto.push({ descricao: l.querySelector(".provento-descricao").value, valor: l.querySelector(".provento-valor").value }));
+    
+    document.querySelectorAll("#corpo-tabela-dependentes tr").forEach(l => dadosColetados.dependentes.push({ nome: l.querySelector('.dependente-nome').value, dataNasc: l.querySelector('.dependente-dataNasc').value, parentesco: l.querySelector('.dependente-parentesco').value, invalido: l.querySelector('.dependente-invalido').value }));
     
     document.querySelectorAll("#corpo-tabela-tempo-externo tr").forEach(row => {
-        d.periodosExternos.push({
+        dadosColetados.periodosExternos.push({
             inicio: row.dataset.inicio,
             fim: row.dataset.fim
         });
     });
 
-    return d;
+    return dadosColetados;
 }
 
 function listarHistorico() {
@@ -1789,37 +1855,9 @@ function carregarDoHistorico(id) {
     const h = JSON.parse(localStorage.getItem(c) || "[]");
     const rE = h.find(r => r.id === id);
     if (!rE) return ui.showToast("Erro: Simulação não encontrada.", false);
-    const d = rE.dados;
-    handleNavClick(null, 'simulacao');
-    setTimeout(() => {
-        limparFormularioCompleto();
-        for (const k in d.passo1) {
-            const e = document.getElementById(k);
-            if (e) e.value = d.passo1[k];
-        }
-        if (d.tabela) d.tabela.forEach(l => adicionarLinha(...l));
-        if (d.proventosAto) {
-            document.getElementById('corpo-tabela-proventos-ato').innerHTML = '';
-            d.proventosAto.forEach(p => adicionarLinhaProvento(p.descricao, p.valor));
-            calculateTotalProventos();
-        }
-        if (d.dependentes) {
-            document.getElementById('corpo-tabela-dependentes').innerHTML = '';
-            d.dependentes.forEach(dep => adicionarLinhaDependente(dep.nome, dep.dataNasc, dep.parentesco, dep.invalido));
-        }
-        
-        if(d.periodosExternos) {
-            d.periodosExternos.forEach(p => adicionarPeriodoExterno(p.inicio, p.fim));
-        }
-
-        AppState.simulacaoResultados = d.resultados || {};
-        alternarCamposBeneficio();
-        ui.showToast(`Simulação "${rE.nome}" carregada.`, true);
-        const t = document.getElementById('tipoBeneficio').value;
-        if (t !== 'pensao_aposentado') irParaPasso(2);
-        else irParaPasso(1);
-        calcularBeneficio(true);
-    }, 100);
+    
+    // Usa a função centralizada para restaurar os dados
+    simulacao.restaurarDados(rE.dados);
 }
 
 function excluirDoHistorico(id) {
@@ -2237,20 +2275,5 @@ Object.assign(window, {
     buscarEPreencherFatores,
     adicionarPeriodoExterno, removerPeriodoExterno
 });
-// Torna acessível no HTML
+// Torna o objeto 'simulacao' acessível globalmente no HTML
 window.simulacao = simulacao;
-function salvarSimulacaoLocal() {
-  simulacao.salvarLocal();
-}
-
-
-
-
-
-
-
-
-
-
-
-
