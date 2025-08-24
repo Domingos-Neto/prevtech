@@ -485,7 +485,6 @@
                 </div>
 
                 <input type="file" id="arquivoExcel" accept=".xlsx, .xls" style="display:none;" onchange="importarExcel()" />
-                <input type="file" id="carregarSimulacaoInput" accept=".json" style="display:none;" onchange="carregarSimulacaoLocal(event)" />
                 <div id="printableArea" style="display:none;"></div>
 
             </div> 
@@ -535,9 +534,7 @@
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
 
 <script type="module" src="script.js"></script>
-<input type="file" id="carregarSimulacaoInput" style="display:none;" accept=".json"
-       onchange="simulacao.carregarLocal(event)">
+<input type="file" id="carregarSimulacaoInput" accept=".json" style="display:none;" onchange="simulacao.carregarLocal(event)" />
+
 </body>
 </html>
-
-
