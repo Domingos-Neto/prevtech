@@ -461,27 +461,107 @@
 
                 <div id="telaCadastro" style="display:none;">
                     <h2><i class="ri-user-settings-fill"></i> Módulo de Gestão Cadastral</h2>
-                    <p>Este módulo está em desenvolvimento e será disponibilizado em futuras versões do sistema.</p>
+                    <p>Gerencie as informações de todos os servidores e pensionistas do RPPS.</p>
+                    <div class="form-grid" style="align-items: flex-end; margin-bottom: 20px;">
+                        <input type="text" placeholder="Buscar por nome, CPF ou matrícula...">
+                        <button>Buscar Servidor</button>
+                        <button class="success">Adicionar Novo Servidor</button>
+                    </div>
+                    
+                    <div id="fichaCadastralServidor">
+                        <h4>Ficha Cadastral: <span style="color: var(--primary-light);">Maria Oliveira Santos</span></h4>
+                        <div class="tab-nav">
+                            <button class="active">Dados Pessoais</button>
+                            <button>Dados Funcionais</button>
+                            <button>Dependentes</button>
+                            <button>Histórico de Contribuições</button>
+                        </div>
+                        <div class="tab-content active">
+                            <div class="form-grid">
+                                <label>Nome Completo: <input type="text" value="Maria Oliveira Santos" readonly></label>
+                                <label>CPF: <input type="text" value="999.888.777-66" readonly></label>
+                                <label>Data de Nascimento: <input type="date" value="1970-05-20" readonly></label>
+                                <label>Endereço: <input type="text" value="Rua das Flores, 123" readonly></label>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 
                 <div id="telaProcessos" style="display:none;">
                     <h2><i class="ri-node-tree"></i> Módulo de Acompanhamento de Processos</h2>
-                    <p>Este módulo está em desenvolvimento e será disponibilizado em futuras versões do sistema.</p>
+                    <p>Acompanhe o andamento dos processos de concessão de benefícios de forma visual e organizada.</p>
+                     <div class="kanban-board">
+                        <div class="kanban-column">
+                            <h4><i class="ri-inbox-line"></i> Novos Pedidos</h4>
+                            <div class="kanban-card">
+                                <p>Aposentadoria Voluntária</p>
+                                <small>Requerente: CARLOS SOUZA</small>
+                                <small>Processo: 2025/00123</small>
+                                <small>Data de Entrada: 25/07/2025</small>
+                            </div>
+                        </div>
+                        <div class="kanban-column">
+                            <h4><i class="ri-file-search-line"></i> Em Análise</h4>
+                             <div class="kanban-card">
+                                <p>Pensão por Morte</p>
+                                <small>Requerente: ANA LIMA (Dependente)</small>
+                                <small>Processo: 2025/00119</small>
+                                <small>Data de Entrada: 22/07/2025</small>
+                            </div>
+                             <div class="kanban-card">
+                                <p>Emissão de CTC</p>
+                                <small>Requerente: JOSÉ ALMEIDA</small>
+                                <small>Processo: 2025/00121</small>
+                                <small>Data de Entrada: 23/07/2025</small>
+                            </div>
+                        </div>
+                        <div class="kanban-column">
+                            <h4><i class="ri-check-double-line"></i> Concluídos</h4>
+                             <div class="kanban-card">
+                                <p>Aposentadoria por Incapacidade</p>
+                                <small>Requerente: RITA DE CÁSSIA</small>
+                                <small>Processo: 2025/00115</small>
+                                <small>Data de Entrada: 15/07/2025</small>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <div id="telaFinanceiro" style="display:none;">
                     <h2><i class="ri-line-chart-fill"></i> Módulo Financeiro e Contribuições</h2>
-                    <p>Este módulo está em desenvolvimento e será disponibilizado em futuras versões do sistema.</p>
+                    <p>Controle a arrecadação, despesas e a saúde financeira do fundo de previdência.</p>
+                    <div class="dashboard-grid">
+                        <div class="dashboard-card"><i class="ri-arrow-down-line" style="color:#28a745"></i><span>Arrecadação do Mês<br><b>R$ 1.500.000,00</b></span></div>
+                        <div class="dashboard-card"><i class="ri-arrow-up-line" style="color:#dc3545"></i><span>Despesas com Benefícios<br><b>R$ 1.250.000,00</b></span></div>
+                        <div class="dashboard-card"><i class="ri-scales-3-line" style="color:#17a2b8"></i><span>Saldo do Fundo<br><b>R$ 50.000.000,00</b></span></div>
+                    </div>
+                    <h4>Controle de Folhas de Pagamento</h4>
+                    <table>
+                        <thead><tr><th>Competência</th><th>Data de Importação</th><th>Valor Total</th><th>Status</th></tr></thead>
+                        <tbody>
+                            <tr><td>06/2025</td><td>05/07/2025</td><td>R$ 1.480.754,30</td><td>Conciliado</td></tr>
+                            <tr><td>05/2025</td><td>06/06/2025</td><td>R$ 1.475.012,88</td><td>Conciliado</td></tr>
+                            <tr><td>04/2025</td><td>06/06/2025</td><td>R$ 1.452.325,21</td><td>Conciliado</td></tr>
+                            <tr><td>03/2025</td><td>06/06/2025</td><td>R$ 1.402.850,00</td><td>Conciliado</td></tr>
+                        </tbody>
+                    </table>
                 </div>
 
                 <div id="telaRelatorios" style="display:none;">
                     <h2><i class="ri-file-chart-fill"></i> Módulo de Relatórios e BI</h2>
-                    <p>Este módulo está em desenvolvimento e será disponibilizado em futuras versões do sistema.</p>
+                    <p>Gere relatórios gerenciais, estatísticos e para os órgãos de controle.</p>
+                    <ul class="list-group">
+                        <li class="list-group-item"><div><b>Extrato de Contribuições do Servidor</b><br><small>Gera o extrato individual com todas as contribuições de um servidor.</small></div><button>Gerar</button></li>
+                        <li class="list-group-item"><div><b>Relação de Aposentados e Pensionistas</b><br><small>Lista todos os beneficiários atuais e o valor de seus proventos.</small></div><button>Gerar</button></li>
+                        <li class="list-group-item"><div><b>Dados para Avaliação Atuarial</b><br><small>Exporta a base de dados consolidada para a realização do cálculo atuarial.</small></div><button>Gerar</button></li>
+                        <li class="list-group-item"><div><b>Relatório para o COMPREV</b><br><small>Gera os dados necessários para a Compensação Previdenciária.</small></div><button>Gerar</button></li>
+                        <li class="list-group-item"><div><b>Relatórios para o TCE</b><br><small>Exporta informações nos leiautes exigidos pelo Tribunal de Contas.</small></div><button>Gerar</button></li>
+                    </ul>
                 </div>
                 
                 <div id="telaUsuarios" style="display:none;">
                     <h2><i class="ri-shield-user-fill"></i> Gerenciamento de Usuários</h2>
-                    <p>Este módulo está em desenvolvimento e será disponibilizado em futuras versões do sistema.</p>
+                    <p>O gerenciamento de usuários foi desativado nesta versão do cliente por motivos de segurança. A adição e remoção de e-mails autorizados deve ser feita diretamente no código-fonte ou em um painel de administração seguro.</p>
                 </div>
 
                 <input type="file" id="arquivoExcel" accept=".xlsx, .xls" style="display:none;" onchange="importarExcel()" />
@@ -538,3 +618,4 @@
 
 </body>
 </html>
+
