@@ -1228,20 +1228,20 @@ function gerarAtoDePensao(b) {
 
             // Dados do Ex-servidor (Instituidor)
             nomeServidor: document.getElementById('nomeServidor').value.toUpperCase() || '________________',
-            nacionalidadeServidor: 'brasileiro',
+            nacionalidadeServidor: 'brasileiro(a)', // Tornando neutro
             rgServidor: document.getElementById('rgServidor').value || '________________',
             cpfServidor: document.getElementById('cpfServidor').value || '________________',
             cargoServidor: document.getElementById('cargoServidor').value.toUpperCase() || '________________',
             
             // Ato de Aposentadoria (apenas se for o caso)
-            atoAposentadoria: 'Ato concessivo de Aposentadoria Voluntária por Idade nº 076/2013', // Exemplo - Campo a ser criado, se necessário
+            atoAposentadoria: 'Ato concessivo de Aposentadoria Nº XXX/AAAA', // Exemplo - Campo a ser criado, se necessário
 
             // Datas e Valores
             dataObito: document.getElementById('dataObito').value,
             // O valor base para o cálculo da pensão (média do ativo ou provento do aposentado)
             valorBaseCalculo: (tipoBeneficioPensao === 'pensao_aposentado') 
                 ? parseFloat(document.getElementById('proventoAposentado').value) || 0 
-                : AppState.simulacaoResultados.mediaSalarial || 0,
+                : AppState.simulacaoResultados.mediaSarial || 0,
             
             // Nomes dos Gestores (das configurações)
             nomePrefeito: AppState.configuracoes.nomePrefeito || 'FELIPE SOUZA PINHEIRO',
@@ -1259,22 +1259,19 @@ function gerarAtoDePensao(b) {
             descricaoInstituidor = `aposentado(a) em conformidade com o ${dados.atoAposentadoria}`;
         }
         
-        // Lógica de qualificação genérica do beneficiário
+        // Correção da qualificação do beneficiário para ser genérica e correta
         const qualificacaoBeneficiario = `na qualidade de ${dados.parentesco}`;
 
         // Lógica de cálculo da pensão conforme EC 103/2019
         const cotaPercentual = Math.min(1.0, 0.50 + (numeroDependentes * 0.10));
         const valorFinalPensao = dados.valorBaseCalculo * cotaPercentual;
-
-        // Ajuste para garantir que o valor final não seja inferior ao mínimo, se aplicável
-        // No exemplo, há um complemento. Se o valor final for menor que o valor base E o valor base for o salário mínimo, aplicamos o complemento.
+        
         let complemento = 0;
         let valorCotaExibido = valorFinalPensao;
 
-        // A regra do complemento para atingir o mínimo só se aplica se o benefício originário já era de um salário mínimo.
-        if (dados.valorBaseCalculo.toFixed(2) === SALARIO_MINIMO.toFixed(2) && valorFinalPensao < SALARIO_MINIMO) {
+        // Regra do complemento para atingir o salário mínimo
+        if (valorFinalPensao < SALARIO_MINIMO) {
              complemento = SALARIO_MINIMO - valorFinalPensao;
-             valorCotaExibido = valorFinalPensao; // Mantém o valor da cota calculado
         }
         const valorTotalComComplemento = valorFinalPensao + complemento;
 
@@ -1301,6 +1298,9 @@ function gerarAtoDePensao(b) {
                 <td colspan="4">TOTAL DA PENSÃO</td>
                 <td style="text-align:right;">${formatarDinheiro(valorTotalComComplemento)}</td>
             </tr>`;
+        
+        // CORREÇÃO: Ajuste na frase de concessão para ser gramaticalmente correta
+        const fraseConcessao = `CONCEDER BENEFÍCIO DE PENSÃO POR MORTE AO(À) BENEFICIÁRIO(A) <span class="bold uppercase">${dados.nomePensionista}</span>`;
             
         // ======================= FIM DA MODIFICAÇÃO =======================
 
@@ -1349,15 +1349,15 @@ function gerarAtoDePensao(b) {
                     
                     <p class="resolvem">RESOLVEM:</p>
 
-                    <p class="indent">CONCEDER BENEFÍCIO DE PENSÃO POR MORTE A BENEFICIÁRIO(A) <span class="bold uppercase">${dados.nomePensionista}</span>, ${qualificacaoBeneficiario}, do(a) ex-servidor(a) <span class="bold uppercase">${dados.nomeServidor}</span>, ${dados.nacionalidadeServidor}, portador(a) do RG n.º ${dados.rgServidor} e CPF n.º ${dados.cpfServidor}, ${descricaoInstituidor}, com fundamento no art. 40 §7º da CF/88 (redação da EC n.º 103/19), e na legislação municipal nos artigos art. 22 e 26 da Lei n.º 047/2008 - Regime Próprio de Previdência Social do Município de Itapipoca, alterada pela Lei Nº 005/2020 de 28 de fevereiro de 2020; Lei n.º 042/2021 de 19 de agosto de 2021; Lei n.º 035/2022 em seu art. 6 e Decreto n.º 113/2022, em seu art. 25, cujos efeitos financeiros se darão a partir do dia do óbito ${formatarDataBR(dados.dataObito)}.</p>
+                    <p class="indent">${fraseConcessao}, ${qualificacaoBeneficiario}, do(a) ex-servidor(a) <span class="bold uppercase">${dados.nomeServidor}</span>, ${dados.nacionalidadeServidor}, portador(a) do RG n.º ${dados.rgServidor} e CPF n.º ${dados.cpfServidor}, ${descricaoInstituidor}, com fundamento no art. 40 §7º da CF/88 (redação da EC n.º 103/19), e na legislação municipal nos artigos art. 22 e 26 da Lei n.º 047/2008 - Regime Próprio de Previdência Social do Município de Itapipoca, alterada pela Lei Nº 005/2020 de 28 de fevereiro de 2020; Lei n.º 042/2021 de 19 de agosto de 2021; Lei n.º 035/2022 em seu art. 6 e Decreto n.º 113/2022, em seu art. 25, cujos efeitos financeiros se darão a partir do dia do óbito ${formatarDataBR(dados.dataObito)}.</p>
                     
-                    <p class="indent">A Pensão em referência será paga no valor total ${formatarDinheiro(valorTotalComComplemento)} (${valorPorExtenso(valorTotalComComplemento)}), de forma vitalícia, observando que seu reajuste será em conformidade com o RGPS, conforme abaixo discriminado:</p>
+                    <p class="indent">A Pensão em referência será paga no valor total ${formatarDinheiro(valorTotalComComplemento)} (${valorPorExtenso(valorTotalComComplemento)}), observando que seu reajuste será em conformidade com o RGPS, conforme abaixo discriminado:</p>
                     
                     <table>
                         <thead><tr><th>DESCRIÇÃO</th><th style="text-align:right;">VALOR</th></tr></thead>
                         <tbody>
-                            <tr><td>Proventos de Aposentadoria</td><td style="text-align:right;">${formatarDinheiro(dados.valorBaseCalculo)}</td></tr>
-                            <tr class="total-row"><td>TOTAL DOS PROVENTOS DE APOSENTADORIA</td><td style="text-align:right;">${formatarDinheiro(dados.valorBaseCalculo)}</td></tr>
+                            <tr><td>Proventos de Referência</td><td style="text-align:right;">${formatarDinheiro(dados.valorBaseCalculo)}</td></tr>
+                            <tr class="total-row"><td>TOTAL DOS PROVENTOS DE REFERÊNCIA</td><td style="text-align:right;">${formatarDinheiro(dados.valorBaseCalculo)}</td></tr>
                         </tbody>
                     </table>
 
@@ -2437,6 +2437,7 @@ Object.assign(window, {
 });
 // Torna o objeto 'simulacao' acessível globalmente no HTML
 window.simulacao = simulacao;
+
 
 
 
