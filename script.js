@@ -1214,65 +1214,175 @@ function salvarConfiguracoes(button) {
 function gerarAtoDePensao(b) {
     ui.toggleSpinner(b, true);
     try {
-        const d = {
-            atoNumero: document.getElementById('atoNumero').value || '____',
+        // Coleta de dados do formulário
+        const dados = {
+            atoNumero: document.getElementById('atoNumero').value.padStart(3, '0') || '___',
             atoAno: new Date().getFullYear(),
-            processo: document.getElementById('processoAdministrativo').value || '____',
+            
+            // Dados do Pensionista (Beneficiário)
             nomePensionista: document.getElementById('nomePensionista').value.toUpperCase() || '________________',
-            relacaoPensionista: document.getElementById('relacaoPensionista').value.toLowerCase() || '________________',
-            statusServidor: document.getElementById('tipoBeneficio').value === 'pensao_aposentado' ? 'inativo(a)' : 'ativo(a)',
+            nacionalidadePensionista: 'brasileira', // Assumido como padrão, pode ser ajustado se necessário
+            estadoCivilPensionista: 'viúva', // Assumido como padrão
+            rgPensionista: '99097026386 SSP/CE', // Exemplo - Adicionar campo no HTML se não existir
+            cpfPensionista: '088.051.213-04', // Exemplo - Adicionar campo no HTML se não existir
+            parentesco: document.getElementById('relacaoPensionista').value || 'Cônjuge',
+
+            // Dados do Ex-servidor (Instituidor)
             nomeServidor: document.getElementById('nomeServidor').value.toUpperCase() || '________________',
-            cargoServidor: document.getElementById('cargoServidor').value.toUpperCase() || '________________',
+            nacionalidadeServidor: 'brasileiro', // Assumido como padrão
+            estadoCivilServidor: 'casado', // Assumido como padrão
+            rgServidor: document.getElementById('rgServidor').value || '________________',
             cpfServidor: document.getElementById('cpfServidor').value || '________________',
-            matriculaServidor: document.getElementById('matriculaServidor').value || '________________',
-            dataObito: formatarDataBR(document.getElementById('dataObito').value) || '__/__/____',
-            valorBeneficio: AppState.simulacaoResultados.valorBeneficioFinal || 0,
-            dataAtual: formatarDataPorExtenso(new Date()),
-            nomeDiretor: AppState.configuracoes.nomePresidente || 'NOME DO DIRETOR PRESIDENTE'
+            cargoServidor: document.getElementById('cargoServidor').value.toUpperCase() || '________________',
+            atoAposentadoria: 'Ato concessivo de Aposentadoria Voluntária por Idade nº 076/2013', // Exemplo - Adicionar campo se dinâmico
+
+            // Datas e Valores
+            dataObito: document.getElementById('dataObito').value,
+            valorTotalBeneficio: AppState.simulacaoResultados.valorBeneficioFinal || 0,
+            
+            // Nomes dos Gestores (das configurações)
+            nomePrefeito: AppState.configuracoes.nomePrefeito || 'FELIPE SOUZA PINHEIRO',
+            nomePresidente: AppState.configuracoes.nomePresidente || 'EDIANIA DE CASTRO ALBUQUERQUE'
         };
-        const vE = valorPorExtenso(d.valorBeneficio) + " REAIS",
-            vF = formatarDinheiro(d.valorBeneficio),
-            dV = d.dataObito,
-            e = `<style>
-                body{font-family:'Times New Roman',Times,serif;color:black;background-color:white;line-height:1.5;font-size:12pt;margin:0;}
-                .container{display:flex; flex-direction:column; width:210mm;min-height:297mm;box-sizing:border-box; background-image: url('https://i.postimg.cc/1tC5TV16/Papel-Timbrado-ITAPREV-1.png'); background-size: 100% 100%; background-repeat: no-repeat; -webkit-print-color-adjust: exact; padding: 4.5cm 2cm 3.5cm 2cm;}
-                .content-body {flex-grow: 1;}
-                .center{text-align:center;}.bold{font-weight:bold;}.uppercase{text-transform:uppercase;}.justify{text-align:justify;}.indent{text-indent:50px;}p,h3{margin:0 0 1em 0;}.header p{margin-bottom:5px;}.title{margin-top:1.5cm;border:none;font-weight:bold;}
-                .resolve{text-align:center;font-weight:bold;margin:2em 0;border:none;}
-                .artigo{margin-top:15px;} .cumpra-se{text-align:center;margin-top:60px;} .data-local{text-align:center;margin-top:40px;}
-                .assinatura{text-align:center; margin-top:80px;}
-                @media print{body{padding:0;}}
-                </style>`,
-            cH = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Ato de Pensão Nº ${d.atoNumero}/${d.atoAno}</title>${e}</head><body><div class="container">
-            <div class="content-body">
-                <div class="center header">
-                    <h3 class="title">ATO DE PENSÃO Nº ${d.atoNumero}/${d.atoAno}</h3>
+
+        // Cálculos da Pensão
+        const cotaParte = dados.valorTotalBeneficio * 0.60;
+        const complemento = dados.valorTotalBeneficio - cotaParte;
+
+        const htmlConteudo = `
+        <!DOCTYPE html>
+        <html lang="pt-BR">
+        <head>
+            <meta charset="UTF-8">
+            <title>Ato de Pensão Nº ${dados.atoNumero}/${dados.atoAno}</title>
+            <style>
+                body { font-family: Arial, sans-serif; font-size: 12pt; line-height: 1.5; color: #000; background: #fff; margin: 0; }
+                .container { width: 210mm; min-height: 297mm; margin: auto; padding: 2cm; box-sizing: border-box; display: flex; flex-direction: column; }
+                .header { text-align: center; }
+                .header img { width: 100px; } /* Ajuste o tamanho da logo se necessário */
+                .header h3 { font-size: 14pt; margin: 5px 0; }
+                .header p { font-size: 11pt; margin: 0; }
+                .title { text-align: center; font-weight: bold; margin: 1.5cm 0; font-size: 12pt; }
+                .content-body { flex-grow: 1; text-align: justify; }
+                .content-body p, .content-body div { margin-bottom: 1em; }
+                .indent { text-indent: 50px; }
+                .bold { font-weight: bold; }
+                .uppercase { text-transform: uppercase; }
+                .resolvem { text-align: center; font-weight: bold; margin: 2em 0; }
+                table { width: 100%; border-collapse: collapse; margin-top: 1em; }
+                th, td { border: 1px solid #ccc; padding: 5px; text-align: left; }
+                th { background-color: #f2f2f2; }
+                .total-row td { font-weight: bold; }
+                .signature-container { margin-top: 80px; text-align: center; }
+                .signature-block { display: inline-block; width: 45%; }
+                .signature-block p { margin: 0; line-height: 1.2; }
+                .footer { text-align: center; font-size: 9pt; color: #444; margin-top: auto; padding-top: 1cm; border-top: 1px solid #ccc; }
+                .data-local { text-align: left; margin-top: 40px; }
+                 @media print {
+                    body { margin: 0; padding: 0; }
+                    .container { border: none; box-shadow: none; margin: 0; padding: 2cm; }
+                }
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="header">
+                    <p class="bold">ITAPREV</p>
+                    <p class="bold">INSTITUTO DE PREVIDÊNCIA DOS</p>
+                    <p class="bold">SERVIDORES MUNICIPAIS DE ITAPIPOCA</p>
                 </div>
-                <p class="justify indent">O DIRETOR PRESIDENTE DO INSTITUTO DE PREVIDÊNCIA DOS SERVIDORES MUNICIPAIS DE ITAPIPOCA – ITAPREV, no uso de suas atribuições legais, conferidas pela Lei Orgânica do Município e pela Lei Municipal nº 047/2008, e</p>
-                <p class="justify indent">CONSIDERANDO o requerimento formulado pelo(a) interessado(a), que deu origem ao Processo Administrativo nº <span class="bold">${d.processo}</span>,</p>
-                <h3 class="resolve">RESOLVE:</h3>
-                <p class="justify indent artigo"><b>Art. 1º</b> - CONCEDER o benefício de <b>PENSÃO POR MORTE</b>, ao(à) pensionista <b class="uppercase">${d.nomePensionista}</b>, na qualidade de <b class="uppercase">${d.relacaoPensionista}</b> do(a) ex-servidor(a) ${d.statusServidor}, <b class="uppercase">${d.nomeServidor}</b>, ocupante do cargo de <b class="uppercase">${d.cargoServidor}</b>, CPF nº <b>${d.cpfServidor}</b>, Matrícula nº <b>${d.matriculaServidor}</b>, falecido(a) em <b>${d.dataObito}</b>.</p>
-                <p class="justify indent artigo"><b>Art. 2º</b> - O valor do benefício corresponderá à cota familiar de 50% (cinquenta por cento), acrescida de cotas de 10% (dez por cento) por dependente, até o máximo de 100% (cem por cento), aplicada sobre o valor dos proventos do servidor falecido, totalizando <b>${vF}</b> (<span class="bold uppercase">${vE}</span>).</p>
-                <p class="justify indent artigo"><b>Art. 3º</b> - A presente pensão tem como fundamento legal o Art. 23 da Emenda Constitucional nº 103/2019 e os Arts. 45 a 52 da Lei Municipal nº 047/2008.</p>
-                <p class="justify indent artigo"><b>Art. 4º</b> - Este ato entra em vigor na data de sua publicação, com efeitos financeiros a partir de <b>${dV}</b>, data do óbito do instituidor.</p>
-                <p class="cumpra-se">REGISTRE-SE, PUBLIQUE-SE E CUMPRA-SE.</p>
-                <p class="data-local">Itapipoca-CE, ${d.dataAtual}.</p>
-                <div class="assinatura"><p>_________________________________________</p><p class="bold uppercase">${d.nomeDiretor}</p><p>Diretor Presidente do ITAPREV</p></div>
+
+                <p class="title">ATO DE CONCESSÃO DE PENSÃO POR MORTE № ${dados.atoNumero}/${dados.atoAno}.</p>
+
+                <div class="content-body">
+                    <p class="indent">O PREFEITO MUNICIPAL DE ITAPIPOCA, no uso das atribuições legais que lhe confere a Lei Orgânica do Município de Itapipoca e a Presidente do Instituto de Previdência dos Servidores Municipais de Itapipoca - ITAPREV, de acordo com a Lei Nº 047/2008, de 16 de dezembro de 2008, que criou o Regime Próprio de Previdência Social de Itapipoca, alterada pela Lei Nº 005/2020 de 28 fevereiro de 2020, que parcialmente o reestruturou,</p>
+                    
+                    <p class="resolvem">RESOLVEM:</p>
+
+                    <p class="indent">CONCEDER BENEFÍCIO DE PENSÃO POR MORTE A BENEFICIÁRIO <span class="bold uppercase">${dados.nomePensionista}</span>, ${dados.nacionalidadePensionista}, ${dados.estadoCivilPensionista}, portadora do RG n.º ${dados.rgPensionista} e CPF n.º ${dados.cpfPensionista}, na qualidade de ${dados.parentesco}, do ex-servidor <span class="bold uppercase">${dados.nomeServidor}</span>, ${dados.nacionalidadeServidor}, ${dados.estadoCivilServidor}, portador do RG n.º ${dados.rgServidor} e CPF n.º ${dados.cpfServidor}, ex-servidor público municipal na função de <span class="uppercase bold">${dados.cargoServidor}</span>, aposentado em conformidade com o ${dados.atoAposentadoria}, com fundamento no art. 40 §7º da CF/88 (redação da EC n.º 103/19), e na legislação municipal nos artigos art. 22 e 26 da Lei n.º 047/2008 - Regime Próprio de Previdência Social do Município de Itapipoca, alterada pela Lei Nº 005/2020 de 28 de fevereiro de 2020; Lei n.º 042/2021 de 19 de agosto de 2021; Lei n.º 035/2022 em seu art. 6 e Decreto n.º 113/2022, em seu art. 25, cujos efeitos financeiros se darão a partir do dia do óbito ${formatarDataBR(dados.dataObito)}.</p>
+                    
+                    <p class="indent">A Pensão em referência será paga no valor total ${formatarDinheiro(dados.valorTotalBeneficio)} (${valorPorExtenso(dados.valorTotalBeneficio)}), de forma vitalícia, observando que seu reajuste será em conformidade com o RGPS, conforme abaixo discriminado:</p>
+                    
+                    <table>
+                        <thead><tr><th>DESCRIÇÃO</th><th style="text-align:right;">VALOR</th></tr></thead>
+                        <tbody>
+                            <tr><td>Proventos de Aposentadoria</td><td style="text-align:right;">${formatarDinheiro(dados.valorTotalBeneficio)}</td></tr>
+                            <tr class="total-row"><td>TOTAL DOS PROVENTOS DE APOSENTADORIA</td><td style="text-align:right;">${formatarDinheiro(dados.valorTotalBeneficio)}</td></tr>
+                        </tbody>
+                    </table>
+
+                    <p>Dessa forma, apresentando-se a requerente para receber o benefício de pensão por morte, a mesma restará na forma que segue:</p>
+
+                     <table>
+                        <thead>
+                            <tr>
+                                <th>BENEFICIÁRIO (S)</th>
+                                <th>PARENTESCO</th>
+                                <th>NATUREZA DA PENSÃO</th>
+                                <th>COTA</th>
+                                <th style="text-align:right;">VALOR DA PENSÃO</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>${dados.nomePensionista}</td>
+                                <td>${dados.parentesco}</td>
+                                <td>Vitalícia</td>
+                                <td>60%</td>
+                                <td style="text-align:right;">${formatarDinheiro(cotaParte)}</td>
+                            </tr>
+                            <tr>
+                                <td colspan="4">COMPLEMENTAÇÃO CONSTITUCIONAL</td>
+                                <td style="text-align:right;">${formatarDinheiro(complemento)}</td>
+                            </tr>
+                            <tr class="total-row">
+                                <td colspan="4">TOTAL DA PENSÃO</td>
+                                <td style="text-align:right;">${formatarDinheiro(dados.valorTotalBeneficio)}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <p>Para o benefício em referência ficam assegurados os limites de acumulação de benefícios previdenciários, previstos no artigo 24 e seus parágrafos, da Emenda Constitucional nº 103, de 12 de novembro de 2019.</p>
+
+                    <p class="data-local">Paço da Prefeitura Municipal de Itapipoca, em ${formatarDataPorExtenso(new Date())}.</p>
+
+                    <div class="signature-container">
+                        <div class="signature-block">
+                            <p>_________________________________________</p>
+                            <p class="bold uppercase">${dados.nomePrefeito}</p>
+                            <p>Prefeito Municipal</p>
+                        </div>
+                        <div class="signature-block">
+                            <p>_________________________________________</p>
+                            <p class="bold uppercase">${dados.nomePresidente}</p>
+                            <p>Presidente do ITAPREV</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="footer">
+                    <p>INSTITUTO DE PREVIDÊNCIA DOS SERVIDORES MUNICIPAIS DE ITAPIPOCA</p>
+                    <p>Rua Caio Prado, 730, São Sebastião-Itapipoca - CE - Brasil</p>
+                    <p>CEP: 62508-200-CNPJ: 10575544/0001-35</p>
+                    <p>(88) 3631-0204 | rppsitaprev@gmail.com | www.itaprev.com.br</p>
+                </div>
             </div>
-            </div></body></html>`;
-        const nA = window.open();
-        nA.document.open();
-        nA.document.write(cH);
-        nA.document.close();
-        ui.showToast("Documento gerado.", true);
+        </body>
+        </html>
+        `;
+
+        const newWindow = window.open();
+        newWindow.document.open();
+        newWindow.document.write(htmlConteudo);
+        newWindow.document.close();
+        ui.showToast("Ato de Pensão gerado com sucesso!", true);
     } catch (er) {
         ui.showToast("Erro ao gerar o documento.", false);
-        console.error(er);
+        console.error("Erro em gerarAtoDePensao:", er);
     } finally {
         ui.toggleSpinner(b, false);
     }
 }
-
 function gerarAtoDeAposentadoria(b) {
     ui.toggleSpinner(b, true);
     try {
@@ -2277,3 +2387,4 @@ Object.assign(window, {
 });
 // Torna o objeto 'simulacao' acessível globalmente no HTML
 window.simulacao = simulacao;
+
