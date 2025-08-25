@@ -1239,7 +1239,7 @@ function gerarAtoDePensao(b) {
             dataObito: document.getElementById('dataObito').value,
             valorBaseCalculo: (tipoBeneficioPensao === 'pensao_aposentado') 
                 ? parseFloat(document.getElementById('proventoAposentado').value) || 0 
-                : AppState.simacaoResultados.mediaSalarial || 0,
+                : AppState.simulacaoResultados.mediaSalarial || 0,
             
             // Nomes dos Gestores
             nomePrefeito: AppState.configuracoes.nomePrefeito || 'FELIPE SOUZA PINHEIRO',
@@ -1262,19 +1262,14 @@ function gerarAtoDePensao(b) {
         }
         const valorTotalFinal = valorCalculadoPensao + complemento;
 
-        // ======================= INÍCIO DA MODIFICAÇÃO =======================
-        
-        // Geração dinâmica da tabela de beneficiários
         let tabelaRateioHTML = '';
-        const valorRateado = valorCalculadoPensao / numeroDependentes; // Rateio simples entre os dependentes
+        const valorRateado = numeroDependentes > 0 ? valorCalculadoPensao / numeroDependentes : 0;
 
         Array.from(tabelaDependentes.rows).forEach(linha => {
             const nome = linha.querySelector('.dependente-nome').value.toUpperCase();
             const parentesco = linha.querySelector('.dependente-parentesco').value;
             const isInvalid = linha.querySelector('.dependente-invalido').value === 'Sim';
-            
-            // Determina a natureza da pensão
-            const naturezaPensao = isInvalid ? 'Enquanto durar a invalidez' : 'Temporária'; // Simplificado, pode ser expandido com regras de idade
+            const naturezaPensao = isInvalid ? 'Enquanto durar a invalidez' : 'Temporária';
 
             tabelaRateioHTML += `
                 <tr>
@@ -1286,7 +1281,6 @@ function gerarAtoDePensao(b) {
                 </tr>`;
         });
         
-        // Adiciona a linha de complemento se houver
         if (complemento > 0) {
             tabelaRateioHTML += `
             <tr>
@@ -1295,19 +1289,16 @@ function gerarAtoDePensao(b) {
             </tr>`;
         }
         
-        // Adiciona a linha de total
         tabelaRateioHTML += `
             <tr class="total-row">
                 <td colspan="4">TOTAL DA PENSÃO</td>
                 <td style="text-align:right;">${formatarDinheiro(valorTotalFinal)}</td>
             </tr>`;
 
-        // O texto principal do ato continua se referindo ao pensionista principal informado
         const fraseConcessao = `CONCEDER BENEFÍCIO DE PENSÃO POR MORTE AO(À) BENEFICIÁRIO(A) <span class="bold uppercase">${dados.nomePensionistaPrincipal}</span>`;
         const qualificacaoBeneficiarioPrincipal = `na qualidade de ${dados.parentescoPrincipal}`;
 
-        // ======================= FIM DA MODIFICAÇÃO =======================
-
+        // ======================= INÍCIO DA MODIFICAÇÃO (CSS Assinaturas) =======================
         const htmlConteudo = `
         <!DOCTYPE html>
         <html lang="pt-BR">
@@ -1330,9 +1321,10 @@ function gerarAtoDePensao(b) {
                 th, td { border: 1px solid #ccc; padding: 5px; text-align: left; }
                 th { background-color: #f2f2f2; }
                 .total-row td { font-weight: bold; }
-                .signature-container { margin-top: 60px; text-align: center; }
-                .signature-block { display: inline-block; width: 48%; }
-                .signature-block p { margin: 0; line-height: 1.2; }
+                .signature-container { display: flex; justify-content: space-between; text-align: center; margin-top: 80px; }
+                .signature-block { width: 48%; }
+                .signature-line { margin: 60px 0 5px 0; border-bottom: 1px solid #000; }
+                .signature-block p { margin: 0; line-height: 1.2; font-size: 11pt; }
                 .data-local { text-align: left; margin-top: 40px; }
                  @media print {
                     body { margin: 0; padding: 0; }
@@ -1390,12 +1382,12 @@ function gerarAtoDePensao(b) {
 
                     <div class="signature-container">
                         <div class="signature-block">
-                            <p>_________________________________________</p>
-                            <p class="bold uppercase">${dados.nomePrefeito}</p>
-                            <p>Prefeito Municipal</p>
+                             <p class="signature-line"></p>
+                             <p class="bold uppercase">${dados.nomePrefeito}</p>
+                             <p>Prefeito Municipal</p>
                         </div>
                         <div class="signature-block">
-                            <p>_________________________________________</p>
+                            <p class="signature-line"></p>
                             <p class="bold uppercase">${dados.nomePresidente}</p>
                             <p>Presidente do ITAPREV</p>
                         </div>
@@ -1405,6 +1397,7 @@ function gerarAtoDePensao(b) {
         </body>
         </html>
         `;
+         // ======================= FIM DA MODIFICAÇÃO =======================
 
         const newWindow = window.open();
         newWindow.document.open();
@@ -2443,6 +2436,7 @@ Object.assign(window, {
 });
 // Torna o objeto 'simulacao' acessível globalmente no HTML
 window.simulacao = simulacao;
+
 
 
 
