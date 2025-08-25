@@ -1216,15 +1216,16 @@ function gerarAtoDePensao(b) {
     try {
         // Coleta de dados do formulário
         const tipoBeneficioPensao = document.getElementById('tipoBeneficio').value;
-        const numeroDependentes = document.getElementById('corpo-tabela-dependentes').rows.length;
+        const tabelaDependentes = document.getElementById('corpo-tabela-dependentes');
+        const numeroDependentes = tabelaDependentes.rows.length;
 
         const dados = {
             atoNumero: document.getElementById('atoNumero').value.padStart(3, '0') || '___',
             atoAno: new Date().getFullYear(),
-
-            // Dados do Pensionista (Beneficiário)
-            nomePensionista: document.getElementById('nomePensionista').value.toUpperCase() || '________________',
-            parentesco: document.getElementById('relacaoPensionista').value || 'Dependente',
+            
+            // Dados do Pensionista Principal (para o texto do ato)
+            nomePensionistaPrincipal: document.getElementById('nomePensionista').value.toUpperCase() || '________________',
+            parentescoPrincipal: document.getElementById('relacaoPensionista').value || 'Dependente',
 
             // Dados do Ex-servidor (Instituidor)
             nomeServidor: document.getElementById('nomeServidor').value.toUpperCase() || '________________',
@@ -1232,20 +1233,15 @@ function gerarAtoDePensao(b) {
             rgServidor: document.getElementById('rgServidor').value || '________________',
             cpfServidor: document.getElementById('cpfServidor').value || '________________',
             cargoServidor: document.getElementById('cargoServidor').value.toUpperCase() || '________________',
-
-            // Ato de Aposentadoria (apenas se for o caso)
             atoAposentadoria: 'Ato concessivo de Aposentadoria Nº XXX/AAAA', // Exemplo
 
             // Datas e Valores
             dataObito: document.getElementById('dataObito').value,
-            // ======================= INÍCIO DA MODIFICAÇÃO (CORREÇÃO DE VALOR) =======================
-            // CORRIGIDO: Busca a variável correta (mediaSalarial) para servidores ativos.
-            valorBaseCalculo: (tipoBeneficioPensao === 'pensao_aposentado')
-                ? parseFloat(document.getElementById('proventoAposentado').value) || 0
-                : AppState.simulacaoResultados.mediaSalarial || 0,
-            // ======================= FIM DA MODIFICAÇÃO =======================
-
-            // Nomes dos Gestores (das configurações)
+            valorBaseCalculo: (tipoBeneficioPensao === 'pensao_aposentado') 
+                ? parseFloat(document.getElementById('proventoAposentado').value) || 0 
+                : AppState.simacaoResultados.mediaSalarial || 0,
+            
+            // Nomes dos Gestores
             nomePrefeito: AppState.configuracoes.nomePrefeito || 'FELIPE SOUZA PINHEIRO',
             nomePresidente: AppState.configuracoes.nomePresidente || 'EDIANIA DE CASTRO ALBUQUERQUE'
         };
@@ -1256,8 +1252,7 @@ function gerarAtoDePensao(b) {
         } else { // pensao_aposentado
             descricaoInstituidor = `aposentado(a) em conformidade com o ${dados.atoAposentadoria}`;
         }
-
-        const qualificacaoBeneficiario = `na qualidade de ${dados.parentesco}`;
+        
         const cotaPercentual = Math.min(1.0, 0.50 + (numeroDependentes * 0.10));
         const valorCalculadoPensao = dados.valorBaseCalculo * cotaPercentual;
 
@@ -1267,15 +1262,31 @@ function gerarAtoDePensao(b) {
         }
         const valorTotalFinal = valorCalculadoPensao + complemento;
 
-        let tabelaRateioHTML = `
-            <tr>
-                <td>${dados.nomePensionista}</td>
-                <td>${dados.parentesco}</td>
-                <td>Vitalícia</td>
-                <td>${(cotaPercentual * 100).toFixed(0)}%</td>
-                <td style="text-align:right;">${formatarDinheiro(valorCalculadoPensao)}</td>
-            </tr>`;
+        // ======================= INÍCIO DA MODIFICAÇÃO =======================
+        
+        // Geração dinâmica da tabela de beneficiários
+        let tabelaRateioHTML = '';
+        const valorRateado = valorCalculadoPensao / numeroDependentes; // Rateio simples entre os dependentes
 
+        Array.from(tabelaDependentes.rows).forEach(linha => {
+            const nome = linha.querySelector('.dependente-nome').value.toUpperCase();
+            const parentesco = linha.querySelector('.dependente-parentesco').value;
+            const isInvalid = linha.querySelector('.dependente-invalido').value === 'Sim';
+            
+            // Determina a natureza da pensão
+            const naturezaPensao = isInvalid ? 'Enquanto durar a invalidez' : 'Temporária'; // Simplificado, pode ser expandido com regras de idade
+
+            tabelaRateioHTML += `
+                <tr>
+                    <td>${nome}</td>
+                    <td>${parentesco}</td>
+                    <td>${naturezaPensao}</td>
+                    <td>${(cotaPercentual * 100).toFixed(0)}% (Rateio)</td>
+                    <td style="text-align:right;">${formatarDinheiro(valorRateado)}</td>
+                </tr>`;
+        });
+        
+        // Adiciona a linha de complemento se houver
         if (complemento > 0) {
             tabelaRateioHTML += `
             <tr>
@@ -1283,16 +1294,20 @@ function gerarAtoDePensao(b) {
                 <td style="text-align:right;">${formatarDinheiro(complemento)}</td>
             </tr>`;
         }
-
+        
+        // Adiciona a linha de total
         tabelaRateioHTML += `
             <tr class="total-row">
                 <td colspan="4">TOTAL DA PENSÃO</td>
                 <td style="text-align:right;">${formatarDinheiro(valorTotalFinal)}</td>
             </tr>`;
 
-        const fraseConcessao = `CONCEDER BENEFÍCIO DE PENSÃO POR MORTE AO(À) BENEFICIÁRIO(A) <span class="bold uppercase">${dados.nomePensionista}</span>`;
+        // O texto principal do ato continua se referindo ao pensionista principal informado
+        const fraseConcessao = `CONCEDER BENEFÍCIO DE PENSÃO POR MORTE AO(À) BENEFICIÁRIO(A) <span class="bold uppercase">${dados.nomePensionistaPrincipal}</span>`;
+        const qualificacaoBeneficiarioPrincipal = `na qualidade de ${dados.parentescoPrincipal}`;
 
-        // ======================= INÍCIO DA MODIFICAÇÃO (CSS PARA IMPRESSÃO) =======================
+        // ======================= FIM DA MODIFICAÇÃO =======================
+
         const htmlConteudo = `
         <!DOCTYPE html>
         <html lang="pt-BR">
@@ -1340,7 +1355,7 @@ function gerarAtoDePensao(b) {
                     
                     <p class="resolvem">RESOLVEM:</p>
 
-                    <p class="indent">${fraseConcessao}, ${qualificacaoBeneficiario}, do(a) ex-servidor(a) (instituidor) <span class="bold uppercase">${dados.nomeServidor}</span>, ${dados.nacionalidadeServidor}, portador(a) do RG n.º ${dados.rgServidor} e CPF n.º ${dados.cpfServidor}, ${descricaoInstituidor}, com fundamento no art. 40 §7º da CF/88 (redação da EC n.º 103/19), e na legislação municipal nos artigos art. 22 e 26 da Lei n.º 047/2008 - Regime Próprio de Previdência Social do Município de Itapipoca, alterada pela Lei Nº 005/2020 de 28 de fevereiro de 2020; Lei n.º 042/2021 de 19 de agosto de 2021; Lei n.º 035/2022 em seu art. 6 e Decreto n.º 113/2022, em seu art. 25, cujos efeitos financeiros se darão a partir do dia do óbito ${formatarDataBR(dados.dataObito)}.</p>
+                    <p class="indent">${fraseConcessao}, ${qualificacaoBeneficiarioPrincipal}, do(a) ex-servidor(a) (instituidor) <span class="bold uppercase">${dados.nomeServidor}</span>, ${dados.nacionalidadeServidor}, portador(a) do RG n.º ${dados.rgServidor} e CPF n.º ${dados.cpfServidor}, ${descricaoInstituidor}, com fundamento no art. 40 §7º da CF/88 (redação da EC n.º 103/19), e na legislação municipal nos artigos art. 22 e 26 da Lei n.º 047/2008 - Regime Próprio de Previdência Social do Município de Itapipoca, alterada pela Lei Nº 005/2020 de 28 de fevereiro de 2020; Lei n.º 042/2021 de 19 de agosto de 2021; Lei n.º 035/2022 em seu art. 6 e Decreto n.º 113/2022, em seu art. 25, cujos efeitos financeiros se darão a partir do dia do óbito ${formatarDataBR(dados.dataObito)}.</p>
                     
                     <p class="indent">A Pensão em referência será paga no valor total ${formatarDinheiro(valorTotalFinal)} (${valorPorExtenso(valorTotalFinal)}), observando que seu reajuste será em conformidade com o RGPS, conforme abaixo discriminado:</p>
                     
@@ -1390,7 +1405,6 @@ function gerarAtoDePensao(b) {
         </body>
         </html>
         `;
-        // ======================= FIM DA MODIFICAÇÃO =======================
 
         const newWindow = window.open();
         newWindow.document.open();
@@ -2429,6 +2443,7 @@ Object.assign(window, {
 });
 // Torna o objeto 'simulacao' acessível globalmente no HTML
 window.simulacao = simulacao;
+
 
 
 
