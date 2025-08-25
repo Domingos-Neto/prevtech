@@ -1215,39 +1215,94 @@ function gerarAtoDePensao(b) {
     ui.toggleSpinner(b, true);
     try {
         // Coleta de dados do formulário
+        const tipoBeneficioPensao = document.getElementById('tipoBeneficio').value;
+        const numeroDependentes = document.getElementById('corpo-tabela-dependentes').rows.length;
+
         const dados = {
             atoNumero: document.getElementById('atoNumero').value.padStart(3, '0') || '___',
             atoAno: new Date().getFullYear(),
             
             // Dados do Pensionista (Beneficiário)
             nomePensionista: document.getElementById('nomePensionista').value.toUpperCase() || '________________',
-            nacionalidadePensionista: 'brasileira', // Assumido como padrão, pode ser ajustado se necessário
-            estadoCivilPensionista: 'viúva', // Assumido como padrão
-            rgPensionista: '99097026386 SSP/CE', // Exemplo - Adicionar campo no HTML se não existir
-            cpfPensionista: '088.051.213-04', // Exemplo - Adicionar campo no HTML se não existir
-            parentesco: document.getElementById('relacaoPensionista').value || 'Cônjuge',
+            parentesco: document.getElementById('relacaoPensionista').value || 'Dependente',
 
             // Dados do Ex-servidor (Instituidor)
             nomeServidor: document.getElementById('nomeServidor').value.toUpperCase() || '________________',
-            nacionalidadeServidor: 'brasileiro', // Assumido como padrão
-            estadoCivilServidor: 'casado', // Assumido como padrão
+            nacionalidadeServidor: 'brasileiro',
             rgServidor: document.getElementById('rgServidor').value || '________________',
             cpfServidor: document.getElementById('cpfServidor').value || '________________',
             cargoServidor: document.getElementById('cargoServidor').value.toUpperCase() || '________________',
-            atoAposentadoria: 'Ato concessivo de Aposentadoria Voluntária por Idade nº 076/2013', // Exemplo - Adicionar campo se dinâmico
+            
+            // Ato de Aposentadoria (apenas se for o caso)
+            atoAposentadoria: 'Ato concessivo de Aposentadoria Voluntária por Idade nº 076/2013', // Exemplo - Campo a ser criado, se necessário
 
             // Datas e Valores
             dataObito: document.getElementById('dataObito').value,
-            valorTotalBeneficio: AppState.simulacaoResultados.valorBeneficioFinal || 0,
+            // O valor base para o cálculo da pensão (média do ativo ou provento do aposentado)
+            valorBaseCalculo: (tipoBeneficioPensao === 'pensao_aposentado') 
+                ? parseFloat(document.getElementById('proventoAposentado').value) || 0 
+                : AppState.simulacaoResultados.mediaSalarial || 0,
             
             // Nomes dos Gestores (das configurações)
             nomePrefeito: AppState.configuracoes.nomePrefeito || 'FELIPE SOUZA PINHEIRO',
             nomePresidente: AppState.configuracoes.nomePresidente || 'EDIANIA DE CASTRO ALBUQUERQUE'
         };
 
-        // Cálculos da Pensão
-        const cotaParte = dados.valorTotalBeneficio * 0.60;
-        const complemento = dados.valorTotalBeneficio - cotaParte;
+        // ======================= INÍCIO DA MODIFICAÇÃO =======================
+
+        // Lógica para definir o texto com base no status do servidor (ativo ou aposentado)
+        let descricaoInstituidor = '';
+        if (tipoBeneficioPensao === 'pensao_ativo') {
+            descricaoInstituidor = `ex-servidor(a) público(a) municipal no cargo de <span class="uppercase bold">${dados.cargoServidor}</span>`;
+        } else { // pensao_aposentado
+            // Você pode criar um campo no formulário para o número do ato de aposentadoria se precisar que seja dinâmico
+            descricaoInstituidor = `aposentado(a) em conformidade com o ${dados.atoAposentadoria}`;
+        }
+        
+        // Lógica de qualificação genérica do beneficiário
+        const qualificacaoBeneficiario = `na qualidade de ${dados.parentesco}`;
+
+        // Lógica de cálculo da pensão conforme EC 103/2019
+        const cotaPercentual = Math.min(1.0, 0.50 + (numeroDependentes * 0.10));
+        const valorFinalPensao = dados.valorBaseCalculo * cotaPercentual;
+
+        // Ajuste para garantir que o valor final não seja inferior ao mínimo, se aplicável
+        // No exemplo, há um complemento. Se o valor final for menor que o valor base E o valor base for o salário mínimo, aplicamos o complemento.
+        let complemento = 0;
+        let valorCotaExibido = valorFinalPensao;
+
+        // A regra do complemento para atingir o mínimo só se aplica se o benefício originário já era de um salário mínimo.
+        if (dados.valorBaseCalculo.toFixed(2) === SALARIO_MINIMO.toFixed(2) && valorFinalPensao < SALARIO_MINIMO) {
+             complemento = SALARIO_MINIMO - valorFinalPensao;
+             valorCotaExibido = valorFinalPensao; // Mantém o valor da cota calculado
+        }
+        const valorTotalComComplemento = valorFinalPensao + complemento;
+
+        // Tabela de rateio
+        let tabelaRateioHTML = `
+            <tr>
+                <td>${dados.nomePensionista}</td>
+                <td>${dados.parentesco}</td>
+                <td>Vitalícia</td>
+                <td>${(cotaPercentual * 100).toFixed(0)}%</td>
+                <td style="text-align:right;">${formatarDinheiro(valorCotaExibido)}</td>
+            </tr>`;
+        
+        if (complemento > 0) {
+            tabelaRateioHTML += `
+            <tr>
+                <td colspan="4">COMPLEMENTAÇÃO CONSTITUCIONAL</td>
+                <td style="text-align:right;">${formatarDinheiro(complemento)}</td>
+            </tr>`;
+        }
+        
+        tabelaRateioHTML += `
+            <tr class="total-row">
+                <td colspan="4">TOTAL DA PENSÃO</td>
+                <td style="text-align:right;">${formatarDinheiro(valorTotalComComplemento)}</td>
+            </tr>`;
+            
+        // ======================= FIM DA MODIFICAÇÃO =======================
 
         const htmlConteudo = `
         <!DOCTYPE html>
@@ -1259,9 +1314,7 @@ function gerarAtoDePensao(b) {
                 body { font-family: Arial, sans-serif; font-size: 12pt; line-height: 1.5; color: #000; background: #fff; margin: 0; }
                 .container { width: 210mm; min-height: 297mm; margin: auto; padding: 2cm; box-sizing: border-box; display: flex; flex-direction: column; }
                 .header { text-align: center; }
-                .header img { width: 100px; } /* Ajuste o tamanho da logo se necessário */
-                .header h3 { font-size: 14pt; margin: 5px 0; }
-                .header p { font-size: 11pt; margin: 0; }
+                .header p { font-weight: bold; margin: 2px 0; }
                 .title { text-align: center; font-weight: bold; margin: 1.5cm 0; font-size: 12pt; }
                 .content-body { flex-grow: 1; text-align: justify; }
                 .content-body p, .content-body div { margin-bottom: 1em; }
@@ -1269,7 +1322,7 @@ function gerarAtoDePensao(b) {
                 .bold { font-weight: bold; }
                 .uppercase { text-transform: uppercase; }
                 .resolvem { text-align: center; font-weight: bold; margin: 2em 0; }
-                table { width: 100%; border-collapse: collapse; margin-top: 1em; }
+                table { width: 100%; border-collapse: collapse; margin-top: 1em; font-size: 11pt; }
                 th, td { border: 1px solid #ccc; padding: 5px; text-align: left; }
                 th { background-color: #f2f2f2; }
                 .total-row td { font-weight: bold; }
@@ -1278,18 +1331,15 @@ function gerarAtoDePensao(b) {
                 .signature-block p { margin: 0; line-height: 1.2; }
                 .footer { text-align: center; font-size: 9pt; color: #444; margin-top: auto; padding-top: 1cm; border-top: 1px solid #ccc; }
                 .data-local { text-align: left; margin-top: 40px; }
-                 @media print {
-                    body { margin: 0; padding: 0; }
-                    .container { border: none; box-shadow: none; margin: 0; padding: 2cm; }
-                }
+                 @media print { body { margin: 0; padding: 0; } .container { border: none; box-shadow: none; margin: 0; padding: 2cm; } }
             </style>
         </head>
         <body>
             <div class="container">
                 <div class="header">
-                    <p class="bold">ITAPREV</p>
-                    <p class="bold">INSTITUTO DE PREVIDÊNCIA DOS</p>
-                    <p class="bold">SERVIDORES MUNICIPAIS DE ITAPIPOCA</p>
+                    <p>ITAPREV</p>
+                    <p>INSTITUTO DE PREVIDÊNCIA DOS</p>
+                    <p>SERVIDORES MUNICIPAIS DE ITAPIPOCA</p>
                 </div>
 
                 <p class="title">ATO DE CONCESSÃO DE PENSÃO POR MORTE № ${dados.atoNumero}/${dados.atoAno}.</p>
@@ -1299,19 +1349,19 @@ function gerarAtoDePensao(b) {
                     
                     <p class="resolvem">RESOLVEM:</p>
 
-                    <p class="indent">CONCEDER BENEFÍCIO DE PENSÃO POR MORTE A BENEFICIÁRIO <span class="bold uppercase">${dados.nomePensionista}</span>, ${dados.nacionalidadePensionista}, ${dados.estadoCivilPensionista}, portadora do RG n.º ${dados.rgPensionista} e CPF n.º ${dados.cpfPensionista}, na qualidade de ${dados.parentesco}, do ex-servidor <span class="bold uppercase">${dados.nomeServidor}</span>, ${dados.nacionalidadeServidor}, ${dados.estadoCivilServidor}, portador do RG n.º ${dados.rgServidor} e CPF n.º ${dados.cpfServidor}, ex-servidor público municipal na função de <span class="uppercase bold">${dados.cargoServidor}</span>, aposentado em conformidade com o ${dados.atoAposentadoria}, com fundamento no art. 40 §7º da CF/88 (redação da EC n.º 103/19), e na legislação municipal nos artigos art. 22 e 26 da Lei n.º 047/2008 - Regime Próprio de Previdência Social do Município de Itapipoca, alterada pela Lei Nº 005/2020 de 28 de fevereiro de 2020; Lei n.º 042/2021 de 19 de agosto de 2021; Lei n.º 035/2022 em seu art. 6 e Decreto n.º 113/2022, em seu art. 25, cujos efeitos financeiros se darão a partir do dia do óbito ${formatarDataBR(dados.dataObito)}.</p>
+                    <p class="indent">CONCEDER BENEFÍCIO DE PENSÃO POR MORTE A BENEFICIÁRIO(A) <span class="bold uppercase">${dados.nomePensionista}</span>, ${qualificacaoBeneficiario}, do(a) ex-servidor(a) <span class="bold uppercase">${dados.nomeServidor}</span>, ${dados.nacionalidadeServidor}, portador(a) do RG n.º ${dados.rgServidor} e CPF n.º ${dados.cpfServidor}, ${descricaoInstituidor}, com fundamento no art. 40 §7º da CF/88 (redação da EC n.º 103/19), e na legislação municipal nos artigos art. 22 e 26 da Lei n.º 047/2008 - Regime Próprio de Previdência Social do Município de Itapipoca, alterada pela Lei Nº 005/2020 de 28 de fevereiro de 2020; Lei n.º 042/2021 de 19 de agosto de 2021; Lei n.º 035/2022 em seu art. 6 e Decreto n.º 113/2022, em seu art. 25, cujos efeitos financeiros se darão a partir do dia do óbito ${formatarDataBR(dados.dataObito)}.</p>
                     
-                    <p class="indent">A Pensão em referência será paga no valor total ${formatarDinheiro(dados.valorTotalBeneficio)} (${valorPorExtenso(dados.valorTotalBeneficio)}), de forma vitalícia, observando que seu reajuste será em conformidade com o RGPS, conforme abaixo discriminado:</p>
+                    <p class="indent">A Pensão em referência será paga no valor total ${formatarDinheiro(valorTotalComComplemento)} (${valorPorExtenso(valorTotalComComplemento)}), de forma vitalícia, observando que seu reajuste será em conformidade com o RGPS, conforme abaixo discriminado:</p>
                     
                     <table>
                         <thead><tr><th>DESCRIÇÃO</th><th style="text-align:right;">VALOR</th></tr></thead>
                         <tbody>
-                            <tr><td>Proventos de Aposentadoria</td><td style="text-align:right;">${formatarDinheiro(dados.valorTotalBeneficio)}</td></tr>
-                            <tr class="total-row"><td>TOTAL DOS PROVENTOS DE APOSENTADORIA</td><td style="text-align:right;">${formatarDinheiro(dados.valorTotalBeneficio)}</td></tr>
+                            <tr><td>Proventos de Aposentadoria</td><td style="text-align:right;">${formatarDinheiro(dados.valorBaseCalculo)}</td></tr>
+                            <tr class="total-row"><td>TOTAL DOS PROVENTOS DE APOSENTADORIA</td><td style="text-align:right;">${formatarDinheiro(dados.valorBaseCalculo)}</td></tr>
                         </tbody>
                     </table>
 
-                    <p>Dessa forma, apresentando-se a requerente para receber o benefício de pensão por morte, a mesma restará na forma que segue:</p>
+                    <p>Dessa forma, apresentando-se o(a) requerente para receber o benefício de pensão por morte, a mesma restará na forma que segue:</p>
 
                      <table>
                         <thead>
@@ -1324,21 +1374,7 @@ function gerarAtoDePensao(b) {
                             </tr>
                         </thead>
                         <tbody>
-                            <tr>
-                                <td>${dados.nomePensionista}</td>
-                                <td>${dados.parentesco}</td>
-                                <td>Vitalícia</td>
-                                <td>60%</td>
-                                <td style="text-align:right;">${formatarDinheiro(cotaParte)}</td>
-                            </tr>
-                            <tr>
-                                <td colspan="4">COMPLEMENTAÇÃO CONSTITUCIONAL</td>
-                                <td style="text-align:right;">${formatarDinheiro(complemento)}</td>
-                            </tr>
-                            <tr class="total-row">
-                                <td colspan="4">TOTAL DA PENSÃO</td>
-                                <td style="text-align:right;">${formatarDinheiro(dados.valorTotalBeneficio)}</td>
-                            </tr>
+                            ${tabelaRateioHTML}
                         </tbody>
                     </table>
 
@@ -1359,13 +1395,6 @@ function gerarAtoDePensao(b) {
                         </div>
                     </div>
                 </div>
-
-                <div class="footer">
-                    <p>INSTITUTO DE PREVIDÊNCIA DOS SERVIDORES MUNICIPAIS DE ITAPIPOCA</p>
-                    <p>Rua Caio Prado, 730, São Sebastião-Itapipoca - CE - Brasil</p>
-                    <p>CEP: 62508-200-CNPJ: 10575544/0001-35</p>
-                    <p>(88) 3631-0204 | rppsitaprev@gmail.com | www.itaprev.com.br</p>
-                </div>
             </div>
         </body>
         </html>
@@ -1383,6 +1412,7 @@ function gerarAtoDePensao(b) {
         ui.toggleSpinner(b, false);
     }
 }
+
 function gerarAtoDeAposentadoria(b) {
     ui.toggleSpinner(b, true);
     try {
@@ -2407,5 +2437,6 @@ Object.assign(window, {
 });
 // Torna o objeto 'simulacao' acessível globalmente no HTML
 window.simulacao = simulacao;
+
 
 
