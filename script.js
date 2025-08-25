@@ -1388,37 +1388,57 @@ function gerarAtoDeAposentadoria(b) {
     try {
         const s = document.getElementById('sexo').value,
             tP = calculateTotalProventos(),
-            tB = document.getElementById('tipoBeneficio').value,
-            d = {
-                atoNumero: document.getElementById('atoNumeroAposentadoria').value.padStart(3, '0') || '___',
-                atoAno: new Date().getFullYear(),
-                nomeServidor: document.getElementById('nomeServidor').value.toUpperCase() || '________________',
-                nacionalidade: s === 'F' ? 'brasileira' : 'brasileiro',
-                rg: document.getElementById('rgServidor').value || '________________',
-                cpf: document.getElementById('cpfServidor').value || '________________',
-                matricula: document.getElementById('matriculaServidor').value || '________________',
-                cargaHoraria: document.getElementById('cargaHorariaServidor').value || '________________',
-                cargo: document.getElementById('cargoServidor').value.toUpperCase() || '________________',
-                lotacao: document.getElementById('lotacaoServidor').value.toUpperCase() || '________________',
-                admissao: formatarDataBR(document.getElementById('dataAdmissao').value) || '__/__/____',
-                fundamentoLegal: document.getElementById('fundamentoLegalPersonalizado').value.replace(/\n/g, '<br>') || '________________',
-                dataAtual: formatarDataPorExtenso(document.getElementById('dataCalculo').value || new Date()),
-            };
+            tB = document.getElementById('tipoBeneficio').value;
+
+        // ======================= INÍCIO DA MODIFICAÇÃO =======================
         
+        let fundamentoLegalDinamico = '';
         let tipoAtoTexto = '';
         let tipoAtoResolucao = '';
+        
+        // Lógica para definir o fundamento legal e os textos do ato dinamicamente
         if (tB === 'incapacidade') {
             const proventos = document.getElementById('incapacidadeGrave').value === 'sim' ? 'COM PROVENTOS INTEGRAIS' : 'COM PROVENTOS PROPORCIONAIS';
-            tipoAtoTexto = `ATO CONCESSIVO DE APOSENTADORIA POR INCAPACIDADE PERMANENTE N.º ${d.atoNumero}/${d.atoAno}.`;
-            tipoAtoResolucao = `APOSENTAR POR INCAPACIDADE PERMANENTE, ${proventos}, A SERVIDORA PÚBLICA`;
-        } else if (tB === 'voluntaria') {
-            tipoAtoTexto = `ATO CONCESSIVO DE APOSENTADORIA VOLUNTÁRIA N.º ${d.atoNumero}/${d.atoAno}.`;
-            tipoAtoResolucao = `APOSENTAR VOLUNTARIAMENTE A SERVIDORA PÚBLICA`;
-        } else { // Compulsória
-            tipoAtoTexto = `ATO CONCESSIVO DE APOSENTADORIA COMPULSÓRIA N.º ${d.atoNumero}/${d.atoAno}.`;
-            tipoAtoResolucao = `APOSENTAR COMPULSORIAMENTE, COM PROVENTOS PROPORCIONAIS, A SERVIDORA PÚBLICA`;
-        }
+            tipoAtoTexto = `ATO CONCESSIVO DE APOSENTADORIA POR INCAPACIDADE PERMANENTE N.º ${document.getElementById('atoNumeroAposentadoria').value.padStart(3, '0') || '___'}/${new Date().getFullYear()}.`;
+            tipoAtoResolucao = `APOSENTAR POR INCAPACIDADE PERMANENTE, ${proventos}, O(A) SERVIDOR(A) PÚBLICO(A)`;
+            fundamentoLegalDinamico = `com fundamento no art. 40, § 1º, inciso I da Constituição Federal (redação da EC 103/2019), c/c o art. 7º do Decreto Municipal Nº 113/2022`;
 
+        } else if (tB === 'compulsoria') {
+            tipoAtoTexto = `ATO CONCESSIVO DE APOSENTADORIA COMPULSÓRIA N.º ${document.getElementById('atoNumeroAposentadoria').value.padStart(3, '0') || '___'}/${new Date().getFullYear()}.`;
+            tipoAtoResolucao = `APOSENTAR COMPULSORIAMENTE, COM PROVENTOS PROPORCIONAIS, O(A) SERVIDOR(A) PÚBLICO(A)`;
+            fundamentoLegalDinamico = `com fundamento no art. 40, § 1º, inciso II da Constituição Federal (redação da EC 103/2019), c/c o art. 8º do Decreto Municipal Nº 113/2022`;
+
+        } else { // Aposentadoria Voluntária
+            tipoAtoTexto = `ATO CONCESSIVO DE APOSENTADORIA VOLUNTÁRIA N.º ${document.getElementById('atoNumeroAposentadoria').value.padStart(3, '0') || '___'}/${new Date().getFullYear()}.`;
+            tipoAtoResolucao = `APOSENTAR VOLUNTARIAMENTE O(A) SERVIDOR(A) PÚBLICO(A)`;
+            
+            // Utiliza a regra calculada e armazenada pela função de projeção
+            if (AppState.simulacaoResultados.fundamentoLegal) {
+                fundamentoLegalDinamico = `com fundamento no ${AppState.simulacaoResultados.fundamentoLegal}, c/c a Lei Municipal Nº 035/2022 e Decreto Municipal Nº 113/2022`;
+            } else {
+                // Fallback para o campo manual se a projeção não foi executada
+                fundamentoLegalDinamico = document.getElementById('fundamentoLegalPersonalizado').value.replace(/\n/g, '<br>') || '________________';
+            }
+        }
+        
+        // ======================= FIM DA MODIFICAÇÃO =======================
+
+        const d = {
+            atoNumero: document.getElementById('atoNumeroAposentadoria').value.padStart(3, '0') || '___',
+            atoAno: new Date().getFullYear(),
+            nomeServidor: document.getElementById('nomeServidor').value.toUpperCase() || '________________',
+            nacionalidade: s === 'F' ? 'brasileira' : 'brasileiro',
+            rg: document.getElementById('rgServidor').value || '________________',
+            cpf: document.getElementById('cpfServidor').value || '________________',
+            matricula: document.getElementById('matriculaServidor').value || '________________',
+            cargaHoraria: document.getElementById('cargaHorariaServidor').value || '________________',
+            cargo: document.getElementById('cargoServidor').value.toUpperCase() || '________________',
+            lotacao: document.getElementById('lotacaoServidor').value.toUpperCase() || '________________',
+            admissao: formatarDataBR(document.getElementById('dataAdmissao').value) || '__/__/____',
+            fundamentoLegal: fundamentoLegalDinamico, // Usa a variável dinâmica
+            dataAtual: formatarDataPorExtenso(document.getElementById('dataCalculo').value || new Date()),
+        };
+        
         const vF = formatarDinheiro(tP);
         const tE = valorPorExtenso(tP);
         let pHTR = '';
@@ -1445,9 +1465,9 @@ function gerarAtoDeAposentadoria(b) {
                 </div>
                 <p class="justify">O PREFEITO MUNICIPAL DE ITAPIPOCA, no uso de suas atribuições legais, que lhe confere a Lei Orgânica do Município de Itapipoca e a Presidente do Instituto de Previdência do Município de Itapipoca- ITAPREV, no uso de suas atribuições conferidas,</p>
                 <h4 class="center uppercase" style="font-size:12pt; margin: 2em 0;">RESOLVEM:</h4>
-                <p class="justify">${tipoAtoResolucao} <b class="uppercase">${d.nomeServidor}</b>, ${d.nacionalidade}, portadora do RG n.º ${d.rg}, inscrita no CPF sob o n.º ${d.cpf}, matrícula n.º ${d.matricula}, ${d.cargaHoraria}, ocupante do cargo de <b class="uppercase">${d.cargo}</b>, lotada na <b class="uppercase">${d.lotacao}</b>, com admissão no serviço público em ${d.admissao}, ${d.fundamentoLegal}, com início do benefício na data da publicação deste Ato de Aposentadoria, de acordo com o quadro discriminativo abaixo:</p>
+                <p class="justify">${tipoAtoResolucao} <b class="uppercase">${d.nomeServidor}</b>, ${d.nacionalidade}, portador(a) do RG n.º ${d.rg}, inscrito(a) no CPF sob o n.º ${d.cpf}, matrícula n.º ${d.matricula}, ${d.cargaHoraria}, ocupante do cargo de <b class="uppercase">${d.cargo}</b>, lotado(a) na <b class="uppercase">${d.lotacao}</b>, com admissão no serviço público em ${d.admissao}, ${d.fundamentoLegal}, com início do benefício na data da publicação deste Ato de Aposentadoria, de acordo com o quadro discriminativo abaixo:</p>
                 <table class="proventos-table"><thead><tr><th>CÁLCULO DOS PROVENTOS</th><th>VALOR</th></tr></thead><tbody>${pHTR}</tbody><tfoot><tr><td>TOTAL DOS PROVENTOS</td><td>${vF}</td></tr></tfoot></table>
-                <p class="justify">Desse modo, os proventos da servidora serão fixados em ${vF} (${tE}).</p>
+                <p class="justify">Desse modo, os proventos do(a) servidor(a) serão fixados em ${vF} (${tE}).</p>
                 <p class="center" style="margin-top: 2em;">Itapipoca- CE, ${d.dataAtual}.</p>
                 <div class="signature-container">
                     <div class="signature-block"><p>_________________________________________</p><p>${AppState.configuracoes.nomePrefeito || 'NOME DO PREFEITO(A)'}</p><p>Prefeito Municipal</p></div>
@@ -2387,4 +2407,5 @@ Object.assign(window, {
 });
 // Torna o objeto 'simulacao' acessível globalmente no HTML
 window.simulacao = simulacao;
+
 
