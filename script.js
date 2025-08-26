@@ -127,7 +127,7 @@ const auth = {
             }
         });
     }
-
+}; // <--- CORREÇÃO AQUI: Adicionado para fechar o objeto 'auth' corretamente.
 const ui = {
     showToast: (text, isSuccess = true) => {
         Toastify({ text, duration: 4000, close: true, gravity: "top", position: "right", stopOnFocus: true, style: { background: isSuccess ? "linear-gradient(to right, #00b09b, #96c93d)" : "linear-gradient(to right, #ff5f6d, #ffc371)", }}).showToast();
@@ -2460,6 +2460,7 @@ Object.assign(window, {
 });
 // Torna o objeto 'simulacao' acessível globalmente no HTML
 window.simulacao = simulacao;
+
 
 
 
