@@ -749,3 +749,79 @@ body.dark-mode .dashboard-card i {
 #btnOpenTimeCalc:hover {
     background-color: #081e48;
 }
+/* --- Início do Bloco de Correções de Layout --- */
+
+/* 1. Alinhamento Padrão para Grades de Formulário */
+/* Isso corrige o desalinhamento vertical em seções como "Ato de Pensão" 
+      e "Aposentadoria por Incapacidade". */
+.form-grid {
+    align-items: end; /* Alinha todos os itens na parte inferior da sua célula de grid */
+}
+
+.form-grid label {
+    display: flex;
+    flex-direction: column;
+    gap: 6px; /* Adiciona um espaço entre o texto do rótulo e o campo de entrada */
+}
+
+/* 2. Reorganização da Tabela de Dependentes */
+/* Melhora o espaçamento, alinhamento e aparência da tabela de gestão de dependentes. */
+#containerGestaoDependentes h4 {
+    margin-bottom: 15px; /* Aumenta o espaço abaixo do título "Dependentes para Pensão" */
+}
+
+#tabela-dependentes th {
+    text-align: left;
+    padding-left: 8px;
+    padding-bottom: 10px;
+    font-weight: 600;
+}
+
+#tabela-dependentes td {
+    padding: 4px;
+    vertical-align: top; /* Alinha os campos no topo da célula */
+}
+
+/* Ajuste de largura para colunas específicas da tabela de dependentes */
+#tabela-dependentes th:nth-child(1),
+#tabela-dependentes td:nth-child(1) {
+    width: 40%; /* Mais espaço para o nome completo */
+}
+
+#tabela-dependentes th:nth-child(2),
+#tabela-dependentes td:nth-child(2) {
+    width: 20%;
+}
+
+#tabela-dependentes th:nth-child(3),
+#tabela-dependentes td:nth-child(3) {
+    width: 20%;
+}
+
+
+/* 3. Padronização dos Botões de Ferramentas */
+/* Organiza os botões "Atualizar Fatores", "Exportar" e "Importar" 
+      em um layout mais limpo e alinhado. */
+.grupos-botoes {
+    border-top: 1px solid var(--cor-borda, #eee);
+    padding-top: 20px;
+    margin-top: 25px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.grupos-botoes .grupo {
+    display: flex;
+    align-items: center;
+    gap: 12px; /* Espaçamento entre os botões */
+    flex-wrap: wrap;
+}
+
+.grupos-botoes .grupo h4 {
+    margin: 0;
+}
+
+/* --- Fim do Bloco de Correções de Layout --- */
