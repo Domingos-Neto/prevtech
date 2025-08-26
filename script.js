@@ -981,7 +981,8 @@ function calculateTotalProventos() {
 function adicionarLinhaDependente(n = '', d = '', p = '', inv = 'Nao') {
     const t = document.getElementById('corpo-tabela-dependentes'),
         l = document.createElement('tr');
-    l.innerHTML = `<td><input type="text" class="dependente-nome" value="${n}"></td><td><input type="date" class="dependente-dataNasc" value="${d}"></td><td><select class="dependente-parentesco"><option ${p==='Cônjuge'?'selected':''}>Cônjuge</option><option ${p==='Companheiro(a)'?'selected':''}>Companheiro(a)</option><option ${p==='Filho(a)'?'selected':''}>Filho(a)</option><option ${p==='Filho(a) Inválido(a)'?'selected':''}>Filho(a) Inválido(a)</option><option ${p==='Mãe'?'selected':''}>Mãe</option><option ${p==='Pai'?'selected':''}>Pai</option></select></td><td><select class="dependente-invalido"><option value="Nao" ${inv==='Nao'?'selected':''}>Não</option><option value="Sim" ${inv==='Sim'?'selected':''}>Sim</option></select></td><td><button class="danger btn-tabela" onclick="removerLinhaDependente(this)">Remover</button></td>`;
+    // A linha abaixo foi alterada para usar um ícone no botão
+    l.innerHTML = `<td><input type="text" class="dependente-nome" value="${n}"></td><td><input type="date" class="dependente-dataNasc" value="${d}"></td><td><select class="dependente-parentesco"><option ${p==='Cônjuge'?'selected':''}>Cônjuge</option><option ${p==='Companheiro(a)'?'selected':''}>Companheiro(a)</option><option ${p==='Filho(a)'?'selected':''}>Filho(a)</option><option ${p==='Filho(a) Inválido(a)'?'selected':''}>Filho(a) Inválido(a)</option><option ${p==='Mãe'?'selected':''}>Mãe</option><option ${p==='Pai'?'selected':''}>Pai</option></select></td><td><select class="dependente-invalido"><option value="Nao" ${inv==='Nao'?'selected':''}>Não</option><option value="Sim" ${inv==='Sim'?'selected':''}>Sim</option></select></td><td><button class="danger btn-tabela" onclick="removerLinhaDependente(this)" title="Remover Dependente"><i class="ri-delete-bin-line"></i></button></td>`;
     t.appendChild(l);
 }
 
@@ -2436,6 +2437,7 @@ Object.assign(window, {
 });
 // Torna o objeto 'simulacao' acessível globalmente no HTML
 window.simulacao = simulacao;
+
 
 
 
