@@ -855,3 +855,20 @@ body.dark-mode .dashboard-card i {
 }
 
 /* --- Fim do Bloco de Ajustes Finos de Layout --- */
+/* --- Início do Bloco de REFINAMENTO de Alinhamento (Passo 2) --- */
+
+/* Aplica flexbox e centraliza verticalmente os itens dentro de cada grupo. */
+.grupos-botoes .grupo {
+    display: flex;
+    align-items: center; /* Alinha verticalmente o título e os botões ao centro */
+    gap: 15px;
+}
+
+/* Remove margens e ajusta a altura da linha do título para um
+   alinhamento preciso com o centro visual dos botões. */
+.grupos-botoes .grupo h4 {
+    margin: 0;
+    line-height: 1; /* Chave para o alinhamento vertical exato do texto */
+}
+
+/* --- Fim do Bloco de REFINAMENTO de Alinhamento --- */
