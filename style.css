@@ -825,3 +825,33 @@ body.dark-mode .dashboard-card i {
 }
 
 /* --- Fim do Bloco de Correções de Layout --- */
+/* --- Início do Bloco de Ajustes Finos de Layout --- */
+
+/* 1. Organiza a seção "Pensão (Instituidor Aposentado)" */
+#camposPensaoAposentado {
+    display: grid;
+    grid-template-columns: 1fr; /* Força uma única coluna */
+    gap: 20px;
+}
+
+#camposPensaoAposentado #containerGestaoDependentes {
+    margin-top: 10px;
+}
+
+/* 2. Alinha os títulos e botões no Passo 2 ("Ações da Tabela" e "Ferramentas") */
+.grupos-botoes .grupo h4 {
+    margin: 0; /* Remove margens que podem atrapalhar o alinhamento */
+}
+.grupos-botoes .grupo {
+    align-items: center; /* Garante o alinhamento vertical perfeito */
+}
+
+/* 3. Estiliza o novo botão de ícone na tabela de dependentes */
+#tabela-dependentes .btn-tabela {
+    width: 100%;
+    padding: 6px 8px;
+    font-size: 1.1em;
+    line-height: 1;
+}
+
+/* --- Fim do Bloco de Ajustes Finos de Layout --- */
