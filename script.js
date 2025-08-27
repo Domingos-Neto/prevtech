@@ -2756,9 +2756,9 @@ Object.assign(window, {
     buscarEPreencherFatores,
     adicionarPeriodoExterno, removerPeriodoExterno
 });
-});
 // Torna o objeto 'simulacao' acessível globalmente no HTML
 window.simulacao = simulacao;
+
 
 
 
