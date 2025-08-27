@@ -33,8 +33,8 @@ const db = getFirestore(app); // Inicializa o Firestore
 const _auth = getAuth(app);
 const provider = new GoogleAuthProvider();
 
-//const EMAILS_AUTORIZADOS = ["domingosbarroson@gmail.com", "setordebeneficiositaprev@gmail.com"].map(e => e.toLowerCase());
-//const ADMIN_EMAILS = ["domingosbarroson@gmail.com"].map(e => e.toLowerCase());
+const EMAILS_AUTORIZADOS = ["domingosbarroson@gmail.com", "setordebeneficiositaprev@gmail.com"].map(e => e.toLowerCase());
+const ADMIN_EMAILS = ["domingosbarroson@gmail.com"].map(e => e.toLowerCase());
 
 // =================================================================================
 //  CONFIGURAÇÕES GLOBAIS E CONSTANTES LEGAIS
@@ -82,52 +82,30 @@ const auth = {
         }
     },
     init: () => {
-        onAuthStateChanged(_auth, async (user) => { // Adicionamos 'async' aqui
+        onAuthStateChanged(_auth, (user) => {
           console.log("onAuthStateChanged disparado! Usuário:", user);  
           if (user) {
                 const email = (user.email || "").toLowerCase();
-
-                // --- NOVA LÓGICA COM FIRESTORE ---
-                try {
-                    // 1. Cria uma referência ao documento do usuário usando o e-mail como ID
-                    const userDocRef = doc(db, "usuarios", email);
-
-                    // 2. Busca o documento no Firestore
-                    const userDocSnap = await getDoc(userDocRef);
-
-                    // 3. Verifica se o documento existe
-                    if (userDocSnap.exists()) {
-                        const userData = userDocSnap.data(); // Pega os dados do usuário (nome, tipo, etc)
-                        
-                        // O usuário está autorizado!
-                        AppState.usuarioAtual = {
-                            uid: user.uid,
-                            email: email,
-                            displayName: userData.nome || user.displayName, // Usa o nome do Firestore
-                            tipo: userData.tipo || "comum", // Usa o tipo (admin/comum) do Firestore
-                        };
-                        ui.showApp();
-                        initSistemaPosLogin();
-
-                    } else {
-                        // Se o documento não existe, o usuário não está autorizado
-                        ui.showToast("⚠️ E-mail não autorizado para acessar o sistema.", false);
-                        signOut(_auth);
-                    }
-                } catch (error) {
-                    console.error("Erro ao verificar autorização no Firestore:", error);
-                    ui.showToast("Ocorreu um erro ao verificar suas permissões.", false);
+                if (!EMAILS_AUTORIZADOS.includes(email)) {
+                    ui.showToast("⚠️ E-mail não autorizado para acessar o sistema.", false);
                     signOut(_auth);
+                    return;
                 }
-                // --- FIM DA NOVA LÓGICA ---
-
+                AppState.usuarioAtual = {
+                    uid: user.uid,
+                    email: email,
+                    displayName: user.displayName || email,
+                    tipo: ADMIN_EMAILS.includes(email) ? "admin" : "comum",
+                };
+                ui.showApp();
+                initSistemaPosLogin();
             } else {
                 AppState.usuarioAtual = null;
                 ui.showLogin();
             }
         });
     }
-}; // <--- CORREÇÃO AQUI: Adicionado para fechar o objeto 'auth' corretamente.
+};
 const ui = {
     showToast: (text, isSuccess = true) => {
         Toastify({ text, duration: 4000, close: true, gravity: "top", position: "right", stopOnFocus: true, style: { background: isSuccess ? "linear-gradient(to right, #00b09b, #96c93d)" : "linear-gradient(to right, #ff5f6d, #ffc371)", }}).showToast();
@@ -2460,6 +2438,7 @@ Object.assign(window, {
 });
 // Torna o objeto 'simulacao' acessível globalmente no HTML
 window.simulacao = simulacao;
+
 
 
 
