@@ -104,7 +104,7 @@ const auth = {
                             uid: user.uid,
                             email: email,
                             displayName: userData.nome || user.displayName, // Usa o nome do Firestore
-                            tipo: userData.tipo || "admin", // Usa o tipo (admin/comum) do Firestore
+                            tipo: userData.tipo || "comum", // Usa o tipo (admin/comum) do Firestore
                         };
                         ui.showApp();
                         initSistemaPosLogin();
@@ -2460,6 +2460,7 @@ Object.assign(window, {
 });
 // Torna o objeto 'simulacao' acessível globalmente no HTML
 window.simulacao = simulacao;
+
 
 
 
