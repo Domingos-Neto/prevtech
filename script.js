@@ -968,7 +968,7 @@ function irParaPasso(passo) {
         }
     }
     const tipo = document.getElementById('tipoBeneficio').value;
-    if (passo === 2 && tipo === 'pensao_aposentado') {
+    if (passo === 1 && tipo === 'pensao_aposentado') {
         calcularBeneficio(true, null);
         return;
     }
@@ -998,6 +998,8 @@ function alternarCamposBeneficio() {
     
     const passo2 = document.getElementById('passo2');
     if (passo2) passo2.style.display = tipo === 'pensao_aposentado' ? 'none' : AppState.currentStep === 2 ? 'block' : 'none';
+
+    if(window.checklist) checklist.reset();
 }
 
 function limparFormularioCompleto() {
@@ -1037,6 +1039,9 @@ function limparFormularioCompleto() {
     if (accToggle && accContent) {
         accToggle.classList.remove('active');
         accContent.style.maxHeight = null;
+
+    if(window.checklist) checklist.reset();
+      
     }
 }
 
@@ -2683,8 +2688,10 @@ Object.assign(window, {
     calcularTempoEntreDatas, limparCalculoTempo,
     buscarEPreencherFatores,
     adicionarPeriodoExterno, removerPeriodoExterno,
-    planejarAposentadoria // <<< ADICIONADA NOVA FUNÇÃO AO ESCOPO GLOBAL
+    planejarAposentadoria, // <<< ADICIONADA NOVA FUNÇÃO AO ESCOPO GLOBAL
+    checklist
 });
 // Torna o objeto 'simulacao' acessível globalmente no HTML
 window.simulacao = simulacao;
+
 
