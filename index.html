@@ -137,7 +137,8 @@
                         <div class="form-grid">
                             <label>Tipo de Benefício:
                             <select id="tipoBeneficio" onchange="alternarCamposBeneficio()">
-                            <option value="voluntaria">Aposentadoria Voluntária</option>
+                            <option value="voluntaria">Aposentadoria Voluntária (Idade e Tempo)</option>
+                            <option value="idade">Aposentadoria Por Idade</option>
                             <option value="incapacidade">Aposentadoria por Incapacidade Permanente</option>
                             <option value="compulsoria">Aposentadoria Compulsória</option> 
                             <option value="pensao_ativo">Pensão por Morte (Instituidor Ativo)</option>
@@ -253,25 +254,34 @@
                         </div>
                         <canvas id="graficoSalarios"></canvas>
 
-                        <div id="checklist-container" style="display:none;">
-                            <h4><i class="ri-check-double-line"></i> Checklist de Documentação Necessária</h4>
-                            <p>Verifique os documentos recebidos para este tipo de processo. Gere um PDF ao final.</p>
-                            <div class="progress-bar-container">
-                                <div id="checklist-progress-bar" class="progress-bar-fill"></div>
+                        <div id="checklist-container" style="display:none; margin-top: 30px; border-top: 1px solid var(--cor-borda); padding-top: 20px;">
+                            <div id="checklist-header">
+                                <h3 id="checklist-title">Checklist de Documentos</h3>
                             </div>
-                            <span id="checklist-progress-text" class="progress-text">0% concluído</span>
                             
-                            <div id="document-checklist-content">
+                            <h4>Dados do Servidor</h4>
+                            <div class="form-grid" id="checklist-dados-servidor">
+                                <label>Nome: <input type="text" id="checklist-nome" readonly></label>
+                                <label>Matrícula: <input type="text" id="checklist-matricula" readonly></label>
+                                <label>CPF: <input type="text" id="checklist-cpf" readonly></label>
+                                <label>Cargo: <input type="text" id="checklist-cargo" readonly></label>
+                            </div>
+
+                            <div id="checklist-content">
                                 </div>
                             
-                            <div class="footer-actions">
-                                <button class="secondary" onclick="checklist.gerarPDF(this)">
-                                    <i class="ri-file-pdf-2-line"></i> 
+                            <h4>Observações</h4>
+                            <textarea id="checklist-observacoes" rows="4" placeholder="Adicione observações sobre a documentação..."></textarea>
+                            
+                            <div class="wizard-nav" style="justify-content: center; margin-top:20px;">
+                                <button class="primary" onclick="checklist.gerarPdf(this)">
+                                    <i class="ri-file-pdf-2-line"></i>
                                     <span class="button-text">Gerar PDF do Checklist</span>
                                     <span class="spinner"></span>
                                 </button>
                             </div>
                         </div>
+                        
                         <div id="planner-container">
                             <h4>🔮 Planejador de Aposentadoria Interativo</h4>
                             <p>Explore cenários futuros sem alterar os dados originais da sua simulação.</p>
@@ -657,7 +667,6 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
