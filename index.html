@@ -252,15 +252,36 @@
                             <button class="primary" onclick="adicionarLinhaProvento()">+ Adicionar Linha de Provento</button>
                         </div>
                         <canvas id="graficoSalarios"></canvas>
+
+                        <div id="planner-container">
+                            <h4>🔮 Planejador de Aposentadoria Interativo</h4>
+                            <p>Explore cenários futuros sem alterar os dados originais da sua simulação.</p>
+                            <div class="form-grid">
+                                <label>Aposentar em uma data futura:
+                                    <input type="date" id="planner-data-futura">
+                                </label>
+                                <label>Simular aumento salarial (%):
+                                    <input type="number" id="planner-aumento-salarial" placeholder="Ex: 10">
+                                </label>
+                                <label>Adicionar tempo de contribuição (dias):
+                                    <input type="number" id="planner-tempo-adicional" placeholder="Ex: 365">
+                                </label>
+                            </div>
+                            <button class="secondary" onclick="planejarAposentadoria(this)" style="margin-top: 15px;">
+                                <span class="button-text">📊 Calcular Cenário</span>
+                                <span class="spinner"></span>
+                            </button>
+                            <div id="resultado-planner"></div>
+                        </div>
                         
-                        <h4>Ações Finais</h4>
+                        <h4 style="margin-top: 30px;">Ações Finais</h4>
                         <div class="acoes-finais-container">
                             <div class="grupo-salvar">
                                 <input type="text" id="nomeSimulacao" placeholder="Nome da simulação p/ salvar" />
                                 <button class="primary" onclick="salvarSimulacaoHistorico()">🕘 Salvar no Histórico</button>
                             </div>
                             <div class="grupo-acoes">
-                                <button class="secondary" onclick="imprimirSimulacaoCompleta()">🖨️ Imprimir Relatório</button>
+                                <button class="secondary" onclick="imprimirSimulacao()">🖨️ Imprimir Relatório</button>
                                 <button class="primary" onclick="simulacao.salvarLocal()">💾 Salvar no Computador</button>
                                 <button class="primary" onclick="exportarTudoZIP(this)">📦 Exportar ZIP</button>
                                 <button id="btnGerarAtoAposentadoria" class="success" onclick="gerarAtoDeAposentadoria(this)" style="display: none;">
@@ -627,8 +648,3 @@
 
 </body>
 </html>
-
-
-
-
-
