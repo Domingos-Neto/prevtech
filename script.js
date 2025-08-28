@@ -882,6 +882,7 @@ function limparFormularioCompleto() {
     document.getElementById('resultadoProjecao').innerHTML = '';
     document.getElementById('resultadoAbono').innerHTML = '';
     document.getElementById('resultadoLiquido').innerHTML = '';
+    document.getElementById('resultado-planner').innerHTML = '';
     AppState.simulacaoResultados = {};
     if (AppState.salarioChart) AppState.salarioChart.destroy();
     
@@ -1412,326 +1413,6 @@ function gerarAtoDePensao(b) {
     } finally {
         ui.toggleSpinner(b, false);
     }
-}
-
-// =================================================================================
-// NOVO MÓDULO DE CÁLCULO DE REGRAS - MODELO ITAPREV
-// =================================================================================
-
-/**
- * Função auxiliar para formatar um total de dias em "X anos, Y meses, Z dias"
- * @param {number} totalDias - O número total de dias.
- * @returns {string} - A string formatada.
- */
-function formatarTempoAnosMesesDias(totalDias) {
-    if (isNaN(totalDias) || totalDias < 0) return "0 anos, 0 meses, 0 dias.";
-    let diasRestantes = Math.floor(totalDias);
-    const anos = Math.floor(diasRestantes / 365.25);
-    diasRestantes -= anos * 365.25;
-    const meses = Math.floor(diasRestantes / 30.4375);
-    diasRestantes -= meses * 30.4375;
-    const dias = Math.round(diasRestantes);
-    return `${anos} anos, ${meses} meses, ${dias} dias.`;
-}
-
-/**
- * Função auxiliar para calcular a data em que um requisito de tempo ou idade será atingido.
- * @param {Date} dataBase - A data de início (ex: data de nascimento ou admissão).
- * @param {number} anosRequisito - Quantidade de anos necessários.
- * @returns {Date} - A data de elegibilidade.
- */
-function calcularDataElegibilidade(dataBase, anosRequisito) {
-    const dataElegibilidade = new Date(dataBase.getTime());
-    dataElegibilidade.setUTCFullYear(dataElegibilidade.getUTCFullYear() + anosRequisito);
-    return dataElegibilidade;
-}
-
-
-/**
- * Função principal que reúne e calcula todas as regras de aposentadoria do modelo ITAPREV.
- * @param {object} dadosServidor - Objeto contendo todas as informações do servidor.
- * @returns {Array} - Uma lista de objetos, cada um representando uma regra calculada.
- */
-function calcularRegrasItaprev(dadosServidor) {
-    const { dataNascimento, dataAdmissao, dataCalculo, sexo, tempoContribuicaoTotalDias, isMagisterio } = dadosServidor;
-    
-    // Converte os tempos para anos para facilitar os cálculos
-    const idadeAtual = (dataCalculo - dataNascimento) / 31557600000;
-    const tempoServicoPublicoAnos = (dataCalculo - dataAdmissao) / 31557600000;
-    const tempoContribuicaoTotalAnos = tempoContribuicaoTotalDias / 365.25;
-
-    const resultados = [];
-
-    // --- Regra 1: Aposentadoria Voluntária Professor (EC 103/2019, Art. 10) ---
-    if (isMagisterio) {
-        const req = {
-            tempoContribuicao: { valor: 25, atual: tempoContribuicaoTotalAnos },
-            tempoServicoPublico: { valor: 10, atual: tempoServicoPublicoAnos },
-            tempoNoCargo: { valor: 5, atual: tempoServicoPublicoAnos }, // Simplificado, idealmente viria do formulário
-            idadeMinima: { valor: (sexo === 'M' ? 60 : 57), atual: idadeAtual }
-        };
-        resultados.push({
-            nome: "Aposentadoria Voluntária por Idade e Tempo de Contribuição - Especial de Professor - Proventos pela Média",
-            baseLegal: "Art. 3º, inciso I, da Lei Complementar nº 035/2022 - Art. 10, inciso III do § 2º, da Emenda Constitucional 103/2019",
-            formaCalculo: "60% da Média Aritmética + 2% por ano que exceder 20 anos de contribuição",
-            paridade: "Não",
-            abono: "Sim",
-            requisitos: [
-                { nome: "Tempo de Contribuição", valor: `${req.tempoContribuicao.valor} anos`, atual: formatarTempoAnosMesesDias(req.tempoContribuicao.atual * 365.25), elegivel: calcularDataElegibilidade(dataAdmissao, req.tempoContribuicao.valor), situacao: req.tempoContribuicao.atual >= req.tempoContribuicao.valor },
-                { nome: "Tempo de efetivo exercício no Serv. Público", valor: `${req.tempoServicoPublico.valor} anos`, atual: formatarTempoAnosMesesDias(req.tempoServicoPublico.atual * 365.25), elegivel: calcularDataElegibilidade(dataAdmissao, req.tempoServicoPublico.valor), situacao: req.tempoServicoPublico.atual >= req.tempoServicoPublico.valor },
-                { nome: "Tempo no Cargo", valor: `${req.tempoNoCargo.valor} anos`, atual: formatarTempoAnosMesesDias(req.tempoNoCargo.atual * 365.25), elegivel: calcularDataElegibilidade(dataAdmissao, req.tempoNoCargo.valor), situacao: req.tempoNoCargo.atual >= req.tempoNoCargo.valor },
-                { nome: "Idade Mínima", valor: `${req.idadeMinima.valor} anos`, atual: `${Math.floor(idadeAtual)} anos`, elegivel: calcularDataElegibilidade(dataNascimento, req.idadeMinima.valor), situacao: idadeAtual >= req.idadeMinima.valor },
-            ]
-        });
-    }
-    
-    // --- Regra 2: Aposentadoria Voluntária Geral (EC 103/2019, Art. 10) ---
-     const reqGeral = {
-        tempoContribuicao: { valor: 25, atual: tempoContribuicaoTotalAnos },
-        tempoServicoPublico: { valor: 10, atual: tempoServicoPublicoAnos },
-        tempoNoCargo: { valor: 5, atual: tempoServicoPublicoAnos }, // Simplificado
-        idadeMinima: { valor: (sexo === 'M' ? 65 : 62), atual: idadeAtual }
-    };
-    resultados.push({
-        nome: "Aposentadoria Voluntária por Idade e Tempo de Contribuição - Proventos pela Média",
-        baseLegal: "Art. 3º, inciso I, da Lei Complementar nº 035/2022-Art. 10, inciso I do §1º, da Emenda Consitucional 103/2019",
-        formaCalculo: "60% da Média Aritmética + 2% por ano que exceder 20 anos de contribuição",
-        paridade: "Não",
-        abono: "Sim",
-        requisitos: [
-            { nome: "Tempo de Contribuição", valor: `${reqGeral.tempoContribuicao.valor} anos`, atual: formatarTempoAnosMesesDias(reqGeral.tempoContribuicao.atual * 365.25), elegivel: calcularDataElegibilidade(dataAdmissao, reqGeral.tempoContribuicao.valor), situacao: reqGeral.tempoContribuicao.atual >= reqGeral.tempoContribuicao.valor },
-            { nome: "Tempo de efetivo exercício no Serv. Público", valor: `${reqGeral.tempoServicoPublico.valor} anos`, atual: formatarTempoAnosMesesDias(reqGeral.tempoServicoPublico.atual * 365.25), elegivel: calcularDataElegibilidade(dataAdmissao, reqGeral.tempoServicoPublico.valor), situacao: reqGeral.tempoServicoPublico.atual >= reqGeral.tempoServicoPublico.valor },
-            { nome: "Tempo no Cargo", valor: `${reqGeral.tempoNoCargo.valor} anos`, atual: formatarTempoAnosMesesDias(reqGeral.tempoNoCargo.atual * 365.25), elegivel: calcularDataElegibilidade(dataAdmissao, reqGeral.tempoNoCargo.valor), situacao: reqGeral.tempoNoCargo.atual >= reqGeral.tempoNoCargo.valor },
-            { nome: "Idade Mínima", valor: `${reqGeral.idadeMinima.valor} anos`, atual: `${Math.floor(idadeAtual)} anos`, elegivel: calcularDataElegibilidade(dataNascimento, reqGeral.idadeMinima.valor), situacao: idadeAtual >= reqGeral.idadeMinima.valor },
-        ]
-    });
-    
-    // --- Regra 3: Transição Pontos Professor (EC 103/2019, Art. 4º) ---
-    if (isMagisterio) {
-        const pontosNecessarios = (sexo === 'M' ? 100 : 92) + (dataCalculo.getFullYear() - 2020);
-        const somaAtual = idadeAtual + tempoContribuicaoTotalAnos;
-         const reqPontosProf = {
-            tempoContribuicao: { valor: (sexo === 'M' ? 30 : 25), atual: tempoContribuicaoTotalAnos },
-            tempoServicoPublico: { valor: 20, atual: tempoServicoPublicoAnos },
-            tempoNoCargo: { valor: 5, atual: tempoServicoPublicoAnos },
-            idadeMinima: { valor: (sexo === 'M' ? 57 : 52), atual: idadeAtual }, // Idade mínima para a regra de pontos do professor
-            somaIdadeTempo: { valor: pontosNecessarios, atual: somaAtual }
-        };
-        resultados.push({
-            nome: "Aposentadoria Voluntária Especial de Professor - Proventos pela Média",
-            baseLegal: "Art. 4º, inciso I, da Lei Complementar nº 035/2022 - Art. 4º da Emenda Constitucional n° 103/2019",
-            formaCalculo: "60% da Média Aritmética + 2% por ano que exceder 20 anos de contribuição",
-            paridade: "Não",
-            abono: "Não",
-            requisitos: [
-                { nome: "Tempo de Contribuição", valor: `${reqPontosProf.tempoContribuicao.valor} anos`, atual: formatarTempoAnosMesesDias(reqPontosProf.tempoContribuicao.atual * 365.25), elegivel: calcularDataElegibilidade(dataAdmissao, reqPontosProf.tempoContribuicao.valor), situacao: reqPontosProf.tempoContribuicao.atual >= reqPontosProf.tempoContribuicao.valor },
-                { nome: "Tempo de efetivo exercício no Serv. Público", valor: `${reqPontosProf.tempoServicoPublico.valor} anos`, atual: formatarTempoAnosMesesDias(reqPontosProf.tempoServicoPublico.atual * 365.25), elegivel: calcularDataElegibilidade(dataAdmissao, reqPontosProf.tempoServicoPublico.valor), situacao: reqPontosProf.tempoServicoPublico.atual >= reqPontosProf.tempoServicoPublico.valor },
-                { nome: "Tempo no Cargo", valor: `${reqPontosProf.tempoNoCargo.valor} anos`, atual: formatarTempoAnosMesesDias(reqPontosProf.tempoNoCargo.atual * 365.25), elegivel: calcularDataElegibilidade(dataAdmissao, reqPontosProf.tempoNoCargo.valor), situacao: reqPontosProf.tempoNoCargo.atual >= reqPontosProf.tempoNoCargo.valor },
-                { nome: "Idade Mínima", valor: `${reqPontosProf.idadeMinima.valor} anos`, atual: `${Math.floor(idadeAtual)} anos`, elegivel: calcularDataElegibilidade(dataNascimento, reqPontosProf.idadeMinima.valor), situacao: idadeAtual >= reqPontosProf.idadeMinima.valor },
-                { nome: "Soma Idade e Tempo de Contribuição", valor: `${Math.floor(reqPontosProf.somaIdadeTempo.valor)}`, atual: `${Math.floor(reqPontosProf.somaIdadeTempo.atual)}`, elegivel: new Date(), situacao: reqPontosProf.somaIdadeTempo.atual >= reqPontosProf.somaIdadeTempo.valor }, // Cálculo de data para pontos é complexo, simplificado aqui
-            ]
-        });
-    }
-
-    // Adicione aqui a lógica para as outras regras do PDF (Aposentadoria com paridade, Pedágio 100%, Compulsória, etc.)
-    // Siga o mesmo modelo, criando um objeto para cada regra e adicionando ao array 'resultados'.
-
-    return resultados;
-}
-
-// =================================================================================
-// NOVA FUNÇÃO PARA GERAR O HTML DO RELATÓRIO - MODELO ITAPREV
-// =================================================================================
-
-function gerarRelatorioPDFHTML(dadosServidor, resultadosRegras) {
-    
-    // --- Bloco de Dados do Servidor ---
-    const servidorInfoHTML = `
-        <div class="info-grid">
-            <div><b>Servidor:</b> ${dadosServidor.nomeServidor}</div>
-            <div><b>Magistério:</b> ${dadosServidor.isMagisterio ? 'SIM' : 'NÃO'}</div>
-            <div><b>Cargo:</b> ${dadosServidor.cargoServidor}</div>
-            <div><b>CPF:</b> ${dadosServidor.cpfServidor}</div>
-            <div><b>Data de Nascimento:</b> ${formatarDataBR(dadosServidor.dataNascimento.toISOString().slice(0,10))}</div>
-            <div><b>Matrícula:</b> ${dadosServidor.matriculaServidor}</div>
-            <div><b>Sexo:</b> ${dadosServidor.sexo === 'M' ? 'MASCULINO' : 'FEMININO'}</div>
-            <div><b>Data de Ingresso:</b> ${formatarDataBR(dadosServidor.dataAdmissao.toISOString().slice(0,10))}</div>
-            <div><b>Data Fim:</b> ${formatarDataBR(dadosServidor.dataCalculo.toISOString().slice(0,10))}</div>
-        </div>
-    `;
-
-    // --- Bloco de Tempo de Contribuição ---
-    const tempoContribuicaoHTML = `
-        <h3>Descrição dos Tempos de Contribuição</h3>
-        <table class="contribution-table">
-            <tbody>
-                <tr>
-                    <td>Tempo de Contribuição no Ente Atual - Bruto</td>
-                    <td>${Math.round((dadosServidor.dataCalculo - dadosServidor.dataAdmissao) / (1000 * 60 * 60 * 24))}</td>
-                    <td>${formatarTempoAnosMesesDias((dadosServidor.dataCalculo - dadosServidor.dataAdmissao) / (1000 * 60 * 60 * 24))}</td>
-                </tr>
-                 <tr>
-                    <td>Tempo de Contribuição do RGPS</td>
-                    <td>${dadosServidor.tempoExternoDias}</td>
-                    <td>${formatarTempoAnosMesesDias(dadosServidor.tempoExternoDias)}</td>
-                </tr>
-                 <tr>
-                    <td>Tempo de Contribuição - Professor</td>
-                    <td>${dadosServidor.isMagisterio ? dadosServidor.tempoContribuicaoTotalDias : 0}</td>
-                    <td>${dadosServidor.isMagisterio ? formatarTempoAnosMesesDias(dadosServidor.tempoContribuicaoTotalDias) : '0 anos, 0 meses, 0 dias.'}</td>
-                </tr>
-                <tr class="total-row">
-                    <td>TOTAL GERAL</td>
-                    <td>${dadosServidor.tempoContribuicaoTotalDias}</td>
-                    <td>${formatarTempoAnosMesesDias(dadosServidor.tempoContribuicaoTotalDias)}</td>
-                </tr>
-            </tbody>
-        </table>
-    `;
-
-    // --- Bloco Dinâmico das Regras de Aposentadoria ---
-    let regrasHTML = '<h3>Regras de Aposentadoria</h3>';
-    resultadosRegras.forEach(regra => {
-        
-        let todosRequisitosCumpridos = regra.requisitos.every(r => r.situacao);
-        let dataElegibilidadeGeral = new Date(Math.max(...regra.requisitos.map(r => r.elegivel.getTime())));
-
-        let requisitosTabelaHTML = '';
-        regra.requisitos.forEach(req => {
-            requisitosTabelaHTML += `
-                <tr>
-                    <td>${req.nome}</td>
-                    <td>${req.valor}</td>
-                    <td>${req.atual}</td>
-                    <td>${formatarDataBR(req.elegivel.toISOString().slice(0,10))}</td>
-                    <td class="${req.situacao ? 'elegivel' : 'inelegivel'}">${req.situacao ? 'Elegível' : 'Inelegível'}</td>
-                </tr>
-            `;
-        });
-
-        regrasHTML += `
-            <div class="rule-card">
-                <h4>${!todosRequisitosCumpridos ? '<span class="inelegivel-cross">X</span>' : ''} ${regra.nome}</h4>
-                <p class="legal-basis">${regra.baseLegal}</p>
-                <p><b>Forma de Cálculo:</b> ${regra.formaCalculo}</p>
-                <div class="summary-grid">
-                    <div><b>Abono</b><span>${regra.abono}</span></div>
-                    <div><b>Paridade</b><span>${regra.paridade}</span></div>
-                    <div><b>Elegibilidade</b><span>${formatarDataBR(dataElegibilidadeGeral.toISOString().slice(0,10))}</span></div>
-                </div>
-                <table class="requirements-table">
-                    <thead>
-                        <tr>
-                            <th>Requisito</th>
-                            <th>Valor</th>
-                            <th>Situação Atual</th>
-                            <th>Elegibilidade</th>
-                            <th>Situação</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${requisitosTabelaHTML}
-                    </tbody>
-                </table>
-            </div>
-        `;
-    });
-
-    // --- Montagem do HTML Final com Estilos ---
-    const htmlCompleto = `
-        <!DOCTYPE html>
-        <html lang="pt-BR">
-        <head>
-            <meta charset="UTF-8">
-            <title>Resultado da Simulação de Aposentadoria</title>
-            <style>
-                @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
-                body { font-family: 'Roboto', sans-serif; font-size: 10pt; line-height: 1.4; color: #333; background: #fff; margin: 2cm; }
-                .header { text-align: center; margin-bottom: 20px; }
-                .header h2 { margin: 2px 0; font-size: 1.2em; }
-                .header h1 { margin: 2px 0; font-size: 1em; color: #666; }
-                .disclaimer { border: 1px solid #ccc; padding: 10px; font-size: 0.8em; text-align: justify; margin: 20px 0; background: #f9f9f9; }
-                h3 { font-size: 1.1em; color: #0a2559; border-bottom: 1px solid #ccc; padding-bottom: 5px; margin-top: 25px; }
-                .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px 20px; margin-bottom: 20px; }
-                .contribution-table { width: 100%; border-collapse: collapse; }
-                .contribution-table td { border: 1px solid #ddd; padding: 6px; }
-                .contribution-table .total-row td { font-weight: bold; background: #f2f2f2; }
-                .rule-card { border: 1px solid #ddd; border-radius: 5px; margin-top: 20px; padding: 15px; page-break-inside: avoid; }
-                .rule-card h4 { margin: 0 0 10px 0; font-size: 1.05em; color: #0a2559; display: flex; align-items: center; }
-                .rule-card .legal-basis { font-size: 0.8em; color: #555; font-style: italic; }
-                .summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); background: #f2f2f2; border: 1px solid #ddd; text-align: center; margin: 10px 0; }
-                .summary-grid div { padding: 5px; }
-                .summary-grid b { display: block; font-size: 0.8em; }
-                .requirements-table { width: 100%; border-collapse: collapse; font-size: 0.9em; }
-                .requirements-table th, .requirements-table td { border: 1px solid #ddd; padding: 5px; text-align: center; }
-                .requirements-table th { background: #e9eef5; }
-                .elegivel { color: green; font-weight: bold; }
-                .inelegivel { color: red; font-weight: bold; }
-                .inelegivel-cross { color: red; font-weight: bold; margin-right: 10px; font-size: 1.2em; }
-                .footer { text-align: center; font-size: 0.8em; color: #777; margin-top: 30px; border-top: 1px solid #ccc; padding-top: 10px; }
-                @media print { body { margin: 1cm; } .rule-card { border: 1px solid #ccc; } }
-            </style>
-        </head>
-        <body>
-            <div class="header">
-                <h2>ITAPREV</h2>
-                <h1>INSTITUTO DE PREVIDÊNCIA DOS SERVIDORES MUNICIPAIS DE ITAPIPOCA</h1>
-                <h2>Resultado da Simulação de Aposentadoria</h2>
-            </div>
-            <div class="disclaimer">
-                <b>IMPORTANTE:</b> "Este demonstrativo é uma simulação e, portanto, não garante a obtenção do benefício de aposentadoria. Os dados levados em consideração foram apenas para ensaio, baseado nos dados colhidos até o momento. O RPPS exigirá a apresentação de documentos comprobatórios para certificar os períodos de trabalho ou contribuição. Onde após apresentados poderão acarretar um resultado diferente do apresentado neste arquivo."
-            </div>
-
-            ${servidorInfoHTML}
-            ${tempoContribuicaoHTML}
-            ${regrasHTML}
-
-            <div class="footer">
-                Data de Emissão: ${new Date().toLocaleDateString('pt-BR')} | PREVTECH - Sistema de Gestão
-            </div>
-        </body>
-        </html>
-    `;
-    return htmlCompleto;
-}
-
-// =================================================================================
-// NOVA FUNÇÃO "MESTRA" PARA JUNTAR TUDO E IMPRIMIR O RELATÓRIO COMPLETO
-// =================================================================================
-
-function imprimirSimulacaoCompleta() {
-    // 1. Coletar todos os dados necessários do formulário
-    const dadosFormulario = coletarDadosSimulacao(); // Sua função existente!
-    const dadosServidor = {
-        nomeServidor: dadosFormulario.passo1.nomeServidor || 'Não informado',
-        cargoServidor: dadosFormulario.passo1.cargoServidor || 'Não informado',
-        cpfServidor: dadosFormulario.passo1.cpfServidor || 'Não informado',
-        matriculaServidor: dadosFormulario.passo1.matriculaServidor || 'Não informado',
-        dataNascimento: new Date(dadosFormulario.passo1.dataNascimento + 'T00:00:00Z'),
-        dataAdmissao: new Date(dadosFormulario.passo1.dataAdmissao + 'T00:00:00Z'),
-        dataCalculo: dadosFormulario.passo1.dataCalculo ? new Date(dadosFormulario.passo1.dataCalculo + 'T00:00:00Z') : new Date(),
-        sexo: dadosFormulario.passo1.sexo,
-        isMagisterio: dadosFormulario.passo1.isMagisterio === 'sim',
-        tempoExternoDias: parseInt(dadosFormulario.passo1.tempoExterno) || 0
-    };
-    
-    // Calcula o tempo total de contribuição em dias
-    const tempoServicoPublicoDias = (dadosServidor.dataCalculo - dadosServidor.dataAdmissao) / (1000 * 60 * 60 * 24);
-    dadosServidor.tempoContribuicaoTotalDias = Math.round(tempoServicoPublicoDias + dadosServidor.tempoExternoDias);
-
-
-    // 2. Chamar a nova lógica de cálculo de regras
-    const resultadosDasRegras = calcularRegrasItaprev(dadosServidor);
-    
-    // 3. Chamar a nova função de geração de HTML
-    const relatorioHTML = gerarRelatorioPDFHTML(dadosServidor, resultadosDasRegras);
-
-    // 4. Abrir a janela de impressão
-    const newWindow = window.open();
-    newWindow.document.open();
-    newWindow.document.write(relatorioHTML);
-    newWindow.document.close();
-    newWindow.print(); // Opcional: já abre a caixa de diálogo de impressão
 }
 
 function gerarAtoDeAposentadoria(b) {
@@ -2742,35 +2423,141 @@ function atualizarTotalTempoExterno() {
     document.getElementById('tempoExterno').value = totalDias;
 }
 
+// NOVA FUNÇÃO: Planejador de Aposentadoria Interativo
+function planejarAposentadoria(button) {
+    ui.toggleSpinner(button, true);
+    const resultadoDiv = document.getElementById('resultado-planner');
+    resultadoDiv.innerHTML = `<p style="text-align:center; color: var(--cor-texto-secundario);">Calculando novo cenário...</p>`;
+
+    setTimeout(() => {
+        try {
+            // 1. Coletar dados base e do planejador
+            const dadosBase = coletarDadosSimulacao();
+            const dataFuturaStr = document.getElementById('planner-data-futura').value;
+            const aumentoSalarial = parseFloat(document.getElementById('planner-aumento-salarial').value) || 0;
+            const tempoAdicional = parseInt(document.getElementById('planner-tempo-adicional').value) || 0;
+
+            if (!dataFuturaStr && aumentoSalarial === 0 && tempoAdicional === 0) {
+                ui.showToast("Preencha ao menos um campo do planejador.", false);
+                resultadoDiv.innerHTML = '';
+                return;
+            }
+
+            // 2. Preparar dados para o novo cenário (sem alterar os originais)
+            let dataReferenciaCenario = dataFuturaStr ? new Date(dataFuturaStr + 'T00:00:00Z') : (new Date(dadosBase.passo1.dataCalculo + 'T00:00:00Z') || new Date());
+            
+            let salariosCenario = dadosBase.tabela.map(linha => ({
+                value: (parseFloat(linha[2]) || 0) * (1 + aumentoSalarial / 100)
+            }));
+
+            const mediaSalarialCenario = salariosCenario.length > 0
+                ? salariosCenario.reduce((acc, s) => acc + s.value, 0) / salariosCenario.length
+                : 0;
+
+            const dN = new Date(dadosBase.passo1.dataNascimento + 'T00:00:00Z');
+            const dA = new Date(dadosBase.passo1.dataAdmissao + 'T00:00:00Z');
+            const s = dadosBase.passo1.sexo;
+            const tED = (parseInt(dadosBase.passo1.tempoExterno) || 0) + tempoAdicional;
+            const tSD = parseInt(dadosBase.passo1.tempoEspecial) || 0;
+            const isMagisterio = dadosBase.passo1.isMagisterio === 'sim';
+
+            // 3. Recalcular projeção com os dados do cenário
+            const iACenario = (dataReferenciaCenario - dN) / 31557600000;
+            const tempoServicoPublicoCenario = (dataReferenciaCenario - dA) / 31557600000;
+            const tempoExternoCenario = tED / 365.25;
+            const tempoEspecialCenario = tSD / 365.25;
+            const tCTCenario = tempoServicoPublicoCenario + tempoExternoCenario + tempoEspecialCenario;
+
+            const dR = new Date('2019-11-13T00:00:00Z');
+            const tempoServicoPublicoNaReformaAnos = (dR - dA) / 31557600000;
+            const tCRCenario = tempoServicoPublicoNaReformaAnos + tempoExternoCenario + tempoEspecialCenario;
+
+            let p = {};
+            const redutorIdade = isMagisterio ? 5 : 0;
+            const redutorTempo = isMagisterio ? 5 : 0;
+            const vRGCenario = mediaSalarialCenario * Math.min(1, 0.6 + Math.max(0, Math.floor(tCTCenario) - 20) * 0.02);
+
+            // Reavaliação das regras
+            const tMP50 = (s === 'M' ? 33 : 28) - redutorTempo;
+            if (tCRCenario >= tMP50) {
+                const tN = (s === 'M' ? 35 : 30) - redutorTempo;
+                const tF = Math.max(0, tN - tCRCenario);
+                const ped = tF * 0.5;
+                if (tCTCenario >= tN + ped) {
+                    const fP = calcularFatorPrevidenciario(iACenario, tCTCenario, s);
+                    p['Pedágio 50%'] = { status: 'Elegível', valor: mediaSalarialCenario * fP, obs: 'Integralidade pela média (c/ Fator Prev.)' };
+                }
+            }
+
+            const iMP100 = (s === 'M' ? 60 : 57) - redutorIdade;
+            const tNP100 = (s === 'M' ? 35 : 30) - redutorTempo;
+            if (iACenario >= iMP100 && tCTCenario >= tNP100) {
+                p['Pedágio 100%'] = { status: 'Elegível', valor: mediaSalarialCenario, obs: '100% da média' };
+            }
+
+            const aACenario = dataReferenciaCenario.getFullYear();
+            const iMP = ((s === 'M' ? 61 : 56) - redutorIdade) + Math.floor((aACenario - 2019) * 0.5);
+            const tMP = (s === 'M' ? 35 : 30) - redutorTempo;
+            if (iACenario >= iMP && tCTCenario >= tMP) {
+                p['Idade Progressiva'] = { status: 'Elegível', valor: vRGCenario, obs: '60% + 2% por ano excedente' };
+            }
+
+            const pA = iACenario + tCTCenario;
+            const pN = ((s === 'M' ? 96 : 86) - (isMagisterio ? 10 : 0)) + (aACenario - 2019);
+            if (pA >= pN) {
+                p['Pontos'] = { status: 'Elegível', valor: vRGCenario, obs: '60% + 2% por ano excedente' };
+            }
+            
+            const R_IM_M = 65 - redutorIdade;
+            const R_IM_F = 62 - redutorIdade;
+            if (iACenario >= (s === 'M' ? R_IM_M : R_IM_F) && tCTCenario >= 25) {
+                p['Regra Permanente'] = { status: 'Elegível', valor: vRGCenario, obs: '60% + 2% por ano excedente' };
+            }
+
+            // 4. Montar o HTML do resultado
+            let html = `<p><strong>Resultado do Cenário:</strong><br>
+                        Na data de <strong>${dataReferenciaCenario.toLocaleDateString('pt-BR')}</strong>, com idade de <strong>${iACenario.toFixed(1)} anos</strong> e tempo de contribuição de <strong>${tCTCenario.toFixed(1)} anos</strong>, o servidor estaria elegível para as seguintes regras:</p>`;
+            
+            if (Object.keys(p).length > 0) {
+                html += '<table><thead><tr><th>Regra de Transição</th><th>Valor Estimado do Benefício</th><th>Observação</th></tr></thead><tbody>';
+                for (const regra in p) {
+                    html += `<tr><td>${regra}</td><td>${formatarDinheiro(p[regra].valor)}</td><td>${p[regra].obs}</td></tr>`;
+                }
+                html += '</tbody></table>';
+                const melhorRegra = Object.entries(p).sort((a, b) => b[1].valor - a[1].valor)[0];
+                html += `<p>A regra mais vantajosa neste cenário seria a de <strong>${melhorRegra[0]}</strong>, resultando em um benefício bruto de <strong>${formatarDinheiro(melhorRegra[1].valor)}</strong>.</p>`;
+            } else {
+                html += '<p>Com os parâmetros informados, o servidor ainda não estaria elegível para nenhuma regra de aposentadoria na data futura especificada. Tente ajustar a data ou adicionar mais tempo de contribuição.</p>';
+            }
+             html += `<small>Nota: Esta é uma projeção hipotética baseada nos dados informados. Os valores e a elegibilidade podem variar.</small>`
+
+            resultadoDiv.innerHTML = html;
+
+        } catch (error) {
+            console.error("Erro no planejador de aposentadoria:", error);
+            resultadoDiv.innerHTML = `<p style="color:var(--cor-erro)">Ocorreu um erro ao calcular o cenário. Verifique se todos os dados básicos do servidor (datas, etc.) estão preenchidos corretamente no Passo 1.</p>`;
+            ui.showToast("Erro ao calcular o cenário. Verifique os dados.", false);
+        } finally {
+            ui.toggleSpinner(button, false);
+        }
+    }, 50);
+}
+
+
 Object.assign(window, {
     auth, ui, drive, handleNavClick, atualizarDashboardView, irParaPasso, alternarCamposBeneficio,
     adicionarLinha, limparTabela, exportarExcel, importarExcel, atualizarSalarioLinha, excluirLinha,
     calcularBeneficio, adicionarLinhaProvento,
     calculateTotalProventos, excluirLinhaProvento,
-    adicionarLinhaDependente, removerLinhaDependente, salvarSimulacaoHistorico, imprimirSimulacao, imprimirSimulacaoCompleta,
+    adicionarLinhaDependente, removerLinhaDependente, salvarSimulacaoHistorico, imprimirSimulacao,
     exportarTudoZIP, gerarAtoDeAposentadoria, gerarAtoDePensao, carregarDoHistorico, excluirDoHistorico,
     adicionarLinhaPeriodoCTC, calcularTempoTotalCTC, removerLinhaPeriodoCTC, salvarCTC, gerarDocumentoCTC,
     carregarCTC, excluirCTC, alternarTema,
     salvarConfiguracoes, openTimeCalcModal, closeTimeCalcModal,
     calcularTempoEntreDatas, limparCalculoTempo,
     buscarEPreencherFatores,
-    adicionarPeriodoExterno, removerPeriodoExterno
+    adicionarPeriodoExterno, removerPeriodoExterno,
+    planejarAposentadoria // <<< ADICIONADA NOVA FUNÇÃO AO ESCOPO GLOBAL
 });
 // Torna o objeto 'simulacao' acessível globalmente no HTML
 window.simulacao = simulacao;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
