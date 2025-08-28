@@ -383,7 +383,7 @@ const checklist = {
     
     // Função helper para gerar o HTML de um item do checklist
     getItemHTML: (secaoKey, index, texto, isChecked = false, nota = '') => {
-        const id = `chk-${secaoKey}-${index}`;
+        const id = `chk-${secaoKey}-${Date.now()}-${index}`; // ID mais robusto para evitar colisões
         return `
             <div class="checklist-item">
                 <div class="checklist-item-main">
@@ -438,34 +438,54 @@ const checklist = {
         });
     },
 
+    // INÍCIO: LÓGICA DE GERAR PDF CORRIGIDA
     gerarPdf: (button) => {
-        // (A lógica de gerar PDF permanece a mesma, mas agora lê os dados da tela, o que já fazia)
-         ui.toggleSpinner(button, true);
+        ui.toggleSpinner(button, true);
         try {
             const nomeServidor = document.getElementById('checklist-nome').value || "Servidor";
             const titulo = document.getElementById('checklist-title').textContent;
-            let contentHTML = `<style>body{font-family:Arial,sans-serif;font-size:10pt;color:#333}.header-pdf{text-align:center;border-bottom:2px solid #0a2559;padding-bottom:10px;margin-bottom:20px}.header-pdf h2{margin:0;color:#0a2559;font-size:18pt}.header-pdf p{margin:2px 0;font-size:11pt}h3{font-size:14pt;color:#0a2559;text-align:center;margin-bottom:25px}h4{font-size:12pt;border-bottom:1px solid #ccc;padding-bottom:5px;margin-top:25px;margin-bottom:10px}.dados-servidor-pdf{display:grid;grid-template-columns:1fr 1fr;gap:8px 15px;margin-bottom:20px;font-size:10pt}.dados-servidor-pdf p{margin:0}.checklist-item-pdf{font-size:10pt;margin-bottom:8px;line-height:1.4;display:flex;align-items:flex-start}.checkbox-symbol{font-size:14pt;margin-right:10px;line-height:1}.note-pdf{font-size:9pt;color:#555;padding-left:25px;white-space:pre-wrap;word-wrap:break-word;margin-top:-5px;margin-bottom:8px}.obs-pdf{margin-top:20px;border:1px solid #ccc;padding:10px;white-space:pre-wrap;word-wrap:break-word}</style><div id="pdf-content"><div class="header-pdf"><h2>ITAPREV</h2><p>INSTITUTO DE PREVIDÊNCIA DOS SERVIDORES MUNICIPAIS DE ITAPIPOCA</p></div><h3>${titulo}</h3><h4>DADOS DO SERVIDOR</h4><div class="dados-servidor-pdf"><p><strong>Nome:</strong> ${nomeServidor}</p><p><strong>Matrícula:</strong> ${document.getElementById('checklist-matricula').value}</p><p><strong>CPF:</strong> ${document.getElementById('checklist-cpf').value}</p><p><strong>Cargo:</strong> ${document.getElementById('checklist-cargo').value}</p></div>`;
-            document.querySelectorAll('.checklist-secao').forEach(secao => {
-                contentHTML += `<h4>${secao.querySelector('h4').innerText}</h4>`;
-                secao.querySelectorAll('.checklist-item').forEach(item => {
-                    const checkbox = item.querySelector('input[type="checkbox"]');
-                    const label = item.querySelector('label').innerText;
-                    const nota = item.querySelector('textarea').value;
-                    const isChecked = checkbox.checked;
-                    const checkboxSymbol = isChecked ? '☑' : '☐';
-                    contentHTML += `<div class="checklist-item-pdf"><span class="checkbox-symbol">${checkboxSymbol}</span><span>${label}</span></div>`;
-                    if (nota) {
-                        contentHTML += `<div class="note-pdf"><b>Nota:</b> ${nota.replace(/\n/g, '<br>')}</div>`;
-                    }
-                });
-            });
-            const observacoes = document.getElementById('checklist-observacoes').value;
+            
+            // Recria os dados do checklist a partir do DOM para garantir que estão atualizados
+            const dadosAtuais = coletarDadosSimulacao().resultados.checklistState;
+
+            let contentHTML = `<style>body{font-family:Arial,sans-serif;font-size:10pt;color:#333}.header-pdf{text-align:center;border-bottom:2px solid #0a2559;padding-bottom:10px;margin-bottom:20px}.header-pdf h2{margin:0;color:#0a2559;font-size:18pt}.header-pdf p{margin:2px 0;font-size:11pt}h3{font-size:14pt;color:#0a2559;text-align:center;margin-bottom:25px}h4{font-size:12pt;border-bottom:1px solid #ccc;padding-bottom:5px;margin-top:25px;margin-bottom:10px}.dados-servidor-pdf{display:grid;grid-template-columns:1fr 1fr;gap:8px 15px;margin-bottom:20px;font-size:10pt}.dados-servidor-pdf p{margin:0}.checklist-item-pdf{font-size:10pt;margin-bottom:8px;line-height:1.4;display:block;padding-left:5px}.checkbox-symbol{font-family:sans-serif;font-size:14pt;margin-right:10px;line-height:1}.note-pdf{font-size:9pt;color:#555;padding-left:30px;white-space:pre-wrap;word-wrap:break-word;margin-top:-5px;margin-bottom:8px;font-style:italic}.obs-pdf{margin-top:20px;border:1px solid #ccc;padding:10px;white-space:pre-wrap;word-wrap:break-word}</style><div id="pdf-content"><div class="header-pdf"><h2>ITAPREV</h2><p>INSTITUTO DE PREVIDÊNCIA DOS SERVIDORES MUNICIPAIS DE ITAPIPOCA</p></div><h3>${titulo}</h3><h4>DADOS DO SERVIDOR</h4><div class="dados-servidor-pdf"><p><strong>Nome:</strong> ${nomeServidor}</p><p><strong>Matrícula:</strong> ${document.getElementById('checklist-matricula').value}</p><p><strong>CPF:</strong> ${document.getElementById('checklist-cpf').value}</p><p><strong>Cargo:</strong> ${document.getElementById('checklist-cargo').value}</p></div>`;
+            
+            const secoesNomes = {
+                servidor: "DOCUMENTOS A CARGO DO SERVIDOR/REQUERENTE",
+                orgao: "DOCUMENTOS A CARGO DO ÓRGÃO DE ORIGEM/BENEFÍCIOS",
+                juridico: "DOCUMENTOS A CARGO DA ASSESSORIA JURÍDICA"
+            };
+
+            if (dadosAtuais && dadosAtuais.secoes) {
+                for(const key in dadosAtuais.secoes) {
+                    const secao = dadosAtuais.secoes[key];
+                    const total = secao.itens.length;
+                    const checked = secao.itens.filter(i => i.checked).length;
+                    contentHTML += `<h4>${secoesNomes[key]} (${checked}/${total})</h4>`;
+                    
+                    secao.itens.forEach(item => {
+                        const checkboxSymbol = item.checked ? '☑' : '☐';
+                        contentHTML += `<div class="checklist-item-pdf"><span class="checkbox-symbol">${checkboxSymbol}</span><span>${item.texto}</span></div>`;
+                        if (item.nota) {
+                            contentHTML += `<div class="note-pdf"><b>Nota:</b> ${item.nota.replace(/\n/g, '<br>')}</div>`;
+                        }
+                    });
+                }
+            }
+
+            const observacoes = dadosAtuais.observacoesGerais;
             if (observacoes) contentHTML += `<h4>OBSERVAÇÕES GERAIS</h4><div class="obs-pdf">${observacoes.replace(/\n/g, '<br>')}</div>`;
             contentHTML += '</div>';
+
             const opt = { margin: [20, 15, 20, 15], filename: `Checklist_${titulo.replace(/ /g, '_')}_${nomeServidor.replace(/ /g, '_')}.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2, useCORS: true }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } };
             html2pdf().from(contentHTML).set(opt).save().then(() => { ui.showToast("PDF do checklist gerado com sucesso!", true); ui.toggleSpinner(button, false); }).catch((err) => { console.error("Erro na geração do PDF:", err); ui.showToast("Ocorreu um erro ao gerar o PDF.", false); ui.toggleSpinner(button, false); });
-        } catch (error) { console.error("Erro ao preparar PDF do checklist:", error); ui.showToast("Ocorreu um erro ao preparar o PDF.", false); ui.toggleSpinner(button, false); }
+        } catch (error) {
+            console.error("Erro ao preparar PDF do checklist:", error);
+            ui.showToast("Ocorreu um erro ao preparar o PDF.", false);
+            ui.toggleSpinner(button, false);
+        }
     },
+    // FIM: LÓGICA DE GERAR PDF CORRIGIDA
 
     reset: () => {
         const container = document.getElementById('checklist-container');
@@ -505,15 +525,15 @@ const checklist = {
             let secaoAtual = null;
 
             editor.value.split('\n').forEach(line => {
-                line = line.trim();
-                if (line.startsWith('==') && line.endsWith('==')) {
-                    const header = line.replace(/==/g, '').trim().toLowerCase();
+                const trimmedLine = line.trim();
+                if (trimmedLine.startsWith('==') && trimmedLine.endsWith('==')) {
+                    const header = trimmedLine.replace(/==/g, '').trim().toLowerCase();
                     if(header.includes('servidor')) secaoAtual = 'servidor';
                     else if(header.includes('orgao') || header.includes('órgão')) secaoAtual = 'orgao';
                     else if(header.includes('juridico') || header.includes('jurídica')) secaoAtual = 'juridico';
                     else secaoAtual = null;
-                } else if (secaoAtual && line !== '') {
-                    secoes[secaoAtual].push(line);
+                } else if (secaoAtual && trimmedLine !== '') { // Ignora linhas em branco
+                    secoes[secaoAtual].push(trimmedLine);
                 }
             });
 
@@ -1113,7 +1133,10 @@ function calcularBeneficio(n = true, b = null) {
         try {
             const rD = document.getElementById('resultado');
             let vB = 0, dC = '', m = 0, s = [];
+            // Mantém o estado do checklist se já existir, senão limpa
+            const checklistStateAtual = AppState.simulacaoResultados.checklistState;
             AppState.simulacaoResultados = {};
+            AppState.simulacaoResultados.checklistState = checklistStateAtual;
 
             if (t !== 'pensao_aposentado') {
                 const mR = calcularMediaSalarial();
