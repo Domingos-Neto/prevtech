@@ -445,6 +445,132 @@ const drive = {
     },
 };
 
+// =================================================================================
+// MÓDULO CHECKLIST DINÂMICO DE DOCUMENTAÇÃO (NOVO)
+// =================================================================================
+const checklist = {
+    elementos: {
+        container: null,
+        lista: null,
+        progressBar: null,
+        progressText: null
+    },
+
+    documentos: {
+        geral: [
+            "Requerimento do Benefício (assinado)",
+            "Documento de Identificação com Foto (RG ou CNH)",
+            "Cadastro de Pessoa Física (CPF)",
+            "Comprovante de Residência atualizado",
+            "PIS/PASEP",
+            "Certidão de Nascimento ou Casamento",
+            "Último Contracheque"
+        ],
+        voluntaria: [
+            "Declaração de Acumulação de Cargos",
+            "Certidão de Tempo de Contribuição (CTC) de outros regimes (se houver)",
+            "Portaria de Admissão"
+        ],
+        incapacidade: [
+            "Laudo Médico Pericial detalhado com a Data de Início da Incapacidade (DII)",
+            "Comunicação de Acidente de Trabalho (CAT), se aplicável"
+        ],
+        compulsoria: [
+            "Comunicação oficial da data de implementação da idade limite"
+        ],
+        pensao: [
+            "Certidão de Óbito do servidor instituidor",
+            "Documentos de Identificação (RG e CPF) de todos os dependentes",
+            "Certidão de Nascimento dos filhos menores",
+            "Comprovação de união estável ou casamento atualizada",
+            "Declaração de Inexistência de outros dependentes",
+            "Laudo de invalidez para dependente inválido (se houver)"
+        ]
+    },
+
+    init: () => {
+        checklist.elementos.container = document.getElementById('checklist-container');
+        checklist.elementos.lista = document.getElementById('document-checklist');
+        checklist.elementos.progressBar = document.getElementById('checklist-progress-bar');
+        checklist.elementos.progressText = document.getElementById('checklist-progress-text');
+    },
+
+    atualizar: (tipoBeneficio) => {
+        if (!checklist.elementos.container) checklist.init();
+
+        let listaDocumentos = [...checklist.documentos.geral];
+
+        switch (tipoBeneficio) {
+            case 'voluntaria':
+                listaDocumentos.push(...checklist.documentos.voluntaria);
+                break;
+            case 'incapacidade':
+                listaDocumentos.push(...checklist.documentos.incapacidade);
+                break;
+            case 'compulsoria':
+                 listaDocumentos.push(...checklist.documentos.compulsoria);
+                break;
+            case 'pensao_ativo':
+            case 'pensao_aposentado':
+                listaDocumentos.push(...checklist.documentos.pensao);
+                break;
+        }
+
+        checklist.renderizar(listaDocumentos);
+        checklist.elementos.container.style.display = 'block';
+    },
+
+    renderizar: (documentos) => {
+        checklist.elementos.lista.innerHTML = '';
+        documentos.forEach((doc, index) => {
+            const li = document.createElement('li');
+            const id = `doc-${index}`;
+            li.innerHTML = `
+                <input type="checkbox" id="${id}" onchange="checklist.updateProgress()">
+                <label for="${id}">${doc}</label>
+            `;
+            li.onclick = (e) => {
+                if(e.target.tagName !== 'INPUT') {
+                    const checkbox = li.querySelector('input');
+                    checkbox.checked = !checkbox.checked;
+                    checkbox.dispatchEvent(new Event('change'));
+                }
+            };
+            checklist.elementos.lista.appendChild(li);
+        });
+        checklist.updateProgress();
+    },
+
+    updateProgress: () => {
+        const itens = checklist.elementos.lista.querySelectorAll('li');
+        const totalItens = itens.length;
+        if (totalItens === 0) return;
+
+        let itensMarcados = 0;
+        itens.forEach(item => {
+            const checkbox = item.querySelector('input');
+            if (checkbox.checked) {
+                itensMarcados++;
+                item.classList.add('checked');
+            } else {
+                item.classList.remove('checked');
+            }
+        });
+
+        const porcentagem = (itensMarcados / totalItens) * 100;
+        checklist.elementos.progressBar.style.width = `${porcentagem}%`;
+        checklist.elementos.progressText.textContent = `${Math.round(porcentagem)}% concluído (${itensMarcados} de ${totalItens})`;
+    },
+
+    reset: () => {
+         if (!checklist.elementos.container) checklist.init();
+        checklist.elementos.container.style.display = 'none';
+        checklist.elementos.lista.innerHTML = '';
+        checklist.elementos.progressBar.style.width = '0%';
+        checklist.elementos.progressText.textContent = '0% concluído';
+    }
+};
+
 const EXPECTATIVA_SOBREVIDA_IBGE = { M: { 55: 25.5, 56: 24.7, 57: 23.9, 58: 23.1, 59: 22.3, 60: 21.6, 61: 20.8, 62: 20.1, 63: 19.4, 64: 18.7, 65: 18.0 }, F: { 52: 30.1, 53: 29.2, 54: 28.4, 55: 27.5, 56: 26.7, 57: 25.8, 58: 25.0, 59: 24.1, 60: 23.3, 61: 22.5, 62: 21.7 } };
 
 
@@ -2561,3 +2687,4 @@ Object.assign(window, {
 });
 // Torna o objeto 'simulacao' acessível globalmente no HTML
 window.simulacao = simulacao;
+
