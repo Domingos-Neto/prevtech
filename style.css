@@ -656,7 +656,6 @@ body.dark-mode .dashboard-card i {
   display: flex;
   align-items: flex-end;
   gap: 15px;
-  margin-bottom: 15px;
   flex-wrap: wrap; /* Permite que os itens quebrem a linha em telas menores */
 }
 
@@ -872,3 +871,48 @@ body.dark-mode .dashboard-card i {
 }
 
 /* --- Fim do Bloco de REFINAMENTO de Alinhamento --- */
+
+/* ============================================= */
+/* NOVA FERRAMENTA: PLANEJADOR DE APOSENTADORIA  */
+/* ============================================= */
+#planner-container {
+  background-color: var(--cor-fundo);
+  border: 1px solid var(--cor-borda);
+  border-radius: 10px;
+  padding: 20px;
+  margin-top: 30px;
+}
+
+#planner-container h4 {
+  margin-top: 0;
+  border-color: var(--prevtech-azul-escuro);
+}
+body.dark-mode #planner-container h4 {
+    border-color: var(--prevtech-laranja);
+}
+
+#planner-container p {
+    color: var(--cor-texto-secundario);
+    font-size: 0.9em;
+    margin-top: -5px;
+    margin-bottom: 20px;
+}
+
+#resultado-planner {
+    margin-top: 20px;
+    padding: 15px;
+    background-color: var(--cor-superficie);
+    border: 1px solid var(--cor-borda);
+    border-radius: 8px;
+    min-height: 80px;
+    transition: all 0.3s ease;
+}
+#resultado-planner:empty {
+    display: none;
+}
+#resultado-planner strong {
+    color: var(--prevtech-azul-escuro);
+}
+body.dark-mode #resultado-planner strong {
+    color: var(--prevtech-laranja);
+}
