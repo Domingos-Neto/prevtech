@@ -1287,7 +1287,11 @@ function calcularBeneficio(n = true, b = null) {
 
             if (s.length > 0) desenharGrafico(s, m);
 
-            if (n) irParaPasso(3);
+            if (n) {
+                irParaPasso(3);
+                // AQUI ESTÁ A ALTERAÇÃO:
+                checklist.atualizar(document.getElementById('tipoBeneficio').value);
+            }
         } finally {
             ui.toggleSpinner(b, false);
         }
@@ -2693,6 +2697,7 @@ Object.assign(window, {
 });
 // Torna o objeto 'simulacao' acessível globalmente no HTML
 window.simulacao = simulacao;
+
 
 
 
