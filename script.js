@@ -2688,10 +2688,11 @@ Object.assign(window, {
     calcularTempoEntreDatas, limparCalculoTempo,
     buscarEPreencherFatores,
     adicionarPeriodoExterno, removerPeriodoExterno,
-    planejarAposentadoria, // <<< ADICIONADA NOVA FUNÇÃO AO ESCOPO GLOBAL
-    checklist
+    planejarAposentadoria,
+    checklist // <<< CHECKLIST ADICIONADO AO ESCOPO GLOBAL
 });
 // Torna o objeto 'simulacao' acessível globalmente no HTML
 window.simulacao = simulacao;
+
 
 
