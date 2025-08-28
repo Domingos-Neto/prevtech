@@ -475,20 +475,33 @@ const checklist = {
             const tipoBeneficio = document.getElementById('tipoBeneficio').value;
             const tipo = (tipoBeneficio === 'pensao_ativo' || tipoBeneficio === 'pensao_aposentado') ? 'pensao' : tipoBeneficio;
             const docSet = checklist.documentos[tipo];
+            if (!docSet) {
+                throw new Error("Conjunto de documentos não encontrado para o tipo de benefício.");
+            }
 
+            // HTML otimizado para a geração do PDF
             let contentHTML = `
                 <style>
-                    body { font-family: Arial, sans-serif; font-size: 10pt; }
+                    body { font-family: Arial, sans-serif; font-size: 10pt; color: #333; }
                     .header-pdf { text-align: center; border-bottom: 2px solid #0a2559; padding-bottom: 10px; margin-bottom: 20px; }
-                    .header-pdf h2 { margin: 0; color: #0a2559; }
-                    .header-pdf p { margin: 2px 0; }
-                    h3 { font-size: 14pt; color: #0a2559; text-align: center; margin-bottom: 20px; }
-                    h4 { font-size: 11pt; border-bottom: 1px solid #ccc; padding-bottom: 5px; margin-top: 20px; }
-                    .dados-servidor-pdf { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+                    .header-pdf h2 { margin: 0; color: #0a2559; font-size: 18pt; }
+                    .header-pdf p { margin: 2px 0; font-size: 11pt; }
+                    h3 { font-size: 14pt; color: #0a2559; text-align: center; margin-bottom: 25px; }
+                    h4 { font-size: 12pt; border-bottom: 1px solid #ccc; padding-bottom: 5px; margin-top: 25px; margin-bottom: 10px; }
+                    .dados-servidor-pdf { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 15px; margin-bottom: 20px; font-size: 10pt; }
                     .dados-servidor-pdf p { margin: 0; }
-                    .checklist-item-pdf { margin-bottom: 5px; }
-                    .checkbox-pdf { display: inline-block; width: 14px; height: 14px; border: 1px solid #333; margin-right: 10px; position: relative; top: 2px; }
-                    .checked-pdf::after { content: '✔'; position: absolute; left: 2px; top: -2px; }
+                    .checklist-item-pdf { 
+                        font-size: 10pt;
+                        margin-bottom: 8px; 
+                        line-height: 1.4;
+                        display: flex; /* Usando flexbox para alinhamento */
+                        align-items: flex-start;
+                    }
+                    .checkbox-symbol {
+                        font-size: 14pt; /* Aumenta o tamanho do símbolo */
+                        margin-right: 10px;
+                        line-height: 1;
+                    }
                     .obs-pdf { margin-top: 20px; border: 1px solid #ccc; padding: 10px; white-space: pre-wrap; word-wrap: break-word; }
                 </style>
                 <div id="pdf-content">
@@ -511,13 +524,15 @@ const checklist = {
                     const checkbox = item.querySelector('input[type="checkbox"]');
                     const label = item.querySelector('label').innerText;
                     const isChecked = checkbox.checked;
-                    contentHTML += `<div class="checklist-item-pdf"><span class="checkbox-pdf ${isChecked ? 'checked-pdf' : ''}"></span>${label}</div>`;
+                    // ALTERAÇÃO PRINCIPAL: Usando símbolos Unicode no lugar de CSS
+                    const checkboxSymbol = isChecked ? '☑' : '☐';
+                    contentHTML += `<div class="checklist-item-pdf"><span class="checkbox-symbol">${checkboxSymbol}</span><span>${label}</span></div>`;
                 });
             });
 
             const observacoes = document.getElementById('checklist-observacoes').value;
-            if(observacoes) {
-                contentHTML += `<h4>OBSERVAÇÕES</h4><div class="obs-pdf">${observacoes}</div>`;
+            if (observacoes) {
+                contentHTML += `<h4>OBSERVAÇÕES</h4><div class="obs-pdf">${observacoes.replace(/\n/g, '<br>')}</div>`;
             }
 
             contentHTML += '</div>';
@@ -533,11 +548,15 @@ const checklist = {
             html2pdf().from(contentHTML).set(opt).save().then(() => {
                 ui.showToast("PDF do checklist gerado com sucesso!", true);
                 ui.toggleSpinner(button, false);
+            }).catch((err) => {
+                console.error("Erro na geração do PDF:", err);
+                ui.showToast("Ocorreu um erro ao gerar o PDF.", false);
+                ui.toggleSpinner(button, false);
             });
 
         } catch (error) {
-            console.error("Erro ao gerar PDF do checklist:", error);
-            ui.showToast("Ocorreu um erro ao gerar o PDF.", false);
+            console.error("Erro ao preparar PDF do checklist:", error);
+            ui.showToast("Ocorreu um erro ao preparar o PDF.", false);
             ui.toggleSpinner(button, false);
         }
     },
@@ -2041,3 +2060,4 @@ Object.assign(window, {
     checklist
 });
 window.simulacao = simulacao;
+
