@@ -136,7 +136,7 @@ const ui = {
         document.getElementById("floating-buttons-container").style.display = "flex";
     },
     showView: (viewId) => {
-        const views = ['dashboard', 'simulacao', 'geradorCTC', 'telaLegislacao', 'telaConfiguracoes', 'telaCadastro', 'telaProcessos', 'telaFinanceiro', 'telaRelatorios', 'telaUsuarios'];
+        const views = ['dashboard', 'simulacao', 'geradorCTC', 'telaLegislacao', 'telaConfiguracoes', 'telaCadastro', 'telaProcessos', 'telaFinanceiro', 'telaRelatorios', 'telaUsuarios', 'geradorChecklists'];
         views.forEach(id => {
             const viewElement = document.getElementById(id);
             if (viewElement) viewElement.style.display = 'none';
@@ -1991,4 +1991,5 @@ Object.assign(window, {
     preencherChecklistComDadosDaSimulacao
 });
 window.simulacao = simulacao;
+
 
