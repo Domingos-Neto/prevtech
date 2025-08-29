@@ -1013,3 +1013,64 @@ body.dark-mode .document-checklist li:hover {
     text-decoration: line-through;
     color: var(--cor-texto-secundario);
 }
+
+/* ============================================= */
+/* ESTILOS ADICIONAIS PARA O GERADOR DE CHECKLISTS*/
+/* (Adicionados do arquivo Gerador de Checklists.html) */
+/* ============================================= */
+.checklist-form {
+    background-color: var(--cor-superficie);
+    border: 1px solid var(--cor-borda);
+    padding: 2rem;
+    border-radius: 0.5rem;
+    margin-top: -1px; /* Para conectar visualmente com as abas */
+}
+
+.form-header {
+    text-align: center;
+    margin-bottom: 2rem;
+    border-bottom: 2px solid var(--prevtech-laranja);
+    padding-bottom: 1rem;
+}
+
+.form-header h3 {
+    color: var(--prevtech-azul-escuro);
+    font-weight: bold;
+    border-bottom: none; /* Remove a borda duplicada do h3 */
+}
+body.dark-mode .form-header h3 {
+    color: var(--prevtech-laranja);
+}
+
+.form-section-title {
+    font-weight: bold;
+    color: var(--cor-texto-secundario);
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+    border-bottom: 1px solid var(--cor-borda);
+    padding-bottom: 0.5rem;
+    font-size: 1.1rem;
+}
+
+.form-check-label {
+    font-size: 0.95rem;
+}
+
+.footer-actions {
+    text-align: center;
+    margin-top: 2.5rem;
+}
+
+/* Ajustes para as abas do Bootstrap se integrarem melhor */
+.nav-tabs .nav-link {
+    font-weight: 500;
+    color: var(--cor-texto-secundario);
+}
+.nav-tabs .nav-link.active {
+    color: var(--prevtech-laranja);
+    border-color: var(--cor-borda) var(--cor-borda) var(--cor-superficie);
+}
+body.dark-mode .nav-tabs .nav-link.active {
+    background-color: var(--cor-superficie);
+    border-color: var(--cor-borda) var(--cor-borda) var(--cor-superficie);
+}
