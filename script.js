@@ -260,298 +260,211 @@ const simulacao = {
 };
 
 // =================================================================================
-// INÍCIO: MÓDULO CHECKLIST APRIMORADO
+// FUNÇÕES DO NOVO GERADOR DE CHECKLIST INTEGRADAS
 // =================================================================================
-const checklist = {
-    // Templates padrão - serão carregados no localStorage na primeira execução
-    defaultTemplates: {
-        voluntaria: {
-            titulo: "Checklist - Aposentadoria por Idade e Tempo de Contribuição",
-            secoes: {
-                servidor: [ "Requerimento", "Identidade e CPF", "Título de Eleitor", "Carteira de Trabalho (Foto e Identificação)", "Comprovante de residência atualizado", "Termo de Posse (Exceto concurso de 1998)", "Contrato de Trabalho 'CTPS'", "Ato de Nomeação", "Certidão de Tempo de Contribuição do INSS (CTC Original)", "Cadastro Nacional de Informações Sociais - CNIS do INSS (Detalhado)", "Declaração de percepção ou não de benefícios previdenciários (assinada pelo requerente)", "Certidão Negativa (PAD/Nada Consta), expedida pela PMI", "Declaração de Acumulação ou não de cargo ou função pública", "Certificado de Graduação e Pós Graduação (se aplicável)", "Para Professor: Declaração de Efetivo Exercício no Magistério", ],
-                orgao: [ "Edital do Concurso", "Edital de Nomeação do Servidor", "Edital de Convocação e Realização do Concurso", "Lei Municipal de Criação de Cargos", "Relação dos Aprovados e Classificados", "Homologação dos Resultados", "Leis de Incorporação de Benefícios (Ex: 205/1994, 033/2007)", "Declaração de percepção ou não de benefícios (INSS e ITAPREV)", "Declaração de Tempo de Serviço (expedida pelo RH da PMI)", "Ficha Financeira - Mês a Mês (Julho/1994 até ano atual)", "Leis de Reajustes anuais (2009 até o ano corrente)", "Ofício da autoridade competente ao Presidente do TCE", "Leis que dispõem sobre o benefício de aposentadoria", "Dois Últimos Contracheques atualizados", ],
-                juridico: [ "Parecer Jurídico sobre o mérito do pedido", "Ato de Aposentadoria", ]
-            }
-        },
-        idade: {
-            titulo: "Checklist - Aposentadoria por Idade",
-            secoes: {
-                servidor: [ "Requerimento", "Identidade", "CPF", "Título de Eleitor", "Carteira de Trabalho (Foto e Identificação)", "Comprovante de residência atualizado", "Termo de Posse (Exceto concurso de 1998)", "Contrato de Trabalho 'CTPS'", "Ato de Nomeação", "Certidão de Tempo de Contribuição do INSS (CTC Original)", "Cadastro Nacional de Informações Sociais - CNIS do INSS (Detalhado)", "Declaração de percepção ou não de benefícios previdenciários (assinada pelo requerente)", "Certidão Negativa (PAD/Nada Consta), expedida pela PMI", "Declaração de Acumulação ou não de cargo ou função pública", ],
-                orgao: [ "Edital do Concurso", "Edital de Nomeação do Servidor", "Edital de Convocação e Realização do Concurso", "Lei Municipal de Criação de Cargos", "Relação dos Aprovados e Classificados", "Homologação dos Resultados", "Leis de Incorporação de Benefícios", "Declaração de percepção ou não de benefícios (INSS e ITAPREV)", "Declaração de Tempo de Serviço (expedida pelo RH da PMI)", "Ficha Financeira - Mês a Mês (Julho/1994 até ano atual)", "Leis de Reajustes anuais (2009 até o ano corrente)", "Ofício da autoridade competente ao Presidente do TCE", "Leis que dispõem sobre o benefício de aposentadoria", "Dois Últimos Contracheques atualizados", ],
-                juridico: [ "Parecer Jurídico sobre o mérito do pedido", "Ato de Aposentadoria", ]
-            }
-        },
-        incapacidade: {
-            titulo: "Checklist - Aposentadoria por Incapacidade Permanente",
-            secoes: {
-                servidor: [ "Requerimento do Servidor", "Laudo Médico (firmado por pelo menos dois médicos) atestando a incapacidade definitiva", "Cópia da Identidade", "Cópia do CPF", "Cópia do Título de Eleitor", "Cópia da Carteira de Trabalho (Foto e Identificação)", "Cópia do comprovante de residência atualizado", "Cópia do Termo de Posse", "Cópia do Contrato de Trabalho (CTPS)", "Cópia do Ato de Nomeação", "Certidão Original de Tempo de Contribuição Expedida pelo INSS (se houver)", "Cadastro Nacional de Informações Sociais - CNIS INSS (Detalhado)", "Declaração de percepção ou não de benefícios previdenciários (assinada pelo requerente)", "Declaração de Acumulação ou não de cargo ou função pública", "Contra cheque atualizado", ],
-                orgao: [ "Cópia do Edital do Concurso", "Cópia do Edital de Nomeação do Servidor", "Cópia do Edital de Convocação e Realização do Concurso", "Cópia da Lei Municipal de Criação de Cargos", "Relação dos Aprovados e Classificados", "Homologação dos Resultados", "Cópia da Lei de Incorporação de Benefícios", "Certidão de Tempo de Contribuição - ITAPREV", "Declaração de percepção ou não de benefícios previdenciários (expedido pelo INSS)", "Declaração de percepção ou não de benefícios previdenciários (expedida pelo ITAPREV)", "Declaração de Processo Administrativo Disciplinar (PAD/Nada Consta)", "Declaração de Tempo de Contribuição (expedida pela PMI)", "Cópia da Ficha Financeira - Mês a Mês (Jul/94 a data final)", "Ofício da autoridade competente ao Presidente do TCE", "Cópia da Lei que dispõe sobre o benefício de aposentadoria", ],
-                juridico: [ "Parecer Jurídico sobre o mérito do pedido", "Ato de Aposentadoria", ]
-            }
-        },
-        compulsoria: {
-            titulo: "Checklist - Aposentadoria Compulsória",
-            secoes: {
-                servidor: [ "Documento comprobatório de idade e comunicação de afastamento do Órgão de Pessoal", "Cópia da Identidade", "Cópia do CPF", "Cópia do Título de Eleitor", "Cópia da Carteira de Trabalho (Foto e Identificação)", "Cópia do comprovante de residência atualizado", "Cópia do Termo de Posse", "Cópia do Contrato de Trabalho (CTPS)", "Cópia do Ato de Nomeação", "Certidão Original de Tempo de Contribuição Expedida pelo INSS (se houver)", "Cadastro Nacional de Informações Sociais - CNIS INSS (Detalhado)", "Declaração de percepção ou não de benefícios previdenciários (assinada pelo requerente)", "Declaração de Acumulação ou não de cargo ou função pública", ],
-                orgao: [ "Cópia do Edital do Concurso", "Cópia do Edital de Nomeação do Servidor", "Cópia do Edital de Convocação e Realização do Concurso", "Cópia da Lei Municipal de Criação de Cargos", "Relação dos Aprovados e Classificados", "Homologação dos Resultados", "Cópia da Lei de Incorporação de Benefícios", "Certidão de Tempo de Contribuição - ITAPREV", "Declaração de percepção ou não de benefícios (INSS)", "Declaração de percepção ou não de benefícios (ITAPREV)", "Declaração de Processo Administrativo Disciplinar (PAD/Nada Consta)", "Declaração de Tempo de Contribuição (pela PMI)", "Cópia da Ficha Financeira - Mês a Mês (Jul/94 a data final)", "Ofício da autoridade competente ao Presidente do TCE", "Cópia da Lei que dispõe sobre o benefício de aposentadoria", "Contra cheque atualizado", ],
-                juridico: [ "Parecer Jurídico sobre o mérito do pedido", "Ato de Aposentadoria", ]
-            }
-        },
-        pensao: {
-            titulo: "Checklist - Pensão por Morte",
-            secoes: {
-                servidor: [ "Requerimento do interessado", "Cópia de identificação pessoal do requerente (RG, CPF, Título, PIS/PASEP)", "Certidão de óbito do ex-servidor", "Documentos pessoais do ex-servidor", "Declaração de percepção ou não de benefícios (INSS)", "Declaração de percepção ou não de benefícios (ITAPREV)", "Comprovante de pagamento do vencimento do mês do óbito", "Cônjuge: Certidão de casamento atualizada", "Ex-Cônjuge: Sentença que fixou pensão alimentícia", "Companheiro(a): Comprovação de convivência marital", "Pais: Comprovação da dependência econômica", "Filho/irmão menor ou inválido: Certidão de nascimento", "Filho/irmão inválido: Laudo médico", "Menor sob tutela: Sentença judicial de tutela", ],
-                orgao: [ "Ato de ingresso do ex-servidor (Lei de criação de cargo, edital, nomeação, posse, etc.)", "Cópia da Legislação Municipal que institui e regulamenta o benefício da pensão", "Ofício de encaminhamento expedido pela autoridade competente", ],
-                juridico: [ "Parecer do órgão jurídico sobre o mérito de concessão", "Ato ou título concessivo de pensão", ]
-            }
-        }
-    },
 
-    // Inicializa os templates no localStorage se não existirem
-    init: () => {
-        if (!localStorage.getItem('checklistTemplates')) {
-            localStorage.setItem('checklistTemplates', JSON.stringify(checklist.defaultTemplates));
-        }
-    },
+function drawHeader(pdf) {
+    pdf.setFont("helvetica", "bold");
+    pdf.setFontSize(18);
+    pdf.text("ITAPREV", 105, 15, { align: "center" });
 
-    // Lógica principal para exibir o checklist
-    atualizar: (tipoBeneficio) => {
-        const container = document.getElementById('checklist-container');
-        const contentDiv = document.getElementById('checklist-content');
-        const titleEl = document.getElementById('checklist-title');
-        
-        const tipo = (tipoBeneficio === 'pensao_ativo' || tipoBeneficio === 'pensao_aposentado') ? 'pensao' : tipoBeneficio;
-        
-        // Lê os templates do localStorage
-        const templates = JSON.parse(localStorage.getItem('checklistTemplates'));
-        const docSet = templates[tipo];
+    pdf.setFontSize(12);
+    pdf.setFont("helvetica", "normal");
+    pdf.text("INSTITUTO DE PREVIDÊNCIA DOS", 105, 22, { align: "center" });
+    pdf.text("SERVIDORES MUNICIPAIS DE ITAPIPOCA", 105, 28, { align: "center" });
+    
+    pdf.setLineWidth(0.5);
+    pdf.line(15, 35, 195, 35);
+}
 
-        if (!docSet) {
-            container.style.display = 'none';
-            return;
-        }
+function drawFooter(pdf, pageNumber, totalPages) {
+    const pageHeight = pdf.internal.pageSize.getHeight();
+    pdf.setLineWidth(0.5);
+    pdf.line(15, pageHeight - 35, 195, pageHeight - 35);
 
-        // Popula dados do servidor
-        document.getElementById('checklist-nome').value = document.getElementById('nomeServidor').value;
-        document.getElementById('checklist-matricula').value = document.getElementById('matriculaServidor').value;
-        document.getElementById('checklist-cpf').value = document.getElementById('cpfServidor').value;
-        document.getElementById('checklist-cargo').value = document.getElementById('cargoServidor').value;
-        
-        titleEl.textContent = docSet.titulo;
-        contentDiv.innerHTML = ''; // Limpa o conteúdo anterior
+    pdf.setFont("helvetica", "bold");
+    pdf.setFontSize(8);
+    pdf.text("INSTITUTO DE PREVIDÊNCIA DOS SERVIDORES MUNICIPAIS DE ITAPIPOCA", 105, pageHeight - 30, { align: "center" });
+    
+    pdf.setFont("helvetica", "normal");
+    pdf.text("Rua Caio Prado, 730, São Sebastião - Itapipoca - CE - Brasil", 105, pageHeight - 25, { align: "center" });
+    pdf.text("CEP: 62508-200 - CNPJ: 10575544/0001-35", 105, pageHeight - 20, { align: "center" });
+    pdf.text("Contato: (88) 3631-0204 | Email: rppsitaprev@gmail.com | Site: www.itaprev.com.br", 105, pageHeight - 15, { align: "center" });
 
-        const secoesNomes = {
-            servidor: "DOCUMENTOS A CARGO DO SERVIDOR/REQUERENTE",
-            orgao: "DOCUMENTOS A CARGO DO ÓRGÃO DE ORIGEM/BENEFÍCIOS",
-            juridico: "DOCUMENTOS A CARGO DA ASSESSORIA JURÍDICA"
+    pdf.setFontSize(9);
+    pdf.text(`Página ${pageNumber} de ${totalPages}`, 195, pageHeight - 10, { align: 'right' });
+}
+
+async function generatePdf(formId, baseFilename) {
+    const { jsPDF } = window.jspdf;
+    const formElement = document.getElementById(formId);
+    const button = formElement.querySelector('button[onclick*="generatePdf"]');
+    const originalButtonText = button.innerHTML;
+
+    button.disabled = true;
+    button.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Gerando...';
+
+    try {
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        const pageHeight = pdf.internal.pageSize.getHeight();
+        const pageWidth = pdf.internal.pageSize.getWidth();
+        const margin = 15;
+        const footerMargin = 45;
+        const headerMargin = 45;
+        let y = headerMargin;
+
+        const checkAndAddPage = (neededHeight) => {
+            if (y + neededHeight > pageHeight - footerMargin) {
+                pdf.addPage();
+                y = headerMargin;
+            }
         };
-        
-        // Verifica se há um estado salvo para reconstruir
-        const estadoSalvo = AppState.simulacaoResultados.checklistState;
 
-        if (estadoSalvo && estadoSalvo.secoes) {
-            // Reconstrói a partir do estado salvo
-            for (const key in estadoSalvo.secoes) {
-                const secaoSalva = estadoSalvo.secoes[key];
-                const secaoWrapper = document.createElement('div');
-                secaoWrapper.className = 'checklist-secao';
-                secaoWrapper.dataset.secaoKey = key;
-                
-                let itemsHTML = secaoSalva.itens.map((item, index) => checklist.getItemHTML(key, index, item.texto, item.checked, item.nota)).join('');
-                
-                secaoWrapper.innerHTML = `<h4>${secoesNomes[key] || key} <span class="checklist-progress"></span></h4>${itemsHTML}<button class="secondary" onclick="checklist.addItem(this)">+ Adicionar Item</button>`;
-                contentDiv.appendChild(secaoWrapper);
-            }
-        } else {
-            // Constrói a partir do template padrão
-            for (const secaoKey in docSet.secoes) {
-                const secaoWrapper = document.createElement('div');
-                secaoWrapper.className = 'checklist-secao';
-                secaoWrapper.dataset.secaoKey = secaoKey;
+        // Título do Checklist
+        const title = formElement.querySelector('.form-header h3').innerText;
+        pdf.setFontSize(14).setFont('helvetica', 'bold');
+        pdf.text(title, 105, y, { align: "center" });
+        y += 12;
 
-                let itemsHTML = docSet.secoes[secaoKey].map((item, index) => checklist.getItemHTML(secaoKey, index, item)).join('');
+        // Dados do Servidor
+        pdf.setFontSize(12).setFont('helvetica', 'bold');
+        pdf.text("DADOS DO SERVIDOR", margin, y);
+        y += 7;
 
-                secaoWrapper.innerHTML = `<h4>${secoesNomes[secaoKey]} <span class="checklist-progress"></span></h4>${itemsHTML}<button class="secondary" onclick="checklist.addItem(this)">+ Adicionar Item</button>`;
-                contentDiv.appendChild(secaoWrapper);
-            }
-        }
-        
-        document.getElementById('checklist-observacoes').value = estadoSalvo ? estadoSalvo.observacoesGerais : '';
-        container.style.display = 'block';
-        checklist.updateAllProgress();
-    },
-    
-    // Função helper para gerar o HTML de um item do checklist
-    getItemHTML: (secaoKey, index, texto, isChecked = false, nota = '') => {
-        const id = `chk-${secaoKey}-${Date.now()}-${index}`; // ID mais robusto para evitar colisões
-        return `
-            <div class="checklist-item">
-                <div class="checklist-item-main">
-                    <input type="checkbox" id="${id}" ${isChecked ? 'checked' : ''} onchange="checklist.updateAllProgress()">
-                    <label for="${id}">${texto}</label>
-                </div>
-                <div class="checklist-item-actions">
-                    <i class="ri-sticky-note-line" title="Adicionar nota" onclick="checklist.toggleNote(this)"></i>
-                    <i class="ri-delete-bin-line" title="Remover item" onclick="checklist.removeItem(this)"></i>
-                </div>
-                <textarea class="checklist-item-note" style="display:none;" placeholder="Anotação para este item...">${nota}</textarea>
-            </div>`;
-    },
-
-    // Adiciona um novo item a uma seção
-    addItem: (button) => {
-        const secaoWrapper = button.closest('.checklist-secao');
-        const secaoKey = secaoWrapper.dataset.secaoKey;
-        const newItemText = prompt("Digite o texto para o novo item do checklist:");
-        if (newItemText && newItemText.trim() !== "") {
-            const newItemIndex = secaoWrapper.querySelectorAll('.checklist-item').length;
-            const newItemHTML = checklist.getItemHTML(secaoKey, newItemIndex, newItemText.trim());
-            const tempDiv = document.createElement('div');
-            tempDiv.innerHTML = newItemHTML;
-            button.insertAdjacentElement('beforebegin', tempDiv.firstChild);
-            checklist.updateAllProgress();
-        }
-    },
-    
-    // Remove um item
-    removeItem: (icon) => {
-        if (confirm("Tem certeza que deseja remover este item?")) {
-            const item = icon.closest('.checklist-item');
-            item.remove();
-            checklist.updateAllProgress();
-        }
-    },
-
-    // Alterna a visibilidade da caixa de anotações
-    toggleNote: (icon) => {
-        const noteTextarea = icon.closest('.checklist-item').querySelector('.checklist-item-note');
-        noteTextarea.style.display = noteTextarea.style.display === 'none' ? 'block' : 'none';
-    },
-
-    // Atualiza todos os contadores de progresso
-    updateAllProgress: () => {
-        document.querySelectorAll('.checklist-secao').forEach(secao => {
-            const total = secao.querySelectorAll('.checklist-item').length;
-            const checked = secao.querySelectorAll('.checklist-item input[type="checkbox"]:checked').length;
-            const progressSpan = secao.querySelector('.checklist-progress');
-            if(progressSpan) progressSpan.textContent = `(${checked}/${total})`;
+        const serverInputs = formElement.querySelectorAll('.row input[type="text"]');
+        serverInputs.forEach(input => {
+            const label = formElement.querySelector(`label[for="${input.id}"]`).innerText;
+            const value = input.value || 'Não informado';
+            pdf.setFontSize(10).setFont('helvetica', 'normal');
+            checkAndAddPage(5);
+            pdf.text(`${label}: ${value}`, margin, y);
+            y += 5;
         });
-    },
+        y += 5;
 
-    // INÍCIO: LÓGICA DE GERAR PDF CORRIGIDA
-    gerarPdf: (button) => {
-        ui.toggleSpinner(button, true);
-        try {
-            const nomeServidor = document.getElementById('checklist-nome').value || "Servidor";
-            const titulo = document.getElementById('checklist-title').textContent;
-            
-            // Recria os dados do checklist a partir do DOM para garantir que estão atualizados
-            const dadosAtuais = coletarDadosSimulacao().resultados.checklistState;
+        // Documentos
+        const sections = formElement.querySelectorAll('.form-section-title');
+        sections.forEach(sectionTitleElement => {
+            if (!sectionTitleElement.innerText.toLowerCase().includes("dados do servidor") && !sectionTitleElement.innerText.toLowerCase().includes("observações")) {
+                
+                const sectionTitle = sectionTitleElement.innerText;
+                checkAndAddPage(10);
+                pdf.setFontSize(12).setFont('helvetica', 'bold');
+                pdf.text(sectionTitle, margin, y);
+                y += 8;
 
-            let contentHTML = `<style>body{font-family:Arial,sans-serif;font-size:10pt;color:#333}.header-pdf{text-align:center;border-bottom:2px solid #0a2559;padding-bottom:10px;margin-bottom:20px}.header-pdf h2{margin:0;color:#0a2559;font-size:18pt}.header-pdf p{margin:2px 0;font-size:11pt}h3{font-size:14pt;color:#0a2559;text-align:center;margin-bottom:25px}h4{font-size:12pt;border-bottom:1px solid #ccc;padding-bottom:5px;margin-top:25px;margin-bottom:10px}.dados-servidor-pdf{display:grid;grid-template-columns:1fr 1fr;gap:8px 15px;margin-bottom:20px;font-size:10pt}.dados-servidor-pdf p{margin:0}.checklist-item-pdf{font-size:10pt;margin-bottom:8px;line-height:1.4;display:block;padding-left:5px}.checkbox-symbol{font-family:sans-serif;font-size:14pt;margin-right:10px;line-height:1}.note-pdf{font-size:9pt;color:#555;padding-left:30px;white-space:pre-wrap;word-wrap:break-word;margin-top:-5px;margin-bottom:8px;font-style:italic}.obs-pdf{margin-top:20px;border:1px solid #ccc;padding:10px;white-space:pre-wrap;word-wrap:break-word}</style><div id="pdf-content"><div class="header-pdf"><h2>ITAPREV</h2><p>INSTITUTO DE PREVIDÊNCIA DOS SERVIDORES MUNICIPAIS DE ITAPIPOCA</p></div><h3>${titulo}</h3><h4>DADOS DO SERVIDOR</h4><div class="dados-servidor-pdf"><p><strong>Nome:</strong> ${nomeServidor}</p><p><strong>Matrícula:</strong> ${document.getElementById('checklist-matricula').value}</p><p><strong>CPF:</strong> ${document.getElementById('checklist-cpf').value}</p><p><strong>Cargo:</strong> ${document.getElementById('checklist-cargo').value}</p></div>`;
-            
-            const secoesNomes = {
-                servidor: "DOCUMENTOS A CARGO DO SERVIDOR/REQUERENTE",
-                orgao: "DOCUMENTOS A CARGO DO ÓRGÃO DE ORIGEM/BENEFÍCIOS",
-                juridico: "DOCUMENTOS A CARGO DA ASSESSORIA JURÍDICA"
-            };
+                const docSection = sectionTitleElement.nextElementSibling;
+                if (docSection && docSection.classList.contains('doc-section')) {
+                    const checks = docSection.querySelectorAll('.form-check');
+                    checks.forEach(check => {
+                        const input = check.querySelector('input');
+                        const label = check.querySelector('label').innerText;
+                        
+                        pdf.setFontSize(10).setFont('helvetica', 'normal');
+                        const textLines = pdf.splitTextToSize(label, pageWidth - margin * 2 - 10);
+                        const requiredHeight = textLines.length * 6;
+                        
+                        checkAndAddPage(requiredHeight);
 
-            if (dadosAtuais && dadosAtuais.secoes) {
-                for(const key in dadosAtuais.secoes) {
-                    const secao = dadosAtuais.secoes[key];
-                    const total = secao.itens.length;
-                    const checked = secao.itens.filter(i => i.checked).length;
-                    contentHTML += `<h4>${secoesNomes[key]} (${checked}/${total})</h4>`;
-                    
-                    secao.itens.forEach(item => {
-                        const checkboxSymbol = item.checked ? '☑' : '☐';
-                        contentHTML += `<div class="checklist-item-pdf"><span class="checkbox-symbol">${checkboxSymbol}</span><span>${item.texto}</span></div>`;
-                        if (item.nota) {
-                            contentHTML += `<div class="note-pdf"><b>Nota:</b> ${item.nota.replace(/\n/g, '<br>')}</div>`;
+                        pdf.setLineWidth(0.3);
+                        pdf.rect(margin, y - 4, 4, 4);
+                        if(input.checked) {
+                           pdf.setFont('zapfdingbats');
+                           pdf.text('4', margin + 0.5, y);
                         }
+
+                        pdf.setFont('helvetica', 'normal');
+                        pdf.text(textLines, margin + 7, y);
+                        y += requiredHeight;
                     });
                 }
             }
-
-            const observacoes = dadosAtuais.observacoesGerais;
-            if (observacoes) contentHTML += `<h4>OBSERVAÇÕES GERAIS</h4><div class="obs-pdf">${observacoes.replace(/\n/g, '<br>')}</div>`;
-            contentHTML += '</div>';
-
-            const opt = { margin: [20, 15, 20, 15], filename: `Checklist_${titulo.replace(/ /g, '_')}_${nomeServidor.replace(/ /g, '_')}.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2, useCORS: true }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } };
-            html2pdf().from(contentHTML).set(opt).save().then(() => { ui.showToast("PDF do checklist gerado com sucesso!", true); ui.toggleSpinner(button, false); }).catch((err) => { console.error("Erro na geração do PDF:", err); ui.showToast("Ocorreu um erro ao gerar o PDF.", false); ui.toggleSpinner(button, false); });
-        } catch (error) {
-            console.error("Erro ao preparar PDF do checklist:", error);
-            ui.showToast("Ocorreu um erro ao preparar o PDF.", false);
-            ui.toggleSpinner(button, false);
-        }
-    },
-    // FIM: LÓGICA DE GERAR PDF CORRIGIDA
-
-    reset: () => {
-        const container = document.getElementById('checklist-container');
-        if (container) container.style.display = 'none';
-        const contentDiv = document.getElementById('checklist-content');
-        if (contentDiv) contentDiv.innerHTML = '';
-        AppState.simulacaoResultados.checklistState = null; // Limpa o estado salvo
-    },
-
-    // Funções para o Gerenciador de Templates (Admin)
-    loadTemplateForEditing: () => {
-        const selected = document.getElementById('checklist-template-selector').value;
-        const templates = JSON.parse(localStorage.getItem('checklistTemplates'));
-        const templateData = templates[selected];
-        const editor = document.getElementById('checklist-template-editor');
+        });
         
-        let text = "";
-        if(templateData && templateData.secoes) {
-             const secoesNomes = {servidor: "SERVIDOR", orgao: "ÓRGÃO DE ORIGEM/BENEFÍCIOS", juridico: "ASSESSORIA JURÍDICA"};
-             for(const key in templateData.secoes) {
-                text += `== ${secoesNomes[key] || key.toUpperCase()} ==\n`;
-                text += templateData.secoes[key].join('\n');
-                text += `\n\n`;
-             }
+        // Observações
+        const obsTitle = formElement.querySelector('.form-section-title:last-of-type');
+        if (obsTitle && obsTitle.innerText.toLowerCase().includes("observações")) {
+            y += 5;
+            checkAndAddPage(10);
+            pdf.setFontSize(12).setFont('helvetica', 'bold');
+            pdf.text("OBSERVAÇÕES", margin, y);
+            y += 7;
+
+            const obsText = formElement.querySelector('textarea').value || "Nenhuma observação.";
+            pdf.setFontSize(10).setFont('helvetica', 'normal');
+            const obsLines = pdf.splitTextToSize(obsText, pageWidth - margin * 2);
+            checkAndAddPage(obsLines.length * 6);
+            pdf.text(obsLines, margin, y);
         }
-        editor.value = text.trim();
-    },
 
-    saveTemplate: (button) => {
-        ui.toggleSpinner(button, true);
-        try {
-            const selected = document.getElementById('checklist-template-selector').value;
-            const editor = document.getElementById('checklist-template-editor');
-            const templates = JSON.parse(localStorage.getItem('checklistTemplates'));
-            
-            const secoes = { servidor: [], orgao: [], juridico: [] };
-            let secaoAtual = null;
-
-            editor.value.split('\n').forEach(line => {
-                const trimmedLine = line.trim();
-                if (trimmedLine.startsWith('==') && trimmedLine.endsWith('==')) {
-                    const header = trimmedLine.replace(/==/g, '').trim().toLowerCase();
-                    if(header.includes('servidor')) secaoAtual = 'servidor';
-                    else if(header.includes('orgao') || header.includes('órgão')) secaoAtual = 'orgao';
-                    else if(header.includes('juridico') || header.includes('jurídica')) secaoAtual = 'juridico';
-                    else secaoAtual = null;
-                } else if (secaoAtual && trimmedLine !== '') { // Ignora linhas em branco
-                    secoes[secaoAtual].push(trimmedLine);
-                }
-            });
-
-            templates[selected].secoes = secoes;
-            localStorage.setItem('checklistTemplates', JSON.stringify(templates));
-            ui.showToast("Template salvo com sucesso!", true);
-        } catch (e) {
-            console.error("Erro ao salvar template:", e);
-            ui.showToast("Erro ao salvar o template.", false);
-        } finally {
-            ui.toggleSpinner(button, false);
+        // Adicionar Cabeçalho e Rodapé
+        const totalPages = pdf.internal.getNumberOfPages();
+        for (let i = 1; i <= totalPages; i++) {
+            pdf.setPage(i);
+            drawHeader(pdf);
+            drawFooter(pdf, i, totalPages);
         }
+        
+        // Salvar PDF
+        const serverNameInput = formElement.querySelector('input[id*="-nome"]');
+        const serverName = serverNameInput ? serverNameInput.value.trim().replace(/ /g, '_') : 'Servidor';
+        const filename = `${baseFilename}_${serverName || 'Servidor'}.pdf`;
+        pdf.save(filename);
+
+    } catch (error) {
+        console.error("Erro ao gerar PDF:", error);
+        alert("Ocorreu um erro ao gerar o PDF. Verifique o console para mais detalhes.");
+    } finally {
+        button.disabled = false;
+        button.innerHTML = originalButtonText;
     }
-};
-// =================================================================================
-// FIM: MÓDULO CHECKLIST APRIMORADO
-// =================================================================================
+}
 
+
+// =================================================================================
+// NOVA FUNÇÃO PARA CONECTAR SIMULAÇÃO E CHECKLIST
+// =================================================================================
+function preencherChecklistComDadosDaSimulacao() {
+    // 1. Coletar dados da simulação atual
+    const dados = {
+        nome: document.getElementById('nomeServidor').value,
+        matricula: document.getElementById('matriculaServidor').value,
+        cpf: document.getElementById('cpfServidor').value,
+        nascimento: formatarDataBR(document.getElementById('dataNascimento').value),
+        cargo: document.getElementById('cargoServidor').value,
+        lotacao: document.getElementById('lotacaoServidor').value
+    };
+
+    // 2. Navegar para a nova tela de checklist
+    handleNavClick(null, 'geradorChecklists');
+
+    // 3. Aguardar um instante para a tela carregar e então preencher os campos
+    setTimeout(() => {
+        // Itera sobre todos os formulários de checklist para preencher os dados
+        const forms = document.querySelectorAll('.checklist-form');
+        forms.forEach(form => {
+            const nomeInput = form.querySelector('input[id*="-nome"]');
+            if (nomeInput) nomeInput.value = dados.nome;
+            
+            const matriculaInput = form.querySelector('input[id*="-matricula"]');
+            if (matriculaInput) matriculaInput.value = dados.matricula;
+            
+            const cpfInput = form.querySelector('input[id*="-cpf"]');
+            if (cpfInput) cpfInput.value = dados.cpf;
+            
+            const nascimentoInput = form.querySelector('input[id*="-nascimento"]');
+            if (nascimentoInput) nascimentoInput.value = dados.nascimento;
+
+            const cargoInput = form.querySelector('input[id*="-cargo"]');
+            if (cargoInput) cargoInput.value = dados.cargo;
+
+            const lotacaoInput = form.querySelector('input[id*="-lotacao"]');
+            if (lotacaoInput) lotacaoInput.value = dados.lotacao;
+        });
+
+        ui.showToast("Dados do servidor preenchidos no checklist!", true);
+    }, 250); // um pequeno delay para garantir que a UI foi atualizada
+}
 
 const EXPECTATIVA_SOBREVIDA_IBGE = { M: { 55: 25.5, 56: 24.7, 57: 23.9, 58: 23.1, 59: 22.3, 60: 21.6, 61: 20.8, 62: 20.1, 63: 19.4, 64: 18.7, 65: 18.0 }, F: { 52: 30.1, 53: 29.2, 54: 28.4, 55: 27.5, 56: 26.7, 57: 25.8, 58: 25.0, 59: 24.1, 60: 23.3, 61: 22.5, 62: 21.7 } };
 
@@ -2074,6 +1987,8 @@ Object.assign(window, {
     buscarEPreencherFatores,
     adicionarPeriodoExterno, removerPeriodoExterno,
     planejarAposentadoria,
-    checklist
+    generatePdf,
+    preencherChecklistComDadosDaSimulacao
 });
 window.simulacao = simulacao;
+
