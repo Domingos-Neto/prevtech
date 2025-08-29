@@ -1992,3 +1992,4 @@ Object.assign(window, {
 });
 window.simulacao = simulacao;
 
+
