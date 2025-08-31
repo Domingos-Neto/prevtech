@@ -1677,7 +1677,6 @@ function salvarSimulacaoHistorico(nF) {
     ui.showToast("Simulação salva no histórico!", true); listarHistorico(); atualizarIndicadoresDashboard();
 }
 
-// INÍCIO: Função de coleta de dados MODIFICADA para incluir o estado do checklist
 function coletarDadosSimulacao() {
     const dados = { passo1: {}, tabela: [], proventosAto: [], dependentes: [], resultados: AppState.simulacaoResultados, periodosExternos: [], nome: document.getElementById('nomeSimulacao').value.trim() };
     
@@ -1687,12 +1686,12 @@ function coletarDadosSimulacao() {
     // Coleta tabelas
     document.querySelectorAll("#corpo-tabela tr").forEach(l => dados.tabela.push(Array.from(l.querySelectorAll("input"), i => i.value).slice(0, 3)));
     document.querySelectorAll("#corpo-tabela-proventos-ato tr").forEach(l => dados.proventosAto.push({ descricao: l.querySelector(".provento-descricao").value, valor: l.querySelector(".provento-valor").value }));
-    document.querySelectorAll("#corpo-tabela-dependentes tr").forEach(l => dados.dependes.push({ nome: l.querySelector('.dependente-nome').value, dataNasc: l.querySelector('.dependente-dataNasc').value, parentesco: l.querySelector('.dependente-parentesco').value, invalido: l.querySelector('.dependente-invalido').value }));
+    // CORREÇÃO: O nome da propriedade estava 'dependes', foi corrigido para 'dependentes'.
+    document.querySelectorAll("#corpo-tabela-dependentes tr").forEach(l => dados.dependentes.push({ nome: l.querySelector('.dependente-nome').value, dataNasc: l.querySelector('.dependente-dataNasc').value, parentesco: l.querySelector('.dependente-parentesco').value, invalido: l.querySelector('.dependente-invalido').value }));
     document.querySelectorAll("#corpo-tabela-tempo-externo tr").forEach(row => dados.periodosExternos.push({ inicio: row.dataset.inicio, fim: row.dataset.fim }));
 
     // Coleta o estado completo do checklist
     const checklistContainer = document.getElementById('checklist-content');
-    // CORREÇÃO: Adicionada verificação para evitar erro se o elemento não existir no HTML.
     if (checklistContainer && checklistContainer.innerHTML !== '') {
         const checklistState = { secoes: {}, observacoesGerais: document.getElementById('checklist-observacoes').value };
         checklistContainer.querySelectorAll('.checklist-secao').forEach(secaoEl => {
@@ -1711,7 +1710,6 @@ function coletarDadosSimulacao() {
 
     return dados;
 }
-// FIM: Função de coleta de dados MODIFICADA
 
 function listarHistorico() {
     const l = document.getElementById("listaHistorico"); if (!l) return; l.innerHTML = "";
