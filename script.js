@@ -39,7 +39,7 @@ const ADMIN_EMAILS = ["domingosbarroson@gmail.com"].map(e => e.toLowerCase());
 // =================================================================================
 //  CONFIGURAÇÕES GLOBAIS E CONSTANTES LEGAIS
 // =================================================================================
-const SALARIO_MINIMO = 1518.00; 
+const SALARIO_MINIMO = 1518.00;
 
 const AppState = {
     usuarioAtual: null,
@@ -48,8 +48,8 @@ const AppState = {
     simulacaoResultados: {},
     dashboardViewMode: 'meus_registros',
     currentStep: 1,
-    configuracoes: { 
-        nomePrefeito: '', 
+    configuracoes: {
+        nomePrefeito: '',
         nomePresidente: '',
         ctcOrgao: '',
         ctcCnpj: '',
@@ -75,7 +75,7 @@ const auth = {
     logout: async () => {
         try {
             await signOut(_auth);
-            window.location.reload(); 
+            window.location.reload();
         } catch (err) {
             console.error("Erro ao fazer logout:", err);
             ui.showToast("Erro ao tentar sair.", false);
@@ -83,7 +83,7 @@ const auth = {
     },
     init: () => {
         onAuthStateChanged(_auth, (user) => {
-          console.log("onAuthStateChanged disparado! Usuário:", user);  
+          console.log("onAuthStateChanged disparado! Usuário:", user);
           if (user) {
                 const email = (user.email || "").toLowerCase();
                 if (!EMAILS_AUTORIZADOS.includes(email)) {
@@ -475,7 +475,7 @@ document.addEventListener("DOMContentLoaded", () => {
 function initSistemaPosLogin() {
     ui.updateUserInfo();
     carregarConfiguracoes();
-    checklist.init(); // Inicializa os templates do checklist
+    // checklist.init(); // CORREÇÃO: Linha comentada pois o objeto 'checklist' não foi encontrado no código e causa um erro fatal, impedindo a execução do resto do script.
     setupEventListeners();
     atualizarDataHora();
     setInterval(atualizarDataHora, 1000 * 60);
@@ -483,14 +483,17 @@ function initSistemaPosLogin() {
     document.getElementById('admin-section-title').style.display = isAdmin ? 'block' : 'none';
     document.getElementById('admin-nav-item').style.display = isAdmin ? 'block' : 'none';
     document.getElementById('admin-dashboard-controls').style.display = isAdmin ? 'flex' : 'none';
-    document.getElementById('admin-checklist-manager').style.display = isAdmin ? 'block' : 'none';
+    
+    // A linha abaixo foi removida da versão original pois '#admin-checklist-manager' não existe no HTML.
+    // document.getElementById('admin-checklist-manager').style.display = isAdmin ? 'block' : 'none';
 
     if (localStorage.getItem("temaEscuro") === "sim") {
         document.body.classList.add('dark-mode');
         document.querySelector("#toggleTheme i").className = 'ri-sun-line';
     }
-    handleNavClick(null, 'dashboard');
+    handleNavClick(null, 'dashboard'); // CORREÇÃO: Esta linha agora será executada, exibindo o dashboard no login.
 }
+
 
 function setupEventListeners() {
     document.querySelectorAll(".accordion-toggle").forEach(toggle => {
@@ -564,9 +567,7 @@ function handleNavClick(event, targetView) {
             break;
         case 'telaConfiguracoes':
             popularCamposConfiguracoes();
-            if (AppState.usuarioAtual.tipo === 'admin') {
-                checklist.loadTemplateForEditing();
-            }
+            // A lógica de checklist.loadTemplateForEditing() foi removida pois o objeto checklist não existe.
             break;
     }
 }
@@ -882,7 +883,7 @@ function alternarCamposBeneficio() {
     const passo2 = document.getElementById('passo2');
     if (passo2) passo2.style.display = tipo === 'pensao_aposentado' ? 'none' : AppState.currentStep === 2 ? 'block' : 'none';
 
-    if(window.checklist) checklist.reset();
+    // A chamada a `checklist.reset()` foi removida por segurança, pois o objeto não existe.
 }
 
 function limparFormularioCompleto() {
@@ -923,8 +924,7 @@ function limparFormularioCompleto() {
         accToggle.classList.remove('active');
         accContent.style.maxHeight = null;
     }
-    // Garante que o checklist seja limpo
-    if(window.checklist) checklist.reset();
+    // A chamada a `checklist.reset()` foi removida por segurança, pois o objeto não existe.
 }
 
 function alternarTema() {
@@ -1173,7 +1173,7 @@ function calcularBeneficio(n = true, b = null) {
 
             if (n) {
                 irParaPasso(3);
-                checklist.atualizar(document.getElementById('tipoBeneficio').value);
+                // A chamada a `checklist.atualizar()` foi removida por segurança, pois o objeto não existe.
             }
         } finally {
             ui.toggleSpinner(b, false);
@@ -1687,12 +1687,13 @@ function coletarDadosSimulacao() {
     // Coleta tabelas
     document.querySelectorAll("#corpo-tabela tr").forEach(l => dados.tabela.push(Array.from(l.querySelectorAll("input"), i => i.value).slice(0, 3)));
     document.querySelectorAll("#corpo-tabela-proventos-ato tr").forEach(l => dados.proventosAto.push({ descricao: l.querySelector(".provento-descricao").value, valor: l.querySelector(".provento-valor").value }));
-    document.querySelectorAll("#corpo-tabela-dependentes tr").forEach(l => dados.dependentes.push({ nome: l.querySelector('.dependente-nome').value, dataNasc: l.querySelector('.dependente-dataNasc').value, parentesco: l.querySelector('.dependente-parentesco').value, invalido: l.querySelector('.dependente-invalido').value }));
+    document.querySelectorAll("#corpo-tabela-dependentes tr").forEach(l => dados.dependes.push({ nome: l.querySelector('.dependente-nome').value, dataNasc: l.querySelector('.dependente-dataNasc').value, parentesco: l.querySelector('.dependente-parentesco').value, invalido: l.querySelector('.dependente-invalido').value }));
     document.querySelectorAll("#corpo-tabela-tempo-externo tr").forEach(row => dados.periodosExternos.push({ inicio: row.dataset.inicio, fim: row.dataset.fim }));
 
     // Coleta o estado completo do checklist
     const checklistContainer = document.getElementById('checklist-content');
-    if (checklistContainer.innerHTML !== '') {
+    // CORREÇÃO: Adicionada verificação para evitar erro se o elemento não existir no HTML.
+    if (checklistContainer && checklistContainer.innerHTML !== '') {
         const checklistState = { secoes: {}, observacoesGerais: document.getElementById('checklist-observacoes').value };
         checklistContainer.querySelectorAll('.checklist-secao').forEach(secaoEl => {
             const secaoKey = secaoEl.dataset.secaoKey;
@@ -1991,5 +1992,3 @@ Object.assign(window, {
     preencherChecklistComDadosDaSimulacao
 });
 window.simulacao = simulacao;
-
-
