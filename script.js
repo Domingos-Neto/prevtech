@@ -1972,6 +1972,109 @@ function planejarAposentadoria(button) {
     }, 50);
 }
 
+// =================================================================================
+// NOVO SCRIPT PARA CARREGAMENTO EM LOTE DE SEGURADOS
+// =================================================================================
+
+document.addEventListener('DOMContentLoaded', () => {
+    const jsonFileInput = document.getElementById('json-file-input');
+    const loadJsonButton = document.getElementById('load-json-button');
+    const seguradoSelect = document.getElementById('segurado-select');
+    const fillFormButton = document.getElementById('fill-form-button');
+
+    let seguradosData = [];
+
+    // Função para carregar e processar o arquivo JSON
+    loadJsonButton.addEventListener('click', () => {
+        const file = jsonFileInput.files[0];
+        if (!file) {
+            ui.showToast('Por favor, selecione um arquivo JSON.', false);
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            try {
+                seguradosData = JSON.parse(event.target.result);
+                populateSeguradoSelect(seguradosData);
+                ui.showToast('Lista de segurados carregada com sucesso!', true);
+            } catch (error) {
+                ui.showToast('Erro ao processar o arquivo JSON. Verifique o formato.', false);
+                console.error("Erro no parse do JSON:", error);
+            }
+        };
+        reader.onerror = () => {
+            ui.showToast('Ocorreu um erro ao ler o arquivo.', false);
+        };
+        reader.readAsText(file);
+    });
+
+    // Função para popular o menu dropdown com os nomes dos segurados
+    function populateSeguradoSelect(data) {
+        seguradoSelect.innerHTML = '<option value="" selected disabled>Selecione um segurado...</option>';
+        data.forEach((segurado, index) => {
+            const option = document.createElement('option');
+            option.value = index;
+            option.textContent = segurado.nome;
+            seguradoSelect.appendChild(option);
+        });
+        seguradoSelect.disabled = false;
+        fillFormButton.disabled = false;
+    }
+
+    // Função para preencher o formulário com os dados do segurado selecionado
+    fillFormButton.addEventListener('click', () => {
+        const selectedIndex = seguradoSelect.value;
+        if (selectedIndex === "") {
+            ui.showToast('Por favor, selecione um segurado da lista.', false);
+            return;
+        }
+
+        const segurado = seguradosData[selectedIndex];
+        fillFormWithData(segurado);
+        ui.showToast(`Dados de ${segurado.nome} preenchidos no formulário.`, true);
+    });
+
+    // Função que mapeia os dados do JSON para os campos do formulário
+    function fillFormWithData(data) {
+        // Mapeamento dos campos do JSON para os IDs dos elementos do formulário
+        const fieldMapping = {
+            'nome': 'nomeServidor',
+            'cpf': 'cpfServidor',
+            'dataNascimento': 'dataNascimento',
+            'sexo': 'sexoServidor',
+            'matricula': 'matriculaServidor',
+            'dataIngressoVinculo': 'dataAdmissao',
+            'nomeMae': 'nomeMae',
+            'nomePai': 'nomePai',
+            'rg': 'rg',
+            'orgaoExpedidorRG': 'orgaoEmissorRG',
+            'ufExpedicaoRG': 'ufEmissorRG',
+            'dataExpedicaoRG': 'dataEmissaoRG',
+            'nit': 'pisPasep',
+            'estadoCivil': 'estadoCivil',
+            // Adicione outros mapeamentos conforme necessário
+        };
+        
+        // Limpa o formulário antes de preencher
+        document.getElementById('form-calculo-aposentadoria').reset();
+
+        for (const key in fieldMapping) {
+            if (data.hasOwnProperty(key)) {
+                const element = document.getElementById(fieldMapping[key]);
+                if (element) {
+                    // Trata o campo de sexo, que é um select
+                    if (fieldMapping[key] === 'sexoServidor') {
+                        element.value = data[key].toLowerCase();
+                    } else {
+                        element.value = data[key];
+                    }
+                }
+            }
+        }
+    }
+});
+
 Object.assign(window, {
     auth, ui, handleNavClick, atualizarDashboardView, irParaPasso, alternarCamposBeneficio,
     adicionarLinha, limparTabela, exportarExcel, importarExcel, atualizarSalarioLinha, excluirLinha,
@@ -1990,3 +2093,4 @@ Object.assign(window, {
     preencherChecklistComDadosDaSimulacao
 });
 window.simulacao = simulacao;
+
