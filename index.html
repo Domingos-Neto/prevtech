@@ -313,7 +313,7 @@
 
                 <div id="geradorChecklists" style="display:none;">
                     <div class="text-center mb-4">
-                        <h2 class="display-6"><i class="bi bi-file-earmark-check-fill me-2"></i>Gerador de Checklists de Aposentadoria</h2>
+                        <h2 class="display-6"><i class="bi bi-file-earmark-check-fill me-2"></i>Gerador de Checklists</h2>
                         <p class="lead">Selecione o tipo de benefício, preencha os dados e gere um PDF profissional.</p>
                     </div>
             
@@ -418,6 +418,9 @@
                                 <textarea class="form-control" id="it-observacoes" rows="4"></textarea>
                                 
                                 <div class="footer-actions">
+                                    <button type="button" class="btn btn-secondary btn-lg" onclick="handleNavClick(null, 'dashboard')">
+                                        <i class="ri-home-4-line me-2"></i>Voltar ao Painel Inicial
+                                    </button>
                                     <button class="btn btn-primary btn-lg" onclick="generatePdf('form-idade-tempo', 'Checklist_Idade_e_Tempo')">
                                         <i class="bi bi-file-earmark-pdf-fill me-2"></i>Gerar PDF
                                     </button>
@@ -486,6 +489,9 @@
                                 <textarea class="form-control" id="pi-observacoes" rows="4"></textarea>
                                 
                                 <div class="footer-actions">
+                                    <button type="button" class="btn btn-secondary btn-lg" onclick="handleNavClick(null, 'dashboard')">
+                                        <i class="ri-home-4-line me-2"></i>Voltar ao Painel Inicial
+                                    </button>
                                     <button class="btn btn-primary btn-lg" onclick="generatePdf('form-idade', 'Checklist_Aposentadoria_Idade')">
                                         <i class="bi bi-file-earmark-pdf-fill me-2"></i>Gerar PDF
                                     </button>
@@ -549,6 +555,9 @@
                                 <textarea class="form-control" id="inc-observacoes" rows="4"></textarea>
                                 
                                 <div class="footer-actions">
+                                    <button type="button" class="btn btn-secondary btn-lg" onclick="handleNavClick(null, 'dashboard')">
+                                        <i class="ri-home-4-line me-2"></i>Voltar ao Painel Inicial
+                                    </button>
                                     <button class="btn btn-primary btn-lg" onclick="generatePdf('form-incapacidade', 'Checklist_Incapacidade')">
                                         <i class="bi bi-file-earmark-pdf-fill me-2"></i>Gerar PDF
                                     </button>
@@ -611,6 +620,9 @@
                                 <textarea class="form-control" id="comp-observacoes" rows="4"></textarea>
                                 
                                 <div class="footer-actions">
+                                    <button type="button" class="btn btn-secondary btn-lg" onclick="handleNavClick(null, 'dashboard')">
+                                        <i class="ri-home-4-line me-2"></i>Voltar ao Painel Inicial
+                                    </button>
                                     <button class="btn btn-primary btn-lg" onclick="generatePdf('form-compulsoria', 'Checklist_Compulsoria')">
                                         <i class="bi bi-file-earmark-pdf-fill me-2"></i>Gerar PDF
                                     </button>
@@ -664,6 +676,9 @@
                                 <textarea class="form-control" id="pen-observacoes" rows="4"></textarea>
                                 
                                 <div class="footer-actions">
+                                    <button type="button" class="btn btn-secondary btn-lg" onclick="handleNavClick(null, 'dashboard')">
+                                        <i class="ri-home-4-line me-2"></i>Voltar ao Painel Inicial
+                                    </button>
                                     <button class="btn btn-primary btn-lg" onclick="generatePdf('form-pensao', 'Checklist_Pensao_Morte')">
                                         <i class="bi bi-file-earmark-pdf-fill me-2"></i>Gerar PDF
                                     </button>
@@ -782,7 +797,7 @@
             <p style="font-size:0.9em; margin-top: 10px; margin-bottom:15px; flex-grow:1; color: var(--text-secondary-color);">
              Altera dispositivos da Lei n° 047/2008, de 16 de dezembro de 2008, que cria o Regime Próprio de Previdência do Municipio de Itapipoca.
             </p>
-            <a href="https://itaprev.com.br/wp-content/uploads/2021/08/Itapipoca-Lei-N%C2%BA-005.2020-ALTERA-LEI-047-DE-2008.pdf" target="_blank" style="text-decoration: none; width:100%;"><button style="width:100%; margin-top: auto;">Visualizar PDF</button></a>
+            <a href="https://itaprev.com.br/wp-content/uploads/2021/08/Itapipoca-Lei-N%C2%B0-005.2020-ALTERA-LEI-047-DE-2008.pdf" target="_blank" style="text-decoration: none; width:100%;"><button style="width:100%; margin-top: auto;">Visualizar PDF</button></a>
         </div>
       
       <div class="dashboard-card" style="cursor: default; text-align: left; align-items: flex-start; flex-direction: column;">
@@ -791,7 +806,7 @@
             <p style="font-size:0.9em; margin-top: 10px; margin-bottom:15px; flex-grow:1; color: var(--text-secondary-color);">
                 Altera os dispositivos da Lei nº 005/2020, de 28 de fevereiro de 2020, que alterou dispositivos da Lei N° 047/2008, que criou o Regime Próprio de Previdência Social do Municipio de Itapipocа e dá outras providências.
             </p>
-            <a href="https://itaprev.com.br/wp-content/uploads/2021/09/Itapipoca-Lei-N%C2%BA-042.2021.pdf" target="_blank" style="text-decoration: none; width:100%;"><button style="width:100%; margin-top: auto;">Visualizar PDF</button></a>
+            <a href="https://itaprev.com.br/wp-content/uploads/2021/09/Itapipoca-Lei-N%C2%B0-042.2021.pdf" target="_blank" style="text-decoration: none; width:100%;"><button style="width:100%; margin-top: auto;">Visualizar PDF</button></a>
         </div>
 
         <div class="dashboard-card" style="cursor: default; text-align: left; align-items: flex-start; flex-direction: column;">
@@ -1021,5 +1036,3 @@
 
 </body>
 </html>
-
-
