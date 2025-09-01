@@ -314,11 +314,11 @@
                 
                 <div id="geradorDocumentos" style="display:none;">
     <h2><i class="ri-file-add-fill"></i> Gerador de Documentos para Processos</h2>
-    <p>Selecione um documento abaixo para gerar. Os dados do servidor podem ser preenchidos automaticamente a partir da última simulação realizada.</p>
+    <p>Selecione um documento abaixo para gerar. Os dados do servidor podem ser preenchidos manualmente ou puxados da última simulação realizada.</p>
 
     <div class="form-grid" style="align-items: end; margin-bottom: 20px;">
         <label>Nome do Servidor (para preenchimento):
-            <input type="text" id="doc-nome-servidor" placeholder="Preenchido pela simulação" disabled>
+            <input type="text" id="doc-nome-servidor" placeholder="Digite o nome ou puxe da simulação">
         </label>
         <button class="primary" onclick="preencherDocumentosComDadosSimulacao()">
             <i class="ri-user-search-line"></i> Puxar Dados da Simulação
@@ -330,13 +330,13 @@
             <i class="ri-file-edit-line"></i>
             <span>Requerimento de Aposentadoria</span>
         </div>
-      <div class="dashboard-card" onclick="gerarReqPensaoMorte()">
-            <i class="ri-group-line"></i>
-            <span>Requerimento de Pensão por Morte</span>
-        </div>
         <div class="dashboard-card" onclick="gerarDeclaracaoNaoPercepcao()">
             <i class="ri-file-shield-2-line"></i>
             <span>Declaração de Não Percepção (ITAPREV)</span>
+        </div>
+        <div class="dashboard-card" onclick="gerarReqPensaoMorte()">
+            <i class="ri-group-line"></i>
+            <span>Requerimento de Pensão por Morte</span>
         </div>
         <div class="dashboard-card" onclick="gerarDeclaracaoNaoAcumulacao()">
             <i class="ri-file-copy-2-line"></i>
@@ -1082,4 +1082,5 @@
 
 </body>
 </html>
+
 
