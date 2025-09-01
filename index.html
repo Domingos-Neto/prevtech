@@ -313,29 +313,49 @@
                 </div>
                 
                 <div id="geradorDocumentos" style="display:none;">
-                    <h2><i class="ri-file-add-fill"></i> Gerador de Documentos para Processos</h2>
-                    <p>Selecione um documento abaixo para gerar. Os dados do servidor podem ser preenchidos automaticamente a partir da última simulação realizada.</p>
-                
-                    <div class="form-grid" style="align-items: end; margin-bottom: 20px;">
-                        <label>Nome do Servidor (para preenchimento):
-                            <input type="text" id="doc-nome-servidor" placeholder="Preenchido pela simulação">
-                        </label>
-                        <button class="primary" onclick="preencherDocumentosComDadosSimulacao()">
-                            <i class="ri-user-search-line"></i> Puxar Dados da Simulação
-                        </button>
-                    </div>
-                
-                    <div class="dashboard-grid">
-                        <div class="dashboard-card" onclick="gerarRequerimentoAposentadoria()">
-                            <i class="ri-file-edit-line"></i>
-                            <span>Requerimento de Aposentadoria</span>
-                        </div>
-                        <div class="dashboard-card" onclick="gerarDeclaracaoNaoPercepcao()">
-                            <i class="ri-file-shield-2-line"></i>
-                            <span>Declaração de Não Percepção (ITAPREV)</span>
-                        </div>
-                    </div>
-                </div>
+    <h2><i class="ri-file-add-fill"></i> Gerador de Documentos para Processos</h2>
+    <p>Selecione um documento abaixo para gerar. Os dados do servidor podem ser preenchidos automaticamente a partir da última simulação realizada.</p>
+
+    <div class="form-grid" style="align-items: end; margin-bottom: 20px;">
+        <label>Nome do Servidor (para preenchimento):
+            <input type="text" id="doc-nome-servidor" placeholder="Preenchido pela simulação" disabled>
+        </label>
+        <button class="primary" onclick="preencherDocumentosComDadosSimulacao()">
+            <i class="ri-user-search-line"></i> Puxar Dados da Simulação
+        </button>
+    </div>
+
+    <div class="dashboard-grid">
+        <div class="dashboard-card" onclick="gerarRequerimentoAposentadoria()">
+            <i class="ri-file-edit-line"></i>
+            <span>Requerimento de Aposentadoria</span>
+        </div>
+      <div class="dashboard-card" onclick="gerarReqPensaoMorte()">
+            <i class="ri-group-line"></i>
+            <span>Requerimento de Pensão por Morte</span>
+        </div>
+        <div class="dashboard-card" onclick="gerarDeclaracaoNaoPercepcao()">
+            <i class="ri-file-shield-2-line"></i>
+            <span>Declaração de Não Percepção (ITAPREV)</span>
+        </div>
+        <div class="dashboard-card" onclick="gerarDeclaracaoNaoAcumulacao()">
+            <i class="ri-file-copy-2-line"></i>
+            <span>Declaração de Não Acumulação</span>
+        </div>
+         <div class="dashboard-card" onclick="gerarDeclaracaoNaoPercepcaoIndividual()">
+            <i class="ri-user-unfollow-line"></i>
+            <span>Declaração de Não Percepção (Individual)</span>
+        </div>
+        <div class="dashboard-card" onclick="gerarAutoDeclaracaoRenda()">
+            <i class="ri-money-dollar-circle-line"></i>
+            <span>Autodeclaração de Renda</span>
+        </div>
+        <div class="dashboard-card" onclick="gerarDeclaracaoConvivioMarital()">
+            <i class="ri-heart-2-line"></i>
+            <span>Declaração de Convívio Marital</span>
+        </div>
+          </div>
+             </div>
 
                 <div id="geradorChecklists" style="display:none;">
                     <div class="text-center mb-4">
@@ -1062,3 +1082,4 @@
 
 </body>
 </html>
+
