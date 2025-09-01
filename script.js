@@ -136,7 +136,7 @@ const ui = {
         document.getElementById("floating-buttons-container").style.display = "flex";
     },
     showView: (viewId) => {
-        const views = ['dashboard', 'simulacao', 'geradorCTC', 'telaLegislacao', 'telaConfiguracoes', 'telaCadastro', 'telaProcessos', 'telaFinanceiro', 'telaRelatorios', 'telaUsuarios', 'geradorChecklists'];
+        const views = ['dashboard', 'simulacao', 'geradorCTC', 'telaLegislacao', 'telaConfiguracoes', 'telaCadastro', 'telaProcessos', 'telaFinanceiro', 'telaRelatorios', 'telaUsuarios', 'geradorChecklists', 'geradorDocumentos'];
         views.forEach(id => {
             const viewElement = document.getElementById(id);
             if (viewElement) viewElement.style.display = 'none';
@@ -475,7 +475,6 @@ document.addEventListener("DOMContentLoaded", () => {
 function initSistemaPosLogin() {
     ui.updateUserInfo();
     carregarConfiguracoes();
-    // checklist.init(); // CORREÇÃO: Linha comentada pois o objeto 'checklist' não foi encontrado no código e causa um erro fatal, impedindo a execução do resto do script.
     setupEventListeners();
     atualizarDataHora();
     setInterval(atualizarDataHora, 1000 * 60);
@@ -484,14 +483,11 @@ function initSistemaPosLogin() {
     document.getElementById('admin-nav-item').style.display = isAdmin ? 'block' : 'none';
     document.getElementById('admin-dashboard-controls').style.display = isAdmin ? 'flex' : 'none';
     
-    // A linha abaixo foi removida da versão original pois '#admin-checklist-manager' não existe no HTML.
-    // document.getElementById('admin-checklist-manager').style.display = isAdmin ? 'block' : 'none';
-
     if (localStorage.getItem("temaEscuro") === "sim") {
         document.body.classList.add('dark-mode');
         document.querySelector("#toggleTheme i").className = 'ri-sun-line';
     }
-    handleNavClick(null, 'dashboard'); // CORREÇÃO: Esta linha agora será executada, exibindo o dashboard no login.
+    handleNavClick(null, 'dashboard');
 }
 
 
@@ -567,7 +563,9 @@ function handleNavClick(event, targetView) {
             break;
         case 'telaConfiguracoes':
             popularCamposConfiguracoes();
-            // A lógica de checklist.loadTemplateForEditing() foi removida pois o objeto checklist não existe.
+            break;
+        case 'geradorDocumentos':
+            document.getElementById('doc-nome-servidor').value = '';
             break;
     }
 }
@@ -883,7 +881,6 @@ function alternarCamposBeneficio() {
     const passo2 = document.getElementById('passo2');
     if (passo2) passo2.style.display = tipo === 'pensao_aposentado' ? 'none' : AppState.currentStep === 2 ? 'block' : 'none';
 
-    // A chamada a `checklist.reset()` foi removida por segurança, pois o objeto não existe.
 }
 
 function limparFormularioCompleto() {
@@ -924,7 +921,6 @@ function limparFormularioCompleto() {
         accToggle.classList.remove('active');
         accContent.style.maxHeight = null;
     }
-    // A chamada a `checklist.reset()` foi removida por segurança, pois o objeto não existe.
 }
 
 function alternarTema() {
@@ -1173,7 +1169,6 @@ function calcularBeneficio(n = true, b = null) {
 
             if (n) {
                 irParaPasso(3);
-                // A chamada a `checklist.atualizar()` foi removida por segurança, pois o objeto não existe.
             }
         } finally {
             ui.toggleSpinner(b, false);
@@ -1680,17 +1675,13 @@ function salvarSimulacaoHistorico(nF) {
 function coletarDadosSimulacao() {
     const dados = { passo1: {}, tabela: [], proventosAto: [], dependentes: [], resultados: AppState.simulacaoResultados, periodosExternos: [], nome: document.getElementById('nomeSimulacao').value.trim() };
     
-    // Coleta dados do passo 1
     document.querySelectorAll('#passo1 input:not([type=hidden]),#passo1 select,#passo1 textarea').forEach(e => { if (e.id) dados.passo1[e.id] = e.value; });
     
-    // Coleta tabelas
     document.querySelectorAll("#corpo-tabela tr").forEach(l => dados.tabela.push(Array.from(l.querySelectorAll("input"), i => i.value).slice(0, 3)));
     document.querySelectorAll("#corpo-tabela-proventos-ato tr").forEach(l => dados.proventosAto.push({ descricao: l.querySelector(".provento-descricao").value, valor: l.querySelector(".provento-valor").value }));
-    // CORREÇÃO: O nome da propriedade estava 'dependes', foi corrigido para 'dependentes'.
     document.querySelectorAll("#corpo-tabela-dependentes tr").forEach(l => dados.dependentes.push({ nome: l.querySelector('.dependente-nome').value, dataNasc: l.querySelector('.dependente-dataNasc').value, parentesco: l.querySelector('.dependente-parentesco').value, invalido: l.querySelector('.dependente-invalido').value }));
     document.querySelectorAll("#corpo-tabela-tempo-externo tr").forEach(row => dados.periodosExternos.push({ inicio: row.dataset.inicio, fim: row.dataset.fim }));
 
-    // Coleta o estado completo do checklist
     const checklistContainer = document.getElementById('checklist-content');
     if (checklistContainer && checklistContainer.innerHTML !== '') {
         const checklistState = { secoes: {}, observacoesGerais: document.getElementById('checklist-observacoes').value };
@@ -1972,108 +1963,156 @@ function planejarAposentadoria(button) {
     }, 50);
 }
 
+
 // =================================================================================
-// NOVO SCRIPT PARA CARREGAMENTO EM LOTE DE SEGURADOS
+// INÍCIO: NOVAS FUNÇÕES DO GERADOR DE DOCUMENTOS
 // =================================================================================
 
+function preencherDocumentosComDadosSimulacao() {
+    try {
+        const nome = document.getElementById('nomeServidor').value;
+        if (!nome) {
+            ui.showToast("Nenhum nome encontrado. Preencha os dados na tela de 'Nova Simulação' primeiro.", false);
+            return;
+        }
+        document.getElementById('doc-nome-servidor').value = nome;
+        ui.showToast("Dados do servidor prontos para uso!", true);
+    } catch (e) {
+        console.error("Erro ao buscar dados da simulação:", e);
+        ui.showToast("Falha ao buscar dados. Verifique o console.", false);
+    }
+}
+
+function gerarRequerimentoAposentadoria() {
+    const dadosSimulacao = coletarDadosSimulacao();
+    const dadosServidor = dadosSimulacao.passo1 || {};
+    const dataAtual = new Date().toLocaleDateString('pt-BR', {
+        day: 'numeric', month: 'long', year: 'numeric'
+    });
+
+    const htmlConteudo = `
+    <!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">
+    <title>Requerimento de Aposentadoria</title>
+    <style>
+        body { font-family: Arial, sans-serif; font-size: 12pt; color: #333; }
+        .container { width: 210mm; margin: auto; padding: 2cm; }
+        .header, .footer { text-align: center; }
+        .header h3, .header p { margin: 2px; }
+        h2 { text-align: center; font-weight: bold; margin: 40px 0; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+        td { padding: 4px; }
+        input[type="text"] { border: none; border-bottom: 1px dotted #888; width: 100%; padding: 2px; font-family: inherit; font-size: inherit; }
+        .checkbox-group label { display: block; margin-bottom: 8px; }
+        .signature { margin-top: 80px; text-align: center; }
+        .signature input { text-align: center; font-weight: bold; }
+        @media print { input[type="text"] { border-bottom: 1px solid #000; } }
+    </style></head><body>
+    <div class="container">
+        <div class="header">
+            <h3>ITAPREV</h3>
+            <p>INSTITUTO DE PREVIDÊNCIA DOS SERVIDORES MUNICIPAIS DE ITAPIPOCA</p>
+        </div>
+        <h2>REQUERIMENTO DE APOSENTADORIA</h2>
+        <table>
+            <tr><td colspan="3"><label>Nome Completo do(a) Servidor(a):<input type="text" value="${dadosServidor.nomeServidor || ''}"></label></td>
+                <td colspan="1"><label>Matrícula:<input type="text" value="${dadosServidor.matriculaServidor || ''}"></label></td></tr>
+            <tr><td colspan="2"><label>RG:<input type="text" value="${dadosServidor.rgServidor || ''}"></label></td>
+                <td colspan="1"><label>CPF:<input type="text" value="${dadosServidor.cpfServidor || ''}"></label></td>
+                <td colspan="1"><label>Data de Nascimento:<input type="text" value="${formatarDataBR(dadosServidor.dataNascimento) || ''}"></label></td></tr>
+            <tr><td colspan="4"><label>Endereço Residencial:<input type="text" value=""></label></td></tr>
+            <tr><td colspan="2"><label>Telefone:<input type="text" value=""></label></td>
+                <td colspan="2"><label>E-mail:<input type="text" value=""></label></td></tr>
+            <tr><td colspan="2"><label>Cargo:<input type="text" value="${dadosServidor.cargoServidor || ''}"></label></td>
+                <td colspan="2"><label>Admissão:<input type="text" value="${formatarDataBR(dadosServidor.dataAdmissao) || ''}"></label></td></tr>
+            <tr><td colspan="4"><label>Lotação:<input type="text" value="${dadosServidor.lotacaoServidor || ''}"></label></td></tr>
+        </table>
+        <p>Vem, respeitosamente, requerer o benefício de Aposentadoria:</p>
+        <div class="checkbox-group">
+            <label><input type="checkbox"> Aposentadoria por Incapacidade Permanente</label>
+            <label><input type="checkbox"> Aposentadoria Compulsória</label>
+            <label><input type="checkbox"> Aposentadoria por Idade</label>
+            <label><input type="checkbox"> Aposentadoria por Idade e Tempo de Contribuição</label>
+            <label><input type="checkbox"> Aposentadoria por Idade e Tempo de Contribuição (Professor)</label>
+        </div>
+        <p style="text-align:left; margin-top: 40px;">Itapipoca - CE, ${dataAtual}.</p>
+        <div class="signature">
+            <input type="text" value="${dadosServidor.nomeServidor || 'Nome do(a) Requerente'}" style="margin-bottom:0; padding-bottom:0;">
+            <p style="margin-top:0; padding-top:0;">Assinatura do Servidor(a)</p>
+        </div>
+    </div></body></html>`;
+    
+    const newWindow = window.open();
+    newWindow.document.open();
+    newWindow.document.write(htmlConteudo);
+    newWindow.document.close();
+}
+
+function gerarDeclaracaoNaoPercepcao() {
+    const dadosSimulacao = coletarDadosSimulacao();
+    const dadosServidor = dadosSimulacao.passo1 || {};
+    const configs = AppState.configuracoes || {};
+
+    const dataAtual = new Date().toLocaleDateString('pt-BR', {
+        day: 'numeric', month: 'long', year: 'numeric'
+    });
+
+    const htmlConteudo = `
+    <!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">
+    <title>Declaração de Não Percepção</title>
+    <style>
+        body { font-family: Arial, sans-serif; font-size: 12pt; line-height: 1.8; color: #333; }
+        .container { width: 210mm; margin: auto; padding: 2cm; text-align: justify; }
+        .header { text-align: center; }
+        .header h3, .header p { margin: 2px; }
+        h2 { text-align: center; font-weight: bold; margin: 40px 0; }
+        input[type="text"] { border: none; background: #f0f0f0; padding: 3px; font-family: inherit; font-size: inherit; font-weight: bold; }
+        .signature { margin-top: 80px; text-align: center; }
+        .signature p { margin: 2px 0; }
+    </style></head><body>
+    <div class="container">
+        <div class="header">
+            <h3>ITAPREV</h3>
+            <p>INSTITUTO DE PREVIDÊNCIA DOS SERVIDORES MUNICIPAIS DE ITAPIPOCA</p>
+        </div>
+        <h2>DECLARAÇÃO DE NÃO PERCEPÇÃO (ITAPREV)</h2>
+        <p>
+            O Instituto de Previdência dos Servidores Municipais de Itapipoca - ITAPREV, declara para os
+            devidos fins de direito e sob as penas da lei, junto ao Tribunal de Contas do Estado do Ceará -
+            TCE-CE, que o(a) Sr.(a) <b>${dadosServidor.nomeServidor || '________________'}</b>, 
+            portador(a) do RG nº <input type="text" size="20" value="${dadosServidor.rgServidor || ''}">,
+            CPF nº <input type="text" size="15" value="${dadosServidor.cpfServidor || ''}"> e
+            matrícula nº <input type="text" size="10" value="${dadosServidor.matriculaServidor || ''}">, 
+            residente e domiciliado(a) em <input type="text" size="40" value="Itapipoca - CE">, 
+            não recebe benefício previdenciário pago pelo Instituto de Previdência Social do
+            Município de Itapipoca-CE, até a presente data.
+        </p>
+        <p style="text-align:left; margin-top: 40px;">Itapipoca-CE, ${dataAtual}.</p>
+        <div class="signature">
+            <p>_________________________________________</p>
+            <p><b>${configs.nomePresidente || 'NOME DO PRESIDENTE'}</b></p>
+            <p>Presidente do ITAPREV</p>
+            <p>Portaria N°: <input type="text" size="15" value="${configs.ctcPresidentePortaria || ''}"></p>
+        </div>
+    </div></body></html>`;
+
+    const newWindow = window.open();
+    newWindow.document.open();
+    newWindow.document.write(htmlConteudo);
+    newWindow.document.close();
+}
+
+// =================================================================================
+// FIM: NOVAS FUNÇÕES DO GERADOR DE DOCUMENTOS
+// =================================================================================
+
+
+// =================================================================================
+// SCRIPT PARA CARREGAMENTO EM LOTE (Exemplo, se necessário)
+// =================================================================================
 document.addEventListener('DOMContentLoaded', () => {
-    const jsonFileInput = document.getElementById('json-file-input');
-    const loadJsonButton = document.getElementById('load-json-button');
-    const seguradoSelect = document.getElementById('segurado-select');
-    const fillFormButton = document.getElementById('fill-form-button');
-
-    let seguradosData = [];
-
-    // Função para carregar e processar o arquivo JSON
-    loadJsonButton.addEventListener('click', () => {
-        const file = jsonFileInput.files[0];
-        if (!file) {
-            ui.showToast('Por favor, selecione um arquivo JSON.', false);
-            return;
-        }
-
-        const reader = new FileReader();
-        reader.onload = (event) => {
-            try {
-                seguradosData = JSON.parse(event.target.result);
-                populateSeguradoSelect(seguradosData);
-                ui.showToast('Lista de segurados carregada com sucesso!', true);
-            } catch (error) {
-                ui.showToast('Erro ao processar o arquivo JSON. Verifique o formato.', false);
-                console.error("Erro no parse do JSON:", error);
-            }
-        };
-        reader.onerror = () => {
-            ui.showToast('Ocorreu um erro ao ler o arquivo.', false);
-        };
-        reader.readAsText(file);
-    });
-
-    // Função para popular o menu dropdown com os nomes dos segurados
-    function populateSeguradoSelect(data) {
-        seguradoSelect.innerHTML = '<option value="" selected disabled>Selecione um segurado...</option>';
-        data.forEach((segurado, index) => {
-            const option = document.createElement('option');
-            option.value = index;
-            option.textContent = segurado.nome;
-            seguradoSelect.appendChild(option);
-        });
-        seguradoSelect.disabled = false;
-        fillFormButton.disabled = false;
-    }
-
-    // Função para preencher o formulário com os dados do segurado selecionado
-    fillFormButton.addEventListener('click', () => {
-        const selectedIndex = seguradoSelect.value;
-        if (selectedIndex === "") {
-            ui.showToast('Por favor, selecione um segurado da lista.', false);
-            return;
-        }
-
-        const segurado = seguradosData[selectedIndex];
-        fillFormWithData(segurado);
-        ui.showToast(`Dados de ${segurado.nome} preenchidos no formulário.`, true);
-    });
-
-    // Função que mapeia os dados do JSON para os campos do formulário
-    function fillFormWithData(data) {
-        // Mapeamento dos campos do JSON para os IDs dos elementos do formulário
-        const fieldMapping = {
-            'nome': 'nomeServidor',
-            'cpf': 'cpfServidor',
-            'dataNascimento': 'dataNascimento',
-            'sexo': 'sexoServidor',
-            'matricula': 'matriculaServidor',
-            'dataIngressoVinculo': 'dataAdmissao',
-            'nomeMae': 'nomeMae',
-            'nomePai': 'nomePai',
-            'rg': 'rg',
-            'orgaoExpedidorRG': 'orgaoEmissorRG',
-            'ufExpedicaoRG': 'ufEmissorRG',
-            'dataExpedicaoRG': 'dataEmissaoRG',
-            'nit': 'pisPasep',
-            'estadoCivil': 'estadoCivil',
-            // Adicione outros mapeamentos conforme necessário
-        };
-        
-        // Limpa o formulário antes de preencher
-        document.getElementById('form-calculo-aposentadoria').reset();
-
-        for (const key in fieldMapping) {
-            if (data.hasOwnProperty(key)) {
-                const element = document.getElementById(fieldMapping[key]);
-                if (element) {
-                    // Trata o campo de sexo, que é um select
-                    if (fieldMapping[key] === 'sexoServidor') {
-                        element.value = data[key].toLowerCase();
-                    } else {
-                        element.value = data[key];
-                    }
-                }
-            }
-        }
-    }
+    // ... código de carregamento em lote pode ser colocado aqui se expandido
 });
+
 
 Object.assign(window, {
     auth, ui, handleNavClick, atualizarDashboardView, irParaPasso, alternarCamposBeneficio,
@@ -2090,7 +2129,10 @@ Object.assign(window, {
     adicionarPeriodoExterno, removerPeriodoExterno,
     planejarAposentadoria,
     generatePdf,
-    preencherChecklistComDadosDaSimulacao
+    preencherChecklistComDadosDaSimulacao,
+    // << NOVAS FUNÇÕES EXPORTADAS >>
+    preencherDocumentosComDadosSimulacao,
+    gerarRequerimentoAposentadoria,
+    gerarDeclaracaoNaoPercepcao
 });
 window.simulacao = simulacao;
-
