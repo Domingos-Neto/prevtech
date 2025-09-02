@@ -1996,15 +1996,19 @@ function gerarRequerimentoAposentadoria() {
     <style>
         body { font-family: Arial, sans-serif; font-size: 12pt; color: #333; }
         .container { width: 210mm; margin: auto; padding: 2cm; }
-        .header, .footer { text-align: center; }
-        .header h3, .header p { margin: 2px; }
+        .header { text-align: center; }
+        .header h3, .header p { margin: 2px 0; }
         h2 { text-align: center; font-weight: bold; margin: 40px 0; }
+        .section-title { font-weight: bold; margin-top: 20px; margin-bottom: 10px; border-bottom: 1px solid #ccc; padding-bottom: 5px; }
         table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
         td { padding: 4px; }
-        input[type="text"] { border: none; border-bottom: 1px dotted #888; width: 100%; padding: 2px; font-family: inherit; font-size: inherit; }
-        .checkbox-group label { display: block; margin-bottom: 8px; }
-        .signature { margin-top: 80px; text-align: center; }
-        .signature input { text-align: center; font-weight: bold; }
+        label { display: block; margin-top: 5px; }
+        input[type="text"] { border: none; border-bottom: 1px dotted #888; width: 100%; padding: 4px; box-sizing: border-box; font-family: inherit; font-size: inherit; }
+        .checkbox-group label { display: block; margin-bottom: 8px; font-weight: normal; }
+        .signature-block { margin-top: 80px; text-align: center; }
+        .signature-line { border-bottom: 1px solid #000; margin-top: 60px; margin-left: auto; margin-right: auto; width: 80%;}
+        .signature-block p { margin: 5px 0 0 0; font-size: 11pt; }
+        .legal-notice { font-size: 10pt; text-align: center; margin-top: 20px; }
         @media print { input[type="text"] { border-bottom: 1px solid #000; } }
     </style></head><body>
     <div class="container">
@@ -2013,8 +2017,12 @@ function gerarRequerimentoAposentadoria() {
             <p>INSTITUTO DE PREVIDÊNCIA DOS SERVIDORES MUNICIPAIS DE ITAPIPOCA</p>
         </div>
         <h2>REQUERIMENTO DE APOSENTADORIA</h2>
+        
+        <p>Eu, ${dadosServidor.nomeServidor || '__________________________________'}, com fundamento no direito de petição assegurado pelo Art. 5º, XXXIV, 'a', da Constituição Federal, e com base nas disposições da Lei Municipal nº 035/2022 e do Decreto Municipal nº 113/2022, venho, respeitosamente, requerer a concessão do benefício de Aposentadoria, na modalidade abaixo assinalada:</p>
+
+        <div class="section-title">Dados do(a) Servidor(a)</div>
         <table>
-            <tr><td colspan="3"><label>Nome Completo do(a) Servidor(a):<input type="text" value="${dadosServidor.nomeServidor || ''}"></label></td>
+            <tr><td colspan="3"><label>Nome Completo:<input type="text" value="${dadosServidor.nomeServidor || ''}"></label></td>
                 <td colspan="1"><label>Matrícula:<input type="text" value="${dadosServidor.matriculaServidor || ''}"></label></td></tr>
             <tr><td colspan="2"><label>RG:<input type="text" value="${dadosServidor.rgServidor || ''}"></label></td>
                 <td colspan="1"><label>CPF:<input type="text" value="${dadosServidor.cpfServidor || ''}"></label></td>
@@ -2022,22 +2030,32 @@ function gerarRequerimentoAposentadoria() {
             <tr><td colspan="4"><label>Endereço Residencial:<input type="text" value=""></label></td></tr>
             <tr><td colspan="2"><label>Telefone:<input type="text" value=""></label></td>
                 <td colspan="2"><label>E-mail:<input type="text" value=""></label></td></tr>
+        </table>
+        
+        <div class="section-title">Dados Funcionais</div>
+         <table>
             <tr><td colspan="2"><label>Cargo:<input type="text" value="${dadosServidor.cargoServidor || ''}"></label></td>
                 <td colspan="2"><label>Admissão:<input type="text" value="${formatarDataBR(dadosServidor.dataAdmissao) || ''}"></label></td></tr>
             <tr><td colspan="4"><label>Lotação:<input type="text" value="${dadosServidor.lotacaoServidor || ''}"></label></td></tr>
         </table>
-        <p>Vem, respeitosamente, requerer o benefício de Aposentadoria:</p>
+
+        <div class="section-title">Modalidade de Aposentadoria Requerida</div>
         <div class="checkbox-group">
             <label><input type="checkbox"> Aposentadoria por Incapacidade Permanente</label>
             <label><input type="checkbox"> Aposentadoria Compulsória</label>
             <label><input type="checkbox"> Aposentadoria por Idade</label>
             <label><input type="checkbox"> Aposentadoria por Idade e Tempo de Contribuição</label>
-            <label><input type="checkbox"> Aposentadoria por Idade e Tempo de Contribuição (Professor)</label>
+            <label><input type="checkbox"> Aposentadoria Especial de Professor</label>
         </div>
+        
+        <p class="legal-notice">Declaro, sob as penas da lei, que as informações aqui prestadas são verdadeiras e que estou ciente de que a apresentação de informações falsas pode acarretar em sanções administrativas, cíveis e criminais.</p>
+
         <p style="text-align:left; margin-top: 40px;">Itapipoca - CE, ${dataAtual}.</p>
-        <div class="signature">
-            <input type="text" value="${dadosServidor.nomeServidor || 'Nome do(a) Requerente'}" style="margin-bottom:0; padding-bottom:0;">
-            <p style="margin-top:0; padding-top:0;">Assinatura do Servidor(a)</p>
+        
+        <div class="signature-block">
+            <div class="signature-line"></div>
+            <p>${dadosServidor.nomeServidor || 'Nome do(a) Requerente'}</p>
+            <p>Assinatura do(a) Servidor(a)</p>
         </div>
     </div></body></html>`;
     
@@ -2063,11 +2081,12 @@ function gerarDeclaracaoNaoPercepcao() {
         body { font-family: Arial, sans-serif; font-size: 12pt; line-height: 1.8; color: #333; }
         .container { width: 210mm; margin: auto; padding: 2cm; text-align: justify; }
         .header { text-align: center; }
-        .header h3, .header p { margin: 2px; }
+        .header h3, .header p { margin: 2px 0; }
         h2 { text-align: center; font-weight: bold; margin: 40px 0; }
         input[type="text"] { border: none; background: #f0f0f0; padding: 3px; font-family: inherit; font-size: inherit; font-weight: bold; }
-        .signature { margin-top: 80px; text-align: center; }
-        .signature p { margin: 2px 0; }
+        .signature-block { margin-top: 80px; text-align: center; }
+        .signature-line { border-bottom: 1px solid #000; margin-top: 60px; width: 80%; margin-left: auto; margin-right: auto;}
+        .signature-block p { margin: 5px 0 0 0; }
     </style></head><body>
     <div class="container">
         <div class="header">
@@ -2082,16 +2101,14 @@ function gerarDeclaracaoNaoPercepcao() {
             portador(a) do RG nº <input type="text" size="20" value="${dadosServidor.rgServidor || ''}">,
             CPF nº <input type="text" size="15" value="${dadosServidor.cpfServidor || ''}"> e
             matrícula nº <input type="text" size="10" value="${dadosServidor.matriculaServidor || ''}">, 
-            residente e domiciliado(a) em <input type="text" size="40" value="Itapipoca - CE">, 
-            não recebe benefício previdenciário pago pelo Instituto de Previdência Social do
+            não recebe benefício previdenciário pago por este Instituto de Previdência Social do
             Município de Itapipoca-CE, até a presente data.
         </p>
         <p style="text-align:left; margin-top: 40px;">Itapipoca-CE, ${dataAtual}.</p>
-        <div class="signature">
-            <p>_________________________________________</p>
+        <div class="signature-block">
+            <div class="signature-line"></div>
             <p><b>${configs.nomePresidente || 'NOME DO PRESIDENTE'}</b></p>
             <p>Presidente do ITAPREV</p>
-            <p>Portaria N°: <input type="text" size="15" value="${configs.ctcPresidentePortaria || ''}"></p>
         </div>
     </div></body></html>`;
 
@@ -2128,21 +2145,26 @@ function gerarReqPensaoMorte() {
     <style>
         body { font-family: Arial, sans-serif; font-size: 11pt; color: #333; }
         .container { width: 210mm; margin: auto; padding: 1.5cm; }
-        .header h3, .header p { text-align: center; margin: 2px 0; }
+        .header { text-align: center; }
+        .header h3 { margin-bottom: 20px; }
         h2 { text-align: center; font-weight: bold; margin: 30px 0; }
-        h3.section-title { font-size: 12pt; border-bottom: 1px solid #ccc; padding-bottom: 4px; margin-top: 20px; }
+        .section-title { font-size: 12pt; font-weight: bold; border-bottom: 1px solid #ccc; padding-bottom: 4px; margin-top: 20px; margin-bottom: 10px;}
         .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         .grid-span-2 { grid-column: span 2; }
         label { display: block; margin-bottom: 5px; }
         input[type="text"] { width: 100%; border: none; border-bottom: 1px dotted #888; padding: 4px; font-size: 11pt; box-sizing: border-box; }
-        .signature-block { margin-top: 50px; }
-        .signature-line { border-bottom: 1px solid #000; margin-top: 60px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid #ccc; padding: 6px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        .signature-block { margin-top: 50px; text-align: center; }
+        .signature-line { border-bottom: 1px solid #000; margin-top: 60px; width: 80%; margin-left: auto; margin-right: auto;}
+        .signature-block p { margin: 5px 0 0 0; }
         @media print { input { border: none !important; } }
     </style></head><body>
     <div class="container">
         <div class="header"><h3>REQUERIMENTO DE PENSÃO POR MORTE</h3></div>
         
-        <h3 class="section-title">Dados do Requerente</h3>
+        <div class="section-title">Dados do Requerente</div>
         <div class="form-grid">
             <div class="grid-span-2"><label>Nome Completo:<input type="text"></label></div>
             <div><label>RG:<input type="text"></label></div>
@@ -2153,39 +2175,31 @@ function gerarReqPensaoMorte() {
             <div><label>E-mail:<input type="text"></label></div>
         </div>
 
-        <h3 class="section-title">Dados do Instituidor (Servidor Falecido)</h3>
+        <div class="section-title">Dados do Instituidor (Servidor Falecido)</div>
         <div class="form-grid">
             <div class="grid-span-2"><label>Nome Completo:<input type="text" value="${dadosInstituidor.nomeServidor || ''}"></label></div>
             <div><label>Matrícula:<input type="text" value="${dadosInstituidor.matriculaServidor || ''}"></label></div>
             <div><label>Cargo/Lotação:<input type="text" value="${dadosInstituidor.cargoServidor || ''}"></label></div>
-            <div><label>RG:<input type="text" value="${dadosInstituidor.rgServidor || ''}"></label></div>
             <div><label>CPF:<input type="text" value="${dadosInstituidor.cpfServidor || ''}"></label></div>
-            <div><label>Data de Nascimento:<input type="text" value="${formatarDataBR(dadosInstituidor.dataNascimento) || ''}"></label></div>
             <div><label>Data do Óbito:<input type="text" value="${formatarDataBR(dadosInstituidor.dataObito) || ''}"></label></div>
         </div>
 
-        <h3 class="section-title">Dados do(s) Dependente(s) Beneficiário(s)</h3>
-        <div class="form-grid">
-            <div class="grid-span-2"><b>1.</b> <label>Nome Completo:<input type="text"></label></div>
-            <div><label>RG/CPF:<input type="text"></label></div>
-            <div><label>Data de Nascimento:<input type="text"></label></div>
-            <div class="grid-span-2"><label>Grau de Dependência:<input type="text"></label></div>
+        <div class="section-title">Dados do(s) Dependente(s) Beneficiário(s)</div>
+        <table>
+            <thead><tr><th>Nome Completo</th><th>Parentesco</th><th>Data de Nasc.</th><th>CPF</th></tr></thead>
+            <tbody>
+                <tr><td>&nbsp;</td><td></td><td></td><td></td></tr>
+                <tr><td>&nbsp;</td><td></td><td></td><td></td></tr>
+                <tr><td>&nbsp;</td><td></td><td></td><td></td></tr>
+            </tbody>
+        </table>
 
-            <div class="grid-span-2" style="margin-top:15px;"><b>2.</b> <label>Nome Completo:<input type="text"></label></div>
-            <div><label>RG/CPF:<input type="text"></label></div>
-            <div><label>Data de Nascimento:<input type="text"></label></div>
-            <div class="grid-span-2"><label>Grau de Dependência:<input type="text"></label></div>
-        </div>
-        <p style="font-size: 10pt;">(Acrescentar mais campos se necessário)</p>
-
-        <h3 class="section-title">Requerimento</h3>
-        <p>Vem, respeitosamente, requerer a concessão do benefício de Pensão por Morte, na condição de dependente(s) do(a) ex-servidor(a) acima identificado(a).</p>
+        <p style="margin-top: 30px;">Vem, respeitosamente, requerer a concessão do benefício de Pensão por Morte, nos termos do Art. 40, §7º da Constituição Federal (com redação dada pela EC nº 103/2019) e da legislação municipal aplicável, na condição de dependente(s) do(a) ex-servidor(a) acima identificado(a).</p>
         <p>Itapipoca - CE, ${dataFormatada}.</p>
         
         <div class="signature-block">
             <div class="signature-line"></div>
-            <p style="text-align:center;">Assinatura do(a) Requerente</p>
-            <p style="text-align:center;"><input type="text" style="text-align:center;" placeholder="Nome do(a) Requerente"></p>
+            <p>Assinatura do(a) Requerente</p>
         </div>
     </div></body></html>`;
     
@@ -2205,33 +2219,32 @@ function gerarDeclaracaoNaoAcumulacao() {
         body { font-family: Arial, sans-serif; font-size: 12pt; line-height: 1.8; }
         .container { width: 210mm; margin: auto; padding: 2cm; text-align: justify; }
         .header { text-align: center; margin-bottom: 40px; }
+        .header h3, .header p { margin: 2px 0; }
         h2 { text-align: center; font-weight: bold; }
         input[type="text"] { border: none; background-color: #f0f0f0; padding: 3px; font-weight: bold; font-family: inherit; font-size: inherit; }
         .signature-block { margin-top: 80px; text-align: center; }
-        .signature-block p { margin: 2px 0; }
+        .signature-line { border-bottom: 1px solid #000; margin-top: 60px; width: 80%; margin-left: auto; margin-right: auto;}
+        .signature-block p { margin: 5px 0 0 0; }
     </style></head><body>
     <div class="container">
         <div class="header">
             <h3>ITAPREV</h3>
             <p>INSTITUTO DE PREVIDÊNCIA DOS SERVIDORES MUNICIPAIS DE ITAPIPOCA</p>
         </div>
-        <h2>DECLARAÇÃO</h2>
+        <h2>DECLARAÇÃO DE NÃO ACUMULAÇÃO DE CARGOS</h2>
         <p>
             Eu, <input type="text" size="40" value="${dadosServidor.nomeServidor || ''}">, 
-            nacionalidade <input type="text" size="15" value="brasileiro(a)">, 
-            estado civil <input type="text" size="15" value="">, 
-            portador(a) do RG nº <input type="text" size="20" value="${dadosServidor.rgServidor || ''}">, 
-            CPF n° <input type="text" size="20" value="${dadosServidor.cpfServidor || ''}"> e 
+            portador(a) do RG nº <input type="text" size="20" value="${dadosServidor.rgServidor || ''}"> e
+            inscrito(a) no CPF sob o nº <input type="text" size="20" value="${dadosServidor.cpfServidor || ''}">, 
             matrícula nº <input type="text" size="15" value="${dadosServidor.matriculaServidor || ''}">, 
             residente e domiciliado(a) em <input type="text" size="50" value="">, 
-            declaro que não exerço acumulativamente nenhum outro cargo ou função pública, em conformidade com o princípio constitucional previsto nos Artigos 37, XVI, Alínea a, b e c e XVII, da Constituição da República Federativa do Brasil e no Artigo 17 e parágrafos de Ato das Disposições Constitucionais Transitórias.
+            declaro, para os devidos fins de direito, que não exerço acumulativamente nenhum outro cargo ou função pública, em conformidade com o princípio constitucional previsto no Art. 37, XVI e XVII, da Constituição da República Federativa do Brasil e em observância às normas estabelecidas no Estatuto dos Servidores Públicos do Município de Itapipoca.
         </p>
-        <p>E por ser a expressão da verdade, firmo a presente para os fins legais.</p>
+        <p>E por ser a expressão da verdade, firmo a presente para que surta seus efeitos legais.</p>
         <p style="margin-top: 40px;">Itapipoca - CE, ${dataFormatada}.</p>
         <div class="signature-block">
-            <p>_________________________________________</p>
+            <div class="signature-line"></div>
             <p>${dadosServidor.nomeServidor || 'Nome do Declarante'}</p>
-            <p>Declarante</p>
         </div>
     </div></body></html>`;
 
@@ -2251,10 +2264,12 @@ function gerarDeclaracaoNaoPercepcaoIndividual() {
         body { font-family: Arial, sans-serif; font-size: 12pt; line-height: 1.8; }
         .container { width: 210mm; margin: auto; padding: 2cm; text-align: justify; }
         .header { text-align: center; margin-bottom: 40px; }
+        .header h3, .header p { margin: 2px 0; }
         h2 { text-align: center; font-weight: bold; }
         input[type="text"] { border: none; background-color: #f0f0f0; padding: 3px; font-weight: bold; font-family: inherit; font-size: inherit; }
         .signature-block { margin-top: 80px; text-align: center; }
-        .signature-block p { margin: 2px 0; }
+        .signature-line { border-bottom: 1px solid #000; margin-top: 60px; width: 80%; margin-left: auto; margin-right: auto;}
+        .signature-block p { margin: 5px 0 0 0; }
     </style></head><body>
     <div class="container">
         <div class="header">
@@ -2264,19 +2279,15 @@ function gerarDeclaracaoNaoPercepcaoIndividual() {
         <h2>DECLARAÇÃO</h2>
         <p>
             Eu, <input type="text" size="40" value="${dadosServidor.nomeServidor || ''}">, 
-            nacionalidade <input type="text" size="15" value="brasileiro(a)">, 
-            estado civil <input type="text" size="15" value="">, 
             portador(a) do RG nº <input type="text" size="20" value="${dadosServidor.rgServidor || ''}">, 
-            CPF n° <input type="text" size="20" value="${dadosServidor.cpfServidor || ''}"> e 
-            matrícula nº <input type="text" size="15" value="${dadosServidor.matriculaServidor || ''}">, 
+            inscrito(a) no CPF sob o n° <input type="text" size="20" value="${dadosServidor.cpfServidor || ''}">,
             residente e domiciliado(a) em <input type="text" size="50" value="">, 
-            declaro para os devidos fins de direito e sob as penas da lei, junto ao Tribunal de Contas do Estado do Ceará - TCE-CE, que não percebo benefício previdenciário, até a presente data.
+            declaro para os devidos fins de direito e sob as penas da lei, que não recebo benefício previdenciário de nenhum outro Regime de Previdência, até a presente data.
         </p>
         <p style="margin-top: 40px;">Itapipoca - CE, ${dataFormatada}.</p>
         <div class="signature-block">
-            <p>_________________________________________</p>
+            <div class="signature-line"></div>
             <p>${dadosServidor.nomeServidor || 'Nome do Declarante'}</p>
-            <p>Declarante</p>
         </div>
     </div></body></html>`;
     
@@ -2300,34 +2311,33 @@ function gerarAutoDeclaracaoRenda() {
         .options { margin: 20px 0; }
         .options label { display: block; margin-bottom: 10px; }
         .signature-block { margin-top: 60px; text-align: center; }
-        .signature-block p { margin: 2px 0; }
+        .signature-line { border-bottom: 1px solid #000; margin-top: 60px; width: 80%; margin-left: auto; margin-right: auto;}
+        .signature-block p { margin: 5px 0 0 0; }
     </style></head><body>
     <div class="container">
         <h2>AUTODECLARAÇÃO DE RENDA</h2>
         <p>
             Eu, <input type="text" size="30" placeholder="Nome do Dependente">, 
-            nacionalidade <input type="text" size="12" value="brasileiro(a)">, 
-            estado civil <input type="text" size="12" placeholder="Estado Civil">, 
-            ocupação <input type="text" size="20" placeholder="Ocupação">, 
-            RG N° <input type="text" size="15" placeholder="RG do Dependente"> e 
+            portador(a) do RG N° <input type="text" size="15" placeholder="RG do Dependente"> e 
             CPF N° <input type="text" size="15" placeholder="CPF do Dependente">, 
-            na qualidade de dependente de <input type="text" size="30" value="${dadosInstituidor.nomeServidor || ''}">, 
-            CPF N° <input type="text" size="15" value="${dadosInstituidor.cpfServidor || ''}">, 
-            ex-servidor(a) segurado(a) do Instituto de Previdência dos Servidores Municipais de Itapipoca - ITAPREV, Estado do Ceará, 
-            falecido(a) em <input type="text" size="12" placeholder="DD/MM/AAAA" value="${formatarDataBR(dadosInstituidor.dataObito) || ''}">, DECLARO:
+            na qualidade de dependente de <b>${dadosInstituidor.nomeServidor || '________________'}</b>, 
+            CPF N° <b>${dadosInstituidor.cpfServidor || '________________'}</b>, 
+            ex-servidor(a) segurado(a) do Instituto de Previdência dos Servidores Municipais de Itapipoca - ITAPREV, DECLARO, para fins de comprovação de dependência econômica:
         </p>
         <div class="options">
-            <label><input type="checkbox"> Não possuo renda formal.</label>
-            <label><input type="checkbox"> Possuo renda formal no valor mensal de R$ <input type="text" size="10" placeholder="0,00"> (<input type="text" size="30" placeholder="valor por extenso">), oriunda de <input type="text" size="20" placeholder="trabalho/aposentadoria/etc">, junto à/ao <input type="text" size="20" placeholder="empresa/INSS/etc">.</label>
+            <label><input type="checkbox"> <b>NÃO POSSUO</b> renda formal de qualquer natureza.</label>
+            <label><input type="checkbox"> <b>POSSUO</b> renda formal no valor mensal de R$ <input type="text" size="10" placeholder="0,00">, oriunda de <input type="text" size="20" placeholder="trabalho/aposentadoria/etc">.</label>
         </div>
         <p>
-            Declaro, ainda, que me comprometo a informar ao setor de Recursos Humanos do ITAPREV, caso minha situação de recebimento ou não de renda formal tenha alteração.
+             Declaro que as informações acima são a expressão da verdade, estando ciente das sanções cíveis, administrativas e criminais previstas em lei para o caso de falsidade.
         </p>
-        <p>Por ser expressão de verdade, firmo a presente.</p>
+        <p>
+            Comprometo-me, ainda, a informar ao ITAPREV qualquer alteração na minha condição de renda.
+        </p>
         <p style="margin-top: 40px;">Itapipoca - CE, ${dataFormatada}.</p>
         <div class="signature-block">
-            <p>_________________________________________</p>
-            <p><input type="text" style="width: 80%; text-align: center;" placeholder="Nome do Declarante"></p>
+            <div class="signature-line"></div>
+            <p>Assinatura do Declarante</p>
         </div>
     </div></body></html>`;
 
@@ -2348,34 +2358,45 @@ function gerarDeclaracaoConvivioMarital() {
         .container { width: 210mm; margin: auto; padding: 2cm; text-align: justify; }
         h2 { text-align: center; font-weight: bold; margin-bottom: 40px; }
         input[type="text"] { border: none; background-color: #f0f0f0; padding: 3px; font-weight: bold; font-family: inherit; font-size: inherit; }
-        .signature-block { margin-top: 80px; text-align: center; }
-        .signature-block p { margin: 2px 0; }
+        .signature-block { margin-top: 60px; text-align: center; }
+        .signature-line { border-bottom: 1px solid #000; margin-top: 40px; width: 80%; margin-left: auto; margin-right: auto;}
+        .signature-block p { margin: 5px 0 0 0; }
+        .witness-section { margin-top: 60px; }
+        .witness-title { font-weight: bold; text-align: center; margin-bottom: 20px; }
     </style></head><body>
     <div class="container">
-        <h2>DECLARAÇÃO DE CONVÍVIO MARITAL</h2>
+        <h2>DECLARAÇÃO DE CONVÍVIO MARITAL (UNIÃO ESTÁVEL)</h2>
         <p>
             Eu, <input type="text" size="30" placeholder="Nome do(a) Declarante">, 
-            nacionalidade <input type="text" size="12" value="brasileiro(a)">, 
-            estado civil <input type="text" size="12" placeholder="Estado Civil">, 
             portador(a) do RG de N° <input type="text" size="15" placeholder="RG do(a) Declarante"> e 
             CPF n° <input type="text" size="15" placeholder="CPF do(a) Declarante">, 
             residente e domiciliado(a) à <input type="text" size="50" placeholder="Endereço Completo">, 
-            declaro expressamente, sob responsabilidade civil e criminal, que convivia maritalmente com 
-            <input type="text" size="30" value="${dadosInstituidor.nomeServidor || ''}">, ex-servidor público municipal, 
-            portador do RG n° <input type="text" size="15" value="${dadosInstituidor.rgServidor || ''}">, 
-            CPF n° <input type="text" size="15" value="${dadosInstituidor.cpfServidor || ''}"> e 
-            matrícula n° <input type="text" size="10" value="${dadosInstituidor.matriculaServidor || ''}">, 
-            quando do seu falecimento em <input type="text" size="20" placeholder="data do falecimento" value="${formatarDataBR(dadosInstituidor.dataObito) || ''}">, 
-            e que não iniciei relação de vida comum ou união estável com outra pessoa após o seu falecimento.
+            declaro expressamente, para todos os fins de direito e sob as penas do Art. 299 do Código Penal (Falsidade Ideológica), que mantinha união estável, pública, contínua e duradoura, com o objetivo de constituição de família, nos termos do Art. 1.723 do Código Civil, com 
+            <b>${dadosInstituidor.nomeServidor || '________________'}</b>, 
+            portador(a) do CPF n° <b>${dadosInstituidor.cpfServidor || '________________'}</b>, 
+            quando do seu falecimento em <input type="text" size="20" placeholder="data do falecimento" value="${formatarDataBR(dadosInstituidor.dataObito) || ''}">.
         </p>
         <p>
-            Declaro ainda a inteira responsabilidade pelas informações contidas neste instrumento, estando ciente de que a omissão ou a apresentação de informações e/ou documentos falsos ou divergentes poderão implicar nas medidas administrativas cabíveis.
+            Declaro, ainda, inteira responsabilidade pelas informações contidas neste instrumento, estando ciente de que a omissão ou a apresentação de informações falsas implicará nas medidas administrativas, cíveis e criminais cabíveis.
         </p>
         <p style="margin-top: 40px;">Itapipoca - CE, ${dataFormatada}.</p>
         <div class="signature-block">
-            <p>_________________________________________</p>
-            <p><input type="text" style="width: 80%; text-align: center;" placeholder="Nome do(a) Requerente"></p>
-            <p>CPF N° <input type="text" size="20" style="text-align: center;" placeholder="CPF do(a) Requerente"></p>
+            <div class="signature-line"></div>
+            <p>Assinatura do(a) Requerente</p>
+        </div>
+
+        <div class="witness-section">
+            <div class="witness-title">TESTEMUNHAS</div>
+            <div class="signature-block">
+                <div class="signature-line"></div>
+                <p>Nome: _________________________________________</p>
+                <p>CPF: _________________________________________</p>
+            </div>
+            <div class="signature-block">
+                <div class="signature-line"></div>
+                <p>Nome: _________________________________________</p>
+                <p>CPF: _________________________________________</p>
+            </div>
         </div>
     </div></body></html>`;
 
@@ -2410,4 +2431,3 @@ Object.assign(window, {
 });
 
 window.simulacao = simulacao;
-
