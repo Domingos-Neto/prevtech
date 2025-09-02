@@ -165,7 +165,10 @@
                         <div id="camposPensaoAposentado" style="display:none;"><label>Valor do Provento Bruto do Aposentado (R$): <input type="number" id="proventoAposentado" value="0" /></label></div>
                         <h4>Informações do Servidor (Instituidor)</h4>
                         <div class="form-grid">
-                            <label>Nome: <input type="text" id="nomeServidor" /></label>
+                            <div class="form-grid-span-all" style="display: flex; gap: 10px; align-items: flex-end;">
+                                <label style="flex-grow: 1;">Nome: <input type="text" id="nomeServidor" /></label>
+                                <button type="button" class="secondary" onclick="simulacao.abrirModalBusca()" style="margin-bottom: 0; flex-shrink: 0;"><i class="ri-user-search-line"></i> Buscar Servidor</button>
+                            </div>
                             <label>Matrícula: <input type="text" id="matriculaServidor" /></label>
                             <label>CPF: <input type="text" id="cpfServidor" placeholder="000.000.000-00" /><small id="cpf-status" class="status-message"></small></label>
                             <label>RG (com órgão emissor): <input type="text" id="rgServidor" placeholder="Ex: 20181776485 - SSPDS-CE" /></label>
@@ -923,28 +926,55 @@
                 
                 <div id="telaCadastro" style="display:none;">
                     <h2><i class="ri-user-settings-fill"></i> Módulo de Gestão Cadastral</h2>
-                   <p>Gerencie as informações de todos os servidores e pensionistas do RPPS.</p>
+                    <p>Gerencie as informações de todos os servidores e pensionistas do RPPS. Cadastre um servidor aqui para preencher rapidamente os dados em novas simulações.</p>
+
                     <div class="form-grid" style="align-items: flex-end; margin-bottom: 20px;">
-                        <input type="text" placeholder="Buscar por nome, CPF ou matrícula...">
-                        <button>Buscar Servidor</button>
-                        <button class="success">Adicionar Novo Servidor</button>
-                    </div>
-                    
-                    <div id="fichaCadastralServidor">
-                        <h4>Ficha Cadastral: <span style="color: var(--primary-light);">Maria Oliveira Santos</span></h4>
-                        <div class="tab-nav">
-                            <button class="active">Dados Pessoais</button>
-                            <button>Dados Funcionais</button>
-                            <button>Dependentes</button>
-                            <button>Histórico de Contribuições</button>
+                        <div style="grid-column: 1 / 3;">
+                            <label for="buscaServidor">Buscar por Nome, CPF ou Matrícula:</label>
+                            <input type="text" id="buscaServidor" onkeyup="cadastro.filtrarServidores()" placeholder="Digite para buscar...">
                         </div>
-                        <div class="tab-content active">
-                            <div class="form-grid">
-                                <label>Nome Completo: <input type="text" value="Maria Oliveira Santos" readonly></label>
-                                <label>CPF: <input type="text" value="999.888.777-66" readonly></label>
-                                <label>Data de Nascimento: <input type="date" value="1970-05-20" readonly></label>
-                                <label>Endereço: <input type="text" value="Rua das Flores, 123" readonly></label>
-                            </div>
+                        <button class="success" onclick="cadastro.abrirModal()"><i class="ri-user-add-line"></i> Adicionar Novo Servidor</button>
+                    </div>
+
+                    <table id="tabelaServidores">
+                        <thead>
+                            <tr>
+                                <th>Nome</th>
+                                <th>Matrícula</th>
+                                <th>CPF</th>
+                                <th>Cargo</th>
+                                <th style="width: 150px;">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="corpoTabelaServidores">
+                            </tbody>
+                    </table>
+                    <p id="nenhumServidor" style="text-align:center; display:none;">Nenhum servidor encontrado.</p>
+
+                    <div id="modalServidor" class="modal-overlay" style="display:none;">
+                        <div class="modal-content" style="max-width: 800px;">
+                            <button class="modal-close" onclick="cadastro.fecharModal()">&times;</button>
+                            <h4 id="modalTituloServidor" style="margin-top:0;">Adicionar Novo Servidor</h4>
+                            <form id="formServidor" onsubmit="cadastro.salvarServidor(event)">
+                                <input type="hidden" id="servidorId">
+                                <div class="form-grid" style="max-height: 60vh; overflow-y: auto; padding: 10px;">
+                                    <label>Nome: <input type="text" id="form-nomeServidor" required /></label>
+                                    <label>Matrícula: <input type="text" id="form-matriculaServidor" /></label>
+                                    <label>CPF: <input type="text" id="form-cpfServidor" placeholder="000.000.000-00" /></label>
+                                    <label>RG (com órgão emissor): <input type="text" id="form-rgServidor" /></label>
+                                    <label>Cargo (com referência): <input type="text" id="form-cargoServidor" /></label>
+                                    <label>Carga Horária: <input type="text" id="form-cargaHorariaServidor" /></label>
+                                    <label>Lotação (Secretaria): <input type="text" id="form-lotacaoServidor" /></label>
+                                    <label>Magistério? <select id="form-isMagisterio"><option value="nao">Não</option><option value="sim">Sim</option></select></label>
+                                    <label>Data de Admissão: <input type="date" id="form-dataAdmissao" /></label>
+                                    <label>Data de Nascimento: <input type="date" id="form-dataNascimento" /></label>
+                                    <label>Sexo: <select id="form-sexo"><option value="M">Masculino</option><option value="F">Feminino</option></select></label>
+                                </div>
+                                <div class="wizard-nav" style="margin-top:20px;">
+                                    <button type="button" class="secondary" onclick="cadastro.fecharModal()">Cancelar</button>
+                                    <button type="submit" class="primary">Salvar Servidor</button>
+                                </div>
+                            </form>
                         </div>
                     </div>
                 </div>
@@ -1067,6 +1097,25 @@
     </div>
 </div>
 
+<div id="modalBuscaServidor" class="modal-overlay" style="display:none;">
+    <div class="modal-content" style="max-width: 700px;">
+        <button class="modal-close" onclick="simulacao.fecharModalBusca()">&times;</button>
+        <h4 style="margin-top:0;">Selecionar Servidor</h4>
+        <input type="text" id="buscaServidorSimulacao" onkeyup="simulacao.filtrarBusca()" placeholder="Buscar por Nome, CPF ou Matrícula...">
+        <table id="tabelaBuscaServidor" style="margin-top:15px;">
+            <thead>
+                <tr>
+                    <th>Nome</th>
+                    <th>Matrícula</th>
+                    <th>Ação</th>
+                </tr>
+            </thead>
+            <tbody id="corpoTabelaBuscaServidor">
+                </tbody>
+        </table>
+    </div>
+</div>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
@@ -1082,5 +1131,3 @@
 
 </body>
 </html>
-
-
