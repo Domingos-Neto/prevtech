@@ -151,6 +151,143 @@ const ui = {
     }
 };
 
+// =================================================================================
+// INÍCIO: NOVO MÓDULO DE GESTÃO CADASTRAL
+// =================================================================================
+const cadastro = {
+    DB_KEY: 'servidores_db', // Chave para o localStorage
+
+    // Carrega os servidores do localStorage
+    getServidores: () => {
+        return JSON.parse(localStorage.getItem(cadastro.DB_KEY) || '[]');
+    },
+
+    // Salva a lista de servidores no localStorage
+    saveServidores: (servidores) => {
+        localStorage.setItem(cadastro.DB_KEY, JSON.stringify(servidores));
+    },
+
+    // Renderiza a tabela de servidores na tela
+    renderTabela: () => {
+        const servidores = cadastro.getServidores();
+        const corpoTabela = document.getElementById('corpoTabelaServidores');
+        const msgNenhum = document.getElementById('nenhumServidor');
+        corpoTabela.innerHTML = '';
+
+        if (servidores.length === 0) {
+            msgNenhum.style.display = 'block';
+            return;
+        }
+        msgNenhum.style.display = 'none';
+
+        servidores.forEach(s => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${s.nomeServidor || ''}</td>
+                <td>${s.matriculaServidor || ''}</td>
+                <td>${s.cpfServidor || ''}</td>
+                <td>${s.cargoServidor || ''}</td>
+                <td>
+                    <button class="secondary btn-tabela" onclick="cadastro.editarServidor('${s.id}')" title="Editar"><i class="ri-pencil-line"></i></button>
+                    <button class="danger btn-tabela" onclick="cadastro.deletarServidor('${s.id}')" title="Excluir"><i class="ri-delete-bin-line"></i></button>
+                </td>
+            `;
+            corpoTabela.appendChild(tr);
+        });
+    },
+
+    // Abre o modal para adicionar ou editar
+    abrirModal: () => {
+        document.getElementById('formServidor').reset();
+        document.getElementById('servidorId').value = '';
+        document.getElementById('modalTituloServidor').innerText = 'Adicionar Novo Servidor';
+        const modal = document.getElementById('modalServidor');
+        modal.style.display = 'flex';
+        setTimeout(() => modal.classList.add('show'), 10);
+    },
+
+    // Fecha o modal
+    fecharModal: () => {
+        const modal = document.getElementById('modalServidor');
+        modal.classList.remove('show');
+        setTimeout(() => modal.style.display = 'none', 300);
+    },
+
+    // Salva um servidor novo ou atualiza um existente
+    salvarServidor: (event) => {
+        event.preventDefault();
+        const id = document.getElementById('servidorId').value;
+        const servidores = cadastro.getServidores();
+
+        const servidorData = {
+            id: id || crypto.randomUUID(),
+            nomeServidor: document.getElementById('form-nomeServidor').value,
+            matriculaServidor: document.getElementById('form-matriculaServidor').value,
+            cpfServidor: document.getElementById('form-cpfServidor').value,
+            rgServidor: document.getElementById('form-rgServidor').value,
+            cargoServidor: document.getElementById('form-cargoServidor').value,
+            cargaHorariaServidor: document.getElementById('form-cargaHorariaServidor').value,
+            lotacaoServidor: document.getElementById('form-lotacaoServidor').value,
+            isMagisterio: document.getElementById('form-isMagisterio').value,
+            dataAdmissao: document.getElementById('form-dataAdmissao').value,
+            dataNascimento: document.getElementById('form-dataNascimento').value,
+            sexo: document.getElementById('form-sexo').value,
+        };
+
+        if (id) { // Editando
+            const index = servidores.findIndex(s => s.id === id);
+            servidores[index] = servidorData;
+        } else { // Adicionando
+            servidores.unshift(servidorData);
+        }
+
+        cadastro.saveServidores(servidores);
+        cadastro.renderTabela();
+        cadastro.fecharModal();
+        ui.showToast(`Servidor ${id ? 'atualizado' : 'salvo'} com sucesso!`, true);
+    },
+
+    // Preenche o modal com dados de um servidor para edição
+    editarServidor: (id) => {
+        const servidores = cadastro.getServidores();
+        const servidor = servidores.find(s => s.id === id);
+        if (!servidor) return;
+
+        cadastro.abrirModal();
+        document.getElementById('modalTituloServidor').innerText = 'Editar Servidor';
+        document.getElementById('servidorId').value = servidor.id;
+        
+        // Preenche o formulário
+        for (const key in servidor) {
+            const el = document.getElementById(`form-${key}`);
+            if (el) el.value = servidor[key];
+        }
+    },
+
+    // Deleta um servidor
+    deletarServidor: (id) => {
+        if (!confirm('Tem certeza que deseja excluir este servidor? Esta ação não pode ser desfeita.')) return;
+        let servidores = cadastro.getServidores();
+        servidores = servidores.filter(s => s.id !== id);
+        cadastro.saveServidores(servidores);
+        cadastro.renderTabela();
+        ui.showToast('Servidor excluído.', true);
+    },
+
+    // Filtra a tabela de servidores
+    filtrarServidores: () => {
+        const filtro = document.getElementById('buscaServidor').value.toLowerCase();
+        const linhas = document.querySelectorAll('#corpoTabelaServidores tr');
+        linhas.forEach(linha => {
+            const textoLinha = linha.innerText.toLowerCase();
+            linha.style.display = textoLinha.includes(filtro) ? '' : 'none';
+        });
+    }
+};
+// =================================================================================
+// FIM: NOVO MÓDULO DE GESTÃO CADASTRAL
+// =================================================================================
+
 const simulacao = {
   coletarDados: () => {
     return coletarDadosSimulacao(); // Chama a função global de coleta de dados
@@ -256,7 +393,74 @@ const simulacao = {
         event.target.value = '';
     };
     reader.readAsText(file);
+  },
+
+  // INÍCIO: NOVAS FUNÇÕES DE INTEGRAÇÃO COM CADASTRO
+  abrirModalBusca: () => {
+    const servidores = cadastro.getServidores();
+    const corpoTabela = document.getElementById('corpoTabelaBuscaServidor');
+    corpoTabela.innerHTML = '';
+    servidores.forEach(s => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${s.nomeServidor}</td>
+            <td>${s.matriculaServidor}</td>
+            <td><button class="primary btn-tabela" onclick="simulacao.selecionarServidor('${s.id}')">Selecionar</button></td>
+        `;
+        corpoTabela.appendChild(tr);
+    });
+    const modal = document.getElementById('modalBuscaServidor');
+    modal.style.display = 'flex';
+    setTimeout(() => modal.classList.add('show'), 10);
+  },
+
+  fecharModalBusca: () => {
+      const modal = document.getElementById('modalBuscaServidor');
+      modal.classList.remove('show');
+      setTimeout(() => modal.style.display = 'none', 300);
+  },
+
+  selecionarServidor: (id) => {
+      const servidores = cadastro.getServidores();
+      const servidor = servidores.find(s => s.id === id);
+      if (!servidor) {
+          ui.showToast("Servidor não encontrado.", false);
+          return;
+      }
+
+      // Mapeia os dados do servidor para os campos do formulário da simulação
+      const mapping = {
+          nomeServidor: 'nomeServidor',
+          matriculaServidor: 'matriculaServidor',
+          cpfServidor: 'cpfServidor',
+          rgServidor: 'rgServidor',
+          cargoServidor: 'cargoServidor',
+          cargaHorariaServidor: 'cargaHorariaServidor',
+          lotacaoServidor: 'lotacaoServidor',
+          isMagisterio: 'isMagisterio',
+          dataAdmissao: 'dataAdmissao',
+          dataNascimento: 'dataNascimento',
+          sexo: 'sexo'
+      };
+
+      for (const key in mapping) {
+          const el = document.getElementById(mapping[key]);
+          if (el) el.value = servidor[key] || '';
+      }
+      
+      simulacao.fecharModalBusca();
+      ui.showToast("Dados do servidor preenchidos!", true);
+  },
+
+  filtrarBusca: () => {
+      const filtro = document.getElementById('buscaServidorSimulacao').value.toLowerCase();
+      const linhas = document.querySelectorAll('#corpoTabelaBuscaServidor tr');
+      linhas.forEach(linha => {
+          const textoLinha = linha.innerText.toLowerCase();
+          linha.style.display = textoLinha.includes(filtro) ? '' : 'none';
+      });
   }
+  // FIM: NOVAS FUNÇÕES DE INTEGRAÇÃO
 };
 
 // =================================================================================
@@ -566,6 +770,9 @@ function handleNavClick(event, targetView) {
             break;
         case 'geradorDocumentos':
             document.getElementById('doc-nome-servidor').value = '';
+            break;
+        case 'telaCadastro': // <-- LINHA ADICIONADA
+            cadastro.renderTabela();
             break;
     }
 }
@@ -2427,7 +2634,8 @@ Object.assign(window, {
     gerarDeclaracaoNaoAcumulacao,
     gerarDeclaracaoNaoPercepcaoIndividual,
     gerarAutoDeclaracaoRenda,
-    gerarDeclaracaoConvivioMarital
+    gerarDeclaracaoConvivioMarital,
+    cadastro // <-- ADICIONADO PARA ACESSO GLOBAL
 });
 
 window.simulacao = simulacao;
