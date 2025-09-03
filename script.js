@@ -2720,8 +2720,8 @@ function converterDataParaISO(dataInput) {
         const partes = dataInput.split('/');
         if (partes.length === 3) {
             const [dia, mes, ano] = partes;
-            if (dia.length === 2 && mes.length === 2 && ano.length === 4) {
-                return `${ano}-${mes}-${dia}`;
+            if (dia && mes && ano && dia.length <= 2 && mes.length <= 2 && ano.length === 4) {
+                return `${ano}-${String(mes).padStart(2, '0')}-${String(dia).padStart(2, '0')}`;
             }
         }
     }
@@ -2738,16 +2738,13 @@ function importarCTCExcel(event) {
     reader.onload = (e) => {
         try {
             const data = new Uint8Array(e.target.result);
-            // A opção cellDates: true é importante para que a biblioteca tente converter as datas.
             const workbook = XLSX.read(data, { type: "array", cellDates: true });
             const sheetName = workbook.SheetNames[0];
             const worksheet = workbook.Sheets[sheetName];
-            // 'raw: false' ajuda a obter valores formatados se a conversão de data falhar.
             const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: "", raw: false });
 
             document.getElementById('corpo-tabela-periodos-ctc').innerHTML = ''; // Limpa a tabela
 
-            // Pula a primeira linha (cabeçalho)
             for (let i = 1; i < rows.length; i++) {
                 if (rows[i].length === 0 || rows[i].every(cell => cell === "")) {
                     continue; // Pula linhas em branco
@@ -2755,24 +2752,24 @@ function importarCTCExcel(event) {
                 
                 const [inicio, fim, regime, deducoes, fonte] = rows[i];
                 
-                // Usa a nova função corrigida para converter as datas.
                 const inicioISO = converterDataParaISO(inicio);
                 const fimISO = converterDataParaISO(fim);
 
-                // Adiciona a linha apenas se as datas de início e fim forem válidas.
                 if (inicioISO && fimISO) {
                     adicionarLinhaPeriodoCTC(inicioISO, fimISO, regime || 'RGPS', deducoes || '0', fonte || '');
                 } else {
-                    console.warn(`Linha ${i+1} ignorada por conter datas inválidas:`, rows[i]);
+                    console.warn(`Linha ${i + 1} do Excel ignorada por conter datas inválidas:`, rows[i]);
                 }
             }
+
             ui.showToast("Períodos da CTC importados com sucesso!", true);
-            calcularTempoTotalCTC(); // Recalcula o total após a importação.
+            calcularTempoTotalCTC(); // Recalcula o total de dias automaticamente.
+
         } catch (err) {
             ui.showToast("Erro ao processar o arquivo Excel da CTC.", false);
             console.error(err);
         } finally {
-            event.target.value = ''; // Limpa o input para permitir carregar o mesmo arquivo novamente.
+            event.target.value = '';
         }
     };
     reader.readAsArrayBuffer(file);
@@ -2810,5 +2807,6 @@ Object.assign(window, {
 });
 
 window.simulacao = simulacao;
+
 
 
