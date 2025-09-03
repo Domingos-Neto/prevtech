@@ -756,26 +756,33 @@
                         <label>Data do Requerimento: <input type="date" id="ctc-dataRequerimento"></label>
                     </div>
 
-                    <h4>Períodos de Contribuição</h4>
-                    <table id="tabela-periodos-ctc">
-                        <thead>
-                            <tr>
-                                <th style="width: 150px;">Data Início</th>
-                                <th style="width: 150px;">Data Fim</th>
-                                <th style="width: 120px;">Regime</th>
-                                <th style="width: 100px;">Deduções (dias)</th>
-                                <th>Fonte / Observação</th>
-                                <th style="width: 100px;">Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody id="corpo-tabela-periodos-ctc"></tbody>
-                    </table>
-                    <button type="button" class="primary" onclick="adicionarLinhaPeriodoCTC()">+ Adicionar Período</button>
+                    <h4 class="accordion-toggle active">Períodos de Contribuição</h4>
+                    <div class="accordion-content" style="max-height: fit-content;">
+                        <table id="tabela-periodos-ctc">
+                            <thead>
+                                <tr>
+                                    <th style="width: 150px;">Data Início</th>
+                                    <th style="width: 150px;">Data Fim</th>
+                                    <th style="width: 120px;">Regime</th>
+                                    <th style="width: 100px;">Deduções (dias)</th>
+                                    <th>Fonte / Observação</th>
+                                    <th style="width: 100px;">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="corpo-tabela-periodos-ctc"></tbody>
+                        </table>
+                        <button type="button" class="primary" onclick="adicionarLinhaPeriodoCTC()">+ Adicionar Período</button>
+                    </div>
 
                     <h4 id="total-tempo-ctc" style="text-align: right; border-top: 2px solid var(--prevtech-azul-escuro); padding-top: 10px; margin-top:20px;">Total: 0 dias</h4>
                     
                     <div class="wizard-nav">
                         <button class="secondary" onclick="handleNavClick(event, 'dashboard')">Voltar ao Painel</button>
+                        <button class="secondary" onclick="document.getElementById('arquivoExcelCTC').click()"><i class="ri-upload-2-line"></i> Importar Períodos</button>
+                        <button class="secondary" onclick="exportarCTCExcel(this)">
+                             <span class="button-text"><i class="ri-file-excel-2-line"></i> Exportar Períodos</span>
+                             <span class="spinner"></span>
+                        </button>
                         <button onclick="salvarCTC()" class="secondary">💾 Salvar CTC</button>
                         <button class="success" onclick="gerarDocumentoCTC(this)">
                             <span class="button-text">🏛️ Gerar Documento CTC</span>
@@ -1128,6 +1135,7 @@
 
 <script type="module" src="script.js"></script>
 <input type="file" id="carregarSimulacaoInput" accept=".json" style="display:none;" onchange="simulacao.carregarLocal(event)" />
+<input type="file" id="arquivoExcelCTC" accept=".xlsx, .xls" style="display:none;" />
 
 </body>
 </html>
