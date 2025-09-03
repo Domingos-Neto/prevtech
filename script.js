@@ -2695,38 +2695,43 @@ function exportarCTCExcel(button) {
  * @returns {string|null} A data no formato AAAA-MM-DD ou nulo se a entrada for inválida.
  */
 function converterDataParaISO(dataInput) {
-    // Retorna nulo se a entrada for vazia ou inválida.
     if (!dataInput) {
         return null;
     }
 
-    // Caso 1: A entrada é um objeto de data do JavaScript (o mais comum vindo da biblioteca XLSX).
     if (dataInput instanceof Date) {
-        // Usamos getUTC... para evitar problemas de fuso horário que podem alterar o dia.
         const ano = dataInput.getUTCFullYear();
-        const mes = String(dataInput.getUTCMonth() + 1).padStart(2, '0'); // +1 porque os meses são de 0 a 11.
+        const mes = String(dataInput.getUTCMonth() + 1).padStart(2, '0');
         const dia = String(dataInput.getUTCDate()).padStart(2, '0');
         return `${ano}-${mes}-${dia}`;
     }
 
-    // Caso 2: A entrada é uma string.
     if (typeof dataInput === 'string') {
-        // Verifica se já está no formato correto (AAAA-MM-DD).
         if (/^\d{4}-\d{2}-\d{2}$/.test(dataInput)) {
             return dataInput;
         }
         
-        // Tenta converter de DD/MM/AAAA para AAAA-MM-DD.
         const partes = dataInput.split('/');
         if (partes.length === 3) {
-            const [dia, mes, ano] = partes;
-            if (dia && mes && ano && dia.length <= 2 && mes.length <= 2 && ano.length === 4) {
+            let [dia, mes, ano] = partes;
+            
+            // ### INÍCIO DA NOVA LÓGICA ###
+            // Se o ano tiver 1 ou 2 dígitos, converte para 4 dígitos.
+            if (ano.length <= 2) {
+                const anoNumerico = parseInt(ano, 10);
+                // Se o ano for menor que 50 (ex: 01, 24, 49), assume-se que é do século 21 (20xx).
+                // Se for 50 ou maior (ex: 98, 85, 70), assume-se que é do século 20 (19xx).
+                ano = (anoNumerico < 50 ? '20' : '19') + String(anoNumerico).padStart(2, '0');
+            }
+            // ### FIM DA NOVA LÓGICA ###
+
+            // Continua com a validação, agora com o ano já corrigido para 4 dígitos.
+            if (dia && mes && ano && ano.length === 4) {
                 return `${ano}-${String(mes).padStart(2, '0')}-${String(dia).padStart(2, '0')}`;
             }
         }
     }
     
-    // Retorna nulo se nenhum formato conhecido for encontrado.
     return null;
 }
 
@@ -2807,6 +2812,7 @@ Object.assign(window, {
 });
 
 window.simulacao = simulacao;
+
 
 
 
