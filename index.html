@@ -136,6 +136,13 @@
                 </div>
 
                 <div id="simulacao" style="display:none;">
+                    <div id="autosave-prompt" class="toastify-prompt" style="display:none;">
+                        <span><i class="ri-history-line"></i> Encontramos dados não salvos. Deseja restaurá-los?</span>
+                        <div>
+                            <button class="primary" onclick="restoreFromAutosave()">Sim</button>
+                            <button class="secondary" onclick="clearAutosave()">Não</button>
+                        </div>
+                    </div>
                     <div id="passo1" class="wizard-step">
                         <h2>Passo 1: Dados e Tipo de Benefício</h2>
                         <div class="form-grid">
@@ -284,7 +291,9 @@
                                 <span class="button-text">📊 Calcular Cenário</span>
                                 <span class="spinner"></span>
                             </button>
-                            <div id="resultado-planner"></div>
+                            <div id="resultado-planner">
+                                <canvas id="graficoComparadorCenarios" style="margin-top: 20px; max-height: 250px;"></canvas>
+                                </div>
                         </div>
                         
                         <h4 style="margin-top: 30px;">Ações Finais</h4>
@@ -1116,6 +1125,13 @@
     </div>
 </div>
 
+<div id="modalDetalhesCalculo" class="modal-overlay" style="display:none;">
+    <div class="modal-content" style="max-width: 600px;">
+        <button class="modal-close" onclick="ui.hideCalculationDetails()">&times;</button>
+        <h4 style="margin-top:0;">Detalhamento do Cálculo</h4>
+        <div id="conteudoDetalhesCalculo"></div>
+    </div>
+</div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
