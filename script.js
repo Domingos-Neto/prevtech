@@ -45,6 +45,7 @@ const AppState = {
     usuarioAtual: null,
     salarioChart: null,
     tiposBeneficioChart: null,
+    plannerChart: null,
     simulacaoResultados: {},
     dashboardViewMode: 'meus_registros',
     currentStep: 1,
@@ -289,8 +290,51 @@ const cadastro = {
 // =================================================================================
 
 const simulacao = {
+  AUTOSAVE_KEY: 'simulacao_autosave_data',
+
+  // Salva o formulário atual no localStorage
+  autosave: () => {
+    if (AppState.currentStep > 0) { // Só salva se já estiver na simulação
+        const dados = coletarDadosSimulacao();
+        localStorage.setItem(simulacao.AUTOSAVE_KEY, JSON.stringify(dados));
+    }
+  },
+
+  // Verifica se existem dados salvos e oferece para restaurar
+  checkForAutosave: () => {
+      const savedData = localStorage.getItem(simulacao.AUTOSAVE_KEY);
+      if (savedData) {
+          const container = document.getElementById('autosave-notification');
+          container.style.display = 'flex';
+      }
+  },
+
+  // Restaura os dados do autosave
+  restoreAutosave: () => {
+      const savedData = localStorage.getItem(simulacao.AUTOSAVE_KEY);
+      if (savedData) {
+          try {
+              const dados = JSON.parse(savedData);
+              simulacao.restaurarDados(dados);
+              ui.showToast("Dados da última sessão restaurados.", true);
+          } catch (e) {
+              ui.showToast("Erro ao restaurar dados salvos.", false);
+              console.error(e);
+          } finally {
+              simulacao.clearAutosave();
+          }
+      }
+  },
+
+  // Limpa os dados do autosave
+  clearAutosave: () => {
+      localStorage.removeItem(simulacao.AUTOSAVE_KEY);
+      const container = document.getElementById('autosave-notification');
+      container.style.display = 'none';
+  },
+
   coletarDados: () => {
-    return coletarDadosSimulacao(); // Chama a função global de coleta de dados
+    return coletarDadosSimulacao();
   },
 
   restaurarDados: (dados) => {
@@ -459,8 +503,37 @@ const simulacao = {
           const textoLinha = linha.innerText.toLowerCase();
           linha.style.display = textoLinha.includes(filtro) ? '' : 'none';
       });
-  }
+  },
   // FIM: NOVAS FUNÇÕES DE INTEGRAÇÃO
+  
+  // Exibe o modal com o detalhamento do cálculo
+  showCalculationDetails: () => {
+    const details = AppState.simulacaoResultados.calculationDetails;
+    if (!details) {
+        ui.showToast("Nenhum detalhe de cálculo disponível.", false);
+        return;
+    }
+
+    const modalBody = document.getElementById('calculation-details-body');
+    modalBody.innerHTML = ''; 
+
+    details.forEach(item => {
+        const p = document.createElement('p');
+        p.innerHTML = `<strong>${item.step}:</strong> ${item.description} <span class="detail-value">${item.value}</span>`;
+        modalBody.appendChild(p);
+    });
+
+    const modal = document.getElementById('calculation-details-modal');
+    modal.style.display = 'flex';
+    setTimeout(() => modal.classList.add('show'), 10);
+  },
+
+  // Fecha o modal de detalhes do cálculo
+  closeCalculationDetails: () => {
+    const modal = document.getElementById('calculation-details-modal');
+    modal.classList.remove('show');
+    setTimeout(() => modal.style.display = 'none', 300);
+  }
 };
 
 // =================================================================================
@@ -636,7 +709,8 @@ function preencherChecklistComDadosDaSimulacao() {
         cpf: document.getElementById('cpfServidor').value,
         nascimento: formatarDataBR(document.getElementById('dataNascimento').value),
         cargo: document.getElementById('cargoServidor').value,
-        lotacao: document.getElementById('lotacaoServidor').value
+        lotacao: document.getElementById('lotacaoServidor').value,
+        tipoBeneficio: document.getElementById('tipoBeneficio').value
     };
 
     // 2. Navegar para a nova tela de checklist
@@ -665,6 +739,49 @@ function preencherChecklistComDadosDaSimulacao() {
             const lotacaoInput = form.querySelector('input[id*="-lotacao"]');
             if (lotacaoInput) lotacaoInput.value = dados.lotacao;
         });
+        
+        // Restaura o estado do checklist se existir na simulação
+        const checklistState = AppState.simulacaoResultados.checklistState;
+        if (checklistState) {
+            for (const formId in checklistState) {
+                const formElement = document.getElementById(formId);
+                if (formElement) {
+                    checklistState[formId].items.forEach(item => {
+                        const checkbox = formElement.querySelector(`#${item.id}`);
+                        if (checkbox) checkbox.checked = item.checked;
+                    });
+                    const obsTextarea = formElement.querySelector('textarea');
+                    if (obsTextarea) obsTextarea.value = checklistState[formId].observacoes;
+                }
+            }
+        }
+
+        // Seleciona a aba correta
+        let targetTabId = '';
+        switch (dados.tipoBeneficio) {
+            case 'voluntaria':
+            case 'idade':
+                targetTabId = 'idade-tempo-pane';
+                break;
+            case 'incapacidade':
+                targetTabId = 'incapacidade-pane';
+                break;
+            case 'compulsoria':
+                targetTabId = 'compulsoria-pane';
+                break;
+            case 'pensao_ativo':
+            case 'pensao_aposentado':
+                targetTabId = 'pensao-pane';
+                break;
+        }
+
+        if (targetTabId) {
+            const tabButton = document.querySelector(`#checklistTab button[data-bs-target="#${targetTabId}"]`);
+            if (tabButton) {
+                const tab = new bootstrap.Tab(tabButton);
+                tab.show();
+            }
+        }
 
         ui.showToast("Dados do servidor preenchidos no checklist!", true);
     }, 250); // um pequeno delay para garantir que a UI foi atualizada
@@ -732,6 +849,9 @@ function setupEventListeners() {
     if (btnLimparTempo) {
         btnLimparTempo.addEventListener('click', limparCalculoTempo);
     }
+    
+    // Autosave listener
+    document.getElementById('simulacao').addEventListener('input', simulacao.autosave);
 }
 
 function openTimeCalcModal() {
@@ -761,6 +881,7 @@ function handleNavClick(event, targetView) {
         case 'simulacao':
             limparFormularioCompleto();
             irParaPasso(1);
+            simulacao.checkForAutosave();
             break;
         case 'geradorCTC':
             limparFormularioCTC();
@@ -1101,6 +1222,7 @@ function limparFormularioCompleto() {
     document.getElementById('resultado-planner').innerHTML = '';
     AppState.simulacaoResultados = {};
     if (AppState.salarioChart) AppState.salarioChart.destroy();
+    if (AppState.plannerChart) AppState.plannerChart.destroy();
     
     document.getElementById("tempoExterno").value = "0";
     document.getElementById("tempoEspecial").value = "0";
@@ -1253,12 +1375,15 @@ function calcularBeneficio(n = true, b = null) {
             const checklistStateAtual = AppState.simulacaoResultados.checklistState;
             AppState.simulacaoResultados = {};
             AppState.simulacaoResultados.checklistState = checklistStateAtual;
+            
+            let calculationDetails = [];
 
             if (t !== 'pensao_aposentado') {
                 const mR = calcularMediaSalarial();
                 m = mR.media;
                 s = mR.salarios;
                 AppState.simulacaoResultados.salariosParaGrafico = s;
+                calculationDetails.push({ step: "Média Salarial", description: "Média aritmética simples de todos os salários de contribuição atualizados.", value: formatarDinheiro(m) });
             }
 
             const isA = t === 'voluntaria' || t === 'incapacidade' || t === 'compulsoria' || t === 'idade';
@@ -1277,6 +1402,7 @@ function calcularBeneficio(n = true, b = null) {
                     dC = `O valor do benefício é composto pelo somatório dos proventos detalhados, que tem como base a média salarial. A elegibilidade e o valor final podem variar conforme a regra de transição aplicável.`;
                     projetarAposentadoria(m);
                     verificarAbonoPermanencia();
+                    calculationDetails.push({ step: "Valor Final (Voluntária)", description: "O valor é definido pelo total dos proventos informados, que podem se basear em regras de integralidade ou na média salarial.", value: formatarDinheiro(vB) });
 
                 } else if (t === 'incapacidade') {
                     const isGrave = document.getElementById('incapacidadeGrave').value === 'sim';
@@ -1294,6 +1420,7 @@ function calcularBeneficio(n = true, b = null) {
                     if (isGrave) {
                         vB = m;
                         dC = `Cálculo com base em 100% da média salarial, por se tratar de incapacidade decorrente de acidente de trabalho, doença profissional ou do trabalho.`;
+                        calculationDetails.push({ step: "Percentual Aplicado", description: "Incapacidade grave, acidente de trabalho ou doença profissional.", value: "100%" });
                     } else {
                         if (dataInicioIncapacidade < dataReforma) {
                             const tempoEmDias = parseInt(document.getElementById('tempoContribuicaoEfetivoDias').value) || 0;
@@ -1307,16 +1434,20 @@ function calcularBeneficio(n = true, b = null) {
                             const media80 = calcularMedia80Maiores(s);
                             const tempoExigidoEmDias = 9125; // 25 anos
                             const fatorProporcional = tempoEmDias / tempoExigidoEmDias;
-                            
                             vB = media80 * fatorProporcional;
                             
                             dC = `Cálculo pela REGRA ANTIGA (EC 41/2003) por direito adquirido (DII < 13/11/2019). <br><b>Média dos 80% maiores salários:</b> ${formatarDinheiro(media80)}. <br><b>Fator de Proporcionalidade:</b> (${tempoEmDias} / ${tempoExigidoEmDias} dias).`;
+                            calculationDetails.push({ step: "Média (Regra Antiga)", description: "Média dos 80% maiores salários de contribuição.", value: formatarDinheiro(media80) });
+                            calculationDetails.push({ step: "Proporcionalidade", description: `Tempo de contribuição (${tempoEmDias} dias) dividido pelo tempo exigido (${tempoExigidoEmDias} dias).`, value: fatorProporcional.toFixed(4) });
                         }
                         else {
                             const anosExcedentes = Math.max(0, Math.floor(tempoContribTotalAnos) - 20);
                             const percentual = Math.min(1, 0.60 + (anosExcedentes * 0.02));
                             vB = m * percentual;
                             dC = `Cálculo pela REGRA NOVA (EC 103/2019). O valor corresponde a ${ (percentual * 100).toFixed(0) }% da média salarial (60% + 2% por ano de contribuição que exceder 20 anos).`;
+                            calculationDetails.push({ step: "Percentual Base (Regra Nova)", description: "60% da média salarial.", value: formatarDinheiro(m * 0.6) });
+                            calculationDetails.push({ step: "Acréscimo por Tempo", description: `2% para cada um dos ${anosExcedentes} anos que excedem 20 anos de contribuição.`, value: `+ ${(anosExcedentes * 2)}%` });
+                            calculationDetails.push({ step: "Percentual Final", description: "Soma dos percentuais aplicados sobre a média.", value: `${(percentual * 100).toFixed(0)}%` });
                         }
                     }
 
@@ -1341,9 +1472,13 @@ function calcularBeneficio(n = true, b = null) {
                     
                     dC = `Cálculo conforme Art. 8º do Decreto 113/2022. O benefício é proporcional ao tempo de contribuição. <br><b>Fator de Proporcionalidade:</b> ${fatorProporcionalidade.toFixed(4)} (${anosContrib} anos / 20). <br><b>Valor Base (Regra Geral):</b> ${formatarDinheiro(mediaComRegraGeral)}.`;
 
+                    calculationDetails.push({ step: "Cálculo Base (Regra Geral)", description: `60% da média + 2% por ano acima de 20 anos de contrib. (${(percentualBase*100).toFixed(0)}%)`, value: formatarDinheiro(mediaComRegraGeral) });
+                    calculationDetails.push({ step: "Fator de Proporcionalidade", description: `Anos de contribuição (${anosContrib}) dividido por 20 (mínimo para regra geral).`, value: fatorProporcionalidade.toFixed(4) });
+
                     if (vB < SALARIO_MINIMO) {
-                        vB = SALARIO_MINIMO;
                         dC += `<br><b>Ajuste:</b> O valor foi elevado para o salário mínimo vigente.`;
+                        calculationDetails.push({ step: "Ajuste ao Mínimo", description: `O valor calculado (${formatarDinheiro(vB)}) foi ajustado para o salário mínimo.`, value: formatarDinheiro(SALARIO_MINIMO) });
+                        vB = SALARIO_MINIMO;
                     }
 
                     document.querySelectorAll("#corpo-tabela-proventos-ato .provento-valor").forEach(i => i.value = '');
@@ -1358,15 +1493,21 @@ function calcularBeneficio(n = true, b = null) {
                 if (t === 'pensao_ativo') {
                     vB = m * percentualCota;
                     dC = `Cálculo conforme Art. 23 da EC 103/19. Cota de ${ (percentualCota * 100).toFixed(0) }% (50% base + ${ nD * 10 }% por dependente) sobre a média salarial do servidor ativo.`;
+                    calculationDetails.push({ step: "Base de Cálculo", description: "Média salarial do servidor instituidor.", value: formatarDinheiro(m) });
                 } else if (t === 'pensao_aposentado') {
                     const proventoBrutoAposentado = parseFloat(document.getElementById('proventoAposentado').value) || 0;
                     vB = proventoBrutoAposentado * percentualCota;
                     dC = `Cálculo conforme Art. 23 da EC 103/19. Cota de ${ (percentualCota * 100).toFixed(0) }% (50% base + ${ nD * 10 }% por dependente) sobre o provento bruto de ${formatarDinheiro(proventoBrutoAposentado)} que o servidor recebia.`;
+                    calculationDetails.push({ step: "Base de Cálculo", description: "Provento bruto do aposentado instituidor.", value: formatarDinheiro(proventoBrutoAposentado) });
                 }
+                calculationDetails.push({ step: "Cota Familiar", description: `50% (base) + ${nD} x 10% (por dependente).`, value: `${(percentualCota*100).toFixed(0)}%` });
             }
 
-            AppState.simulacaoResultados = { ...AppState.simulacaoResultados, mediaSalarial: m, valorBeneficioFinal: vB, tipo: document.querySelector("#tipoBeneficio option:checked").text, descricao: dC };
-            rD.innerHTML = `<h3>Resultado do Cálculo (Bruto)</h3><p><b>Tipo:</b> ${AppState.simulacaoResultados.tipo}</p>${m>0?`<p><b>Média Salarial de Contribuição:</b> ${formatarDinheiro(AppState.simulacaoResultados.mediaSalarial)}</p>`:''}<p><b>Fundamento do Cálculo:</b> ${AppState.simulacaoResultados.descricao}</p><p style="font-size:1.2em;font-weight:bold;">💰 Valor Bruto do Benefício: ${formatarDinheiro(AppState.simulacaoResultados.valorBeneficioFinal)}</p>`;
+            calculationDetails.push({ step: "Valor Final Bruto", description: "Valor final do benefício antes dos descontos.", value: formatarDinheiro(vB) });
+            AppState.simulacaoResultados = { ...AppState.simulacaoResultados, mediaSalarial: m, valorBeneficioFinal: vB, tipo: document.querySelector("#tipoBeneficio option:checked").text, descricao: dC, calculationDetails: calculationDetails };
+            
+            rD.innerHTML = `<h3>Resultado do Cálculo (Bruto)</h3><p><b>Tipo:</b> ${AppState.simulacaoResultados.tipo}</p>${m>0?`<p><b>Média Salarial de Contribuição:</b> ${formatarDinheiro(AppState.simulacaoResultados.mediaSalarial)}</p>`:''}<p><b>Fundamento do Cálculo:</b> ${AppState.simulacaoResultados.descricao}</p><p style="font-size:1.2em;font-weight:bold;">💰 Valor Bruto do Benefício: ${formatarDinheiro(AppState.simulacaoResultados.valorBeneficioFinal)}</p><button class="secondary" onclick="simulacao.showCalculationDetails()" style="margin-top:10px;"><i class="ri-information-line"></i> Ver Detalhes do Cálculo</button>`;
+            
             calculateValorLiquido(vB);
 
             document.getElementById('btnGerarAtoAposentadoria').style.display = isA ? 'inline-flex' : 'none';
@@ -1376,6 +1517,7 @@ function calcularBeneficio(n = true, b = null) {
 
             if (n) {
                 irParaPasso(3);
+                simulacao.clearAutosave(); // Limpa o autosave ao calcular com sucesso
             }
         } finally {
             ui.toggleSpinner(b, false);
@@ -1888,23 +2030,21 @@ function coletarDadosSimulacao() {
     document.querySelectorAll("#corpo-tabela-proventos-ato tr").forEach(l => dados.proventosAto.push({ descricao: l.querySelector(".provento-descricao").value, valor: l.querySelector(".provento-valor").value }));
     document.querySelectorAll("#corpo-tabela-dependentes tr").forEach(l => dados.dependentes.push({ nome: l.querySelector('.dependente-nome').value, dataNasc: l.querySelector('.dependente-dataNasc').value, parentesco: l.querySelector('.dependente-parentesco').value, invalido: l.querySelector('.dependente-invalido').value }));
     document.querySelectorAll("#corpo-tabela-tempo-externo tr").forEach(row => dados.periodosExternos.push({ inicio: row.dataset.inicio, fim: row.dataset.fim }));
-
-    const checklistContainer = document.getElementById('checklist-content');
-    if (checklistContainer && checklistContainer.innerHTML !== '') {
-        const checklistState = { secoes: {}, observacoesGerais: document.getElementById('checklist-observacoes').value };
-        checklistContainer.querySelectorAll('.checklist-secao').forEach(secaoEl => {
-            const secaoKey = secaoEl.dataset.secaoKey;
-            checklistState.secoes[secaoKey] = { itens: [] };
-            secaoEl.querySelectorAll('.checklist-item').forEach(itemEl => {
-                checklistState.secoes[secaoKey].itens.push({
-                    texto: itemEl.querySelector('label').innerText,
-                    checked: itemEl.querySelector('input[type="checkbox"]').checked,
-                    nota: itemEl.querySelector('textarea.checklist-item-note').value
-                });
-            });
+    
+    // Coleta o estado do checklist
+    const checklistState = {};
+    const checklistForms = document.querySelectorAll('.checklist-form');
+    checklistForms.forEach(form => {
+        const formId = form.id;
+        const items = [];
+        form.querySelectorAll('.form-check-input').forEach(checkbox => {
+            items.push({ id: checkbox.id, checked: checkbox.checked });
         });
-        dados.resultados.checklistState = checklistState;
-    }
+        const observacoes = form.querySelector('textarea')?.value || '';
+        checklistState[formId] = { items, observacoes };
+    });
+    dados.resultados.checklistState = checklistState;
+
 
     return dados;
 }
@@ -2134,6 +2274,7 @@ function planejarAposentadoria(button) {
     setTimeout(() => {
         try {
             const dadosBase = coletarDadosSimulacao();
+            const valorBeneficioAtual = AppState.simulacaoResultados.valorBeneficioFinal || 0;
             const dataFuturaStr = document.getElementById('planner-data-futura').value;
             const aumentoSalarial = parseFloat(document.getElementById('planner-aumento-salarial').value) || 0;
             const tempoAdicional = parseInt(document.getElementById('planner-tempo-adicional').value) || 0;
@@ -2151,6 +2292,7 @@ function planejarAposentadoria(button) {
             // Lógica de projeção simplificada para brevidade. A lógica completa do seu sistema seria usada aqui.
             const redutorIdade = isMagisterio ? 5 : 0, redutorTempo = isMagisterio ? 5 : 0;
             let p = {}, elegivel = false;
+            let valorProjetado = 0;
             if (iACenario >= (s === 'M' ? 65 : 62) - redutorIdade && tCTCenario >= 25) {
                 const vRG = mediaSalarialCenario * Math.min(1, 0.6 + Math.max(0, Math.floor(tCTCenario) - 20) * 0.02);
                 p['Regra Permanente'] = { valor: vRG };
@@ -2160,14 +2302,68 @@ function planejarAposentadoria(button) {
             let html = `<p><strong>Resultado do Cenário para ${dataRefCenario.toLocaleDateString('pt-BR')}:</strong></p>`;
             if (elegivel) {
                 const melhorRegra = Object.entries(p).sort((a, b) => b[1].valor - a[1].valor)[0];
-                html += `<p>A regra mais vantajosa seria <strong>${melhorRegra[0]}</strong>, com benefício de <strong>${formatarDinheiro(melhorRegra[1].valor)}</strong>.</p>`;
+                valorProjetado = melhorRegra[1].valor;
+                html += `<p>A regra mais vantajosa seria <strong>${melhorRegra[0]}</strong>, com benefício de <strong>${formatarDinheiro(valorProjetado)}</strong>.</p>`;
             } else {
                 html += '<p>O servidor ainda não estaria elegível para as regras principais de aposentadoria.</p>';
             }
-            resultadoDiv.innerHTML = html + `<small>Nota: Esta é uma projeção hipotética.</small>`;
+            resultadoDiv.innerHTML = html + `<canvas id="plannerChartCanvas"></canvas><small>Nota: Esta é uma projeção hipotética.</small>`;
+            
+            // Desenhar gráfico de comparação
+            desenharGraficoPlanner(valorBeneficioAtual, valorProjetado);
+
         } catch (error) { resultadoDiv.innerHTML = `<p style="color:var(--cor-erro)">${error.message}</p>`; ui.showToast(error.message, false);
         } finally { ui.toggleSpinner(button, false); }
     }, 50);
+}
+
+function desenharGraficoPlanner(valorAtual, valorProjetado) {
+    const ctx = document.getElementById("plannerChartCanvas").getContext("2d");
+    if (AppState.plannerChart) AppState.plannerChart.destroy();
+    
+    const isDarkMode = document.body.classList.contains('dark-mode');
+    const fontColor = isDarkMode ? '#eee' : '#333';
+    const gridColor = isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
+
+    AppState.plannerChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: ['Cenário Atual', 'Cenário Projetado'],
+            datasets: [{
+                label: 'Valor do Benefício (R$)',
+                data: [valorAtual, valorProjetado],
+                backgroundColor: ['#1e88e5', '#90caf9'],
+                borderColor: ['#0d47a1', '#64b5f6'],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            indexAxis: 'y',
+            plugins: {
+                legend: {
+                    display: false
+                },
+                title: {
+                    display: true,
+                    text: 'Comparação de Cenários de Benefício',
+                    color: fontColor,
+                    font: { size: 14 }
+                }
+            },
+            scales: {
+                x: {
+                    beginAtZero: true,
+                    ticks: { color: fontColor },
+                    grid: { color: gridColor }
+                },
+                y: {
+                    ticks: { color: fontColor },
+                    grid: { color: gridColor }
+                }
+            }
+        }
+    });
 }
 
 
