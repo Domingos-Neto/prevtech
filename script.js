@@ -2694,26 +2694,18 @@ function exportarCTCExcel(button) {
  * @param {Date|string} dataInput A data a ser convertida.
  * @returns {string|null} A data no formato AAAA-MM-DD ou nulo se a entrada for inválida.
  */
-function converterDataParaISO(dataInput) {
-    if (!dataInput) {
-        return null;
-    }
+// CÓDIGO CORRIGIDO
 
-    if (dataInput instanceof Date) {
-        const ano = dataInput.getUTCFullYear();
-        const mes = String(dataInput.getUTCMonth() + 1).padStart(2, '0');
-        const dia = String(dataInput.getUTCDate()).padStart(2, '0');
-        return `${ano}-${mes}-${dia}`;
-    }
+function converterDataParaISO(dataInput) {
+    // ... (outras partes da função)
 
     if (typeof dataInput === 'string') {
-        if (/^\d{4}-\d{2}-\d{2}$/.test(dataInput)) {
-            return dataInput;
-        }
+        // ...
         
         const partes = dataInput.split('/');
         if (partes.length === 3) {
-            let [dia, mes, ano] = partes;
+            // ✅ CORREÇÃO: A ordem foi alterada para mes, dia, ano
+            let [mes, dia, ano] = partes; 
             
             // ### INÍCIO DA NOVA LÓGICA ###
             // Se o ano tiver 1 ou 2 dígitos, converte para 4 dígitos.
@@ -2812,6 +2804,7 @@ Object.assign(window, {
 });
 
 window.simulacao = simulacao;
+
 
 
 
