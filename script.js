@@ -939,7 +939,7 @@ function atualizarDataHora() {
     }
 }
 
-function validaCPF(inputElement, statusElement) {
+ function validaCPF(inputElement, statusElement) {
     const cpf = inputElement.value.replace(/[^\d]/g, '');
     const setInvalid = () => {
         inputElement.style.borderColor = 'var(--cor-erro)';
@@ -2689,6 +2689,35 @@ function exportarCTCExcel(button) {
     }, 50);
 }
 
+// Adicione esta função auxiliar no seu script.js, 
+// pode ser antes da função importarCTCExcel.
+function converterDataParaISO(dataStr) {
+    // Retorna nulo se a entrada for inválida para evitar erros
+    if (!dataStr || typeof dataStr !== 'string') {
+        return null;
+    }
+    
+    // Tenta identificar se a data já está no formato correto (AAAA-MM-DD)
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dataStr)) {
+        return dataStr;
+    }
+    
+    // Converte de DD/MM/AAAA para AAAA-MM-DD
+    const partes = dataStr.split('/');
+    if (partes.length === 3) {
+        const [dia, mes, ano] = partes;
+        // Validação básica para o formato DD/MM/AAAA
+        if (dia.length === 2 && mes.length === 2 && ano.length === 4) {
+             return `${ano}-${mes}-${dia}`;
+        }
+    }
+    
+    // Retorna nulo se nenhum formato conhecido for encontrado
+    return null;
+}
+
+
+// Substitua a função importarCTCExcel existente por esta versão corrigida.
 function importarCTCExcel(event) {
     const file = event.target.files[0];
     if (!file) return;
@@ -2697,7 +2726,7 @@ function importarCTCExcel(event) {
     reader.onload = (e) => {
         try {
             const data = new Uint8Array(e.target.result);
-            const workbook = XLSX.read(data, { type: "array" });
+            const workbook = XLSX.read(data, { type: "array", cellDates: true }); // Usar cellDates pode ajudar
             const sheetName = workbook.SheetNames[0];
             const worksheet = workbook.Sheets[sheetName];
             const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: "", raw: false });
@@ -2707,8 +2736,13 @@ function importarCTCExcel(event) {
             // Pula a primeira linha (cabeçalho)
             for (let i = 1; i < rows.length; i++) {
                 const [inicio, fim, regime, deducoes, fonte] = rows[i];
-                if (inicio && fim) {
-                    adicionarLinhaPeriodoCTC(inicio, fim, regime, deducoes, fonte);
+                
+                // Converte as datas para o formato AAAA-MM-DD
+                const inicioISO = converterDataParaISO(inicio);
+                const fimISO = converterDataParaISO(fim);
+
+                if (inicioISO && fimISO) {
+                    adicionarLinhaPeriodoCTC(inicioISO, fimISO, regime, deducoes, fonte);
                 }
             }
             ui.showToast("Períodos da CTC importados com sucesso!", true);
@@ -2754,3 +2788,4 @@ Object.assign(window, {
 });
 
 window.simulacao = simulacao;
+
