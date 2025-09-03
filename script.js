@@ -732,6 +732,9 @@ function setupEventListeners() {
     if (btnLimparTempo) {
         btnLimparTempo.addEventListener('click', limparCalculoTempo);
     }
+    
+    // Novo listener para importação de CTC
+    document.getElementById('arquivoExcelCTC').addEventListener('change', importarCTCExcel);
 }
 
 function openTimeCalcModal() {
@@ -764,6 +767,7 @@ function handleNavClick(event, targetView) {
             break;
         case 'geradorCTC':
             limparFormularioCTC();
+            preencherCTCComDadosDaSimulacao();
             break;
         case 'telaConfiguracoes':
             popularCamposConfiguracoes();
@@ -2000,10 +2004,26 @@ function limparFormularioCTC() {
 function adicionarLinhaPeriodoCTC(i = '', f = '', regime = 'RGPS', d = '0', fo = '') {
     const t = document.getElementById('corpo-tabela-periodos-ctc'), l = document.createElement('tr');
     l.innerHTML = `<td><input type="date" class="ctc-inicio" onchange="calcularTempoTotalCTC()" value="${i}"></td><td><input type="date" class="ctc-fim" onchange="calcularTempoTotalCTC()" value="${f}"></td><td><select class="ctc-regime"><option value="RGPS" ${regime==='RGPS'?'selected':''}>RGPS</option><option value="RPPS" ${regime==='RPPS'?'selected':''}>RPPS</option></select></td><td><input type="number" class="ctc-deducoes" value="${d}" oninput="calcularTempoTotalCTC()"></td><td><input type="text" class="ctc-fonte" value="${fo}" placeholder="Ex: MUNICÍPIO DE ITAPIPOCA"></td><td><button class="danger btn-tabela" onclick="removerLinhaPeriodoCTC(this)">Remover</button></td>`;
-    t.appendChild(l); calcularTempoTotalCTC();
+    t.appendChild(l); 
+    
+    const accordionContent = document.querySelector('#geradorCTC .accordion-content');
+    if (accordionContent && accordionContent.style.maxHeight) {
+        accordionContent.style.maxHeight = accordionContent.scrollHeight + "px";
+    }
+    
+    calcularTempoTotalCTC();
 }
 
-function removerLinhaPeriodoCTC(b) { b.closest('tr').remove(); calcularTempoTotalCTC(); }
+function removerLinhaPeriodoCTC(b) { 
+    b.closest('tr').remove(); 
+    
+    const accordionContent = document.querySelector('#geradorCTC .accordion-content');
+    if (accordionContent && accordionContent.style.maxHeight) {
+        accordionContent.style.maxHeight = accordionContent.scrollHeight + "px";
+    }
+    
+    calcularTempoTotalCTC(); 
+}
 
 function calcularTempoTotalCTC() {
     let tD = 0;
@@ -2611,6 +2631,99 @@ function gerarDeclaracaoConvivioMarital() {
     newWindow.document.open(); newWindow.document.write(htmlConteudo); newWindow.document.close();
 }
 
+// INÍCIO: NOVAS FUNÇÕES PARA CTC
+function preencherCTCComDadosDaSimulacao() {
+    const nomeSimulacao = document.getElementById('nomeServidor').value;
+    if (!nomeSimulacao) return; // Não preenche se não houver dados
+
+    const mapeamento = {
+        'nomeServidor': 'ctc-nomeServidor',
+        'matriculaServidor': 'ctc-matricula',
+        'cpfServidor': 'ctc-cpf',
+        'rgServidor': 'ctc-rg',
+        'sexo': 'ctc-sexo',
+        'dataNascimento': 'ctc-dataNascimento',
+        'cargoServidor': 'ctc-cargo',
+        'lotacaoServidor': 'ctc-lotacao',
+        'dataAdmissao': 'ctc-dataAdmissao',
+        'dataRequerimento': 'ctc-dataRequerimento'
+    };
+
+    for (const [idSimulacao, idCtc] of Object.entries(mapeamento)) {
+        const elSimulacao = document.getElementById(idSimulacao);
+        const elCtc = document.getElementById(idCtc);
+        if (elSimulacao && elCtc) {
+            elCtc.value = elSimulacao.value;
+        }
+    }
+    ui.showToast("Dados do servidor preenchidos a partir da simulação.", true);
+}
+
+function exportarCTCExcel(button) {
+    ui.toggleSpinner(button, true);
+    setTimeout(() => {
+        try {
+            const data = [['INICIO', 'FIM', 'REGIME', 'DEDUCOES', 'FONTE']];
+            document.querySelectorAll("#corpo-tabela-periodos-ctc tr").forEach(row => {
+                const rowData = [
+                    row.querySelector('.ctc-inicio').value,
+                    row.querySelector('.ctc-fim').value,
+                    row.querySelector('.ctc-regime').value,
+                    row.querySelector('.ctc-deducoes').value,
+                    row.querySelector('.ctc-fonte').value
+                ];
+                data.push(rowData);
+            });
+            
+            const ws = XLSX.utils.aoa_to_sheet(data);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "PeriodosCTC");
+            XLSX.writeFile(wb, "periodos-ctc.xlsx");
+            ui.showToast("Períodos da CTC exportados para Excel!", true);
+        } catch (e) {
+            ui.showToast("Erro ao exportar períodos da CTC.", false);
+            console.error(e);
+        } finally {
+            ui.toggleSpinner(button, false);
+        }
+    }, 50);
+}
+
+function importarCTCExcel(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        try {
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, { type: "array" });
+            const sheetName = workbook.SheetNames[0];
+            const worksheet = workbook.Sheets[sheetName];
+            const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: "", raw: false });
+
+            document.getElementById('corpo-tabela-periodos-ctc').innerHTML = ''; // Limpa a tabela
+            
+            // Pula a primeira linha (cabeçalho)
+            for (let i = 1; i < rows.length; i++) {
+                const [inicio, fim, regime, deducoes, fonte] = rows[i];
+                if (inicio && fim) {
+                    adicionarLinhaPeriodoCTC(inicio, fim, regime, deducoes, fonte);
+                }
+            }
+            ui.showToast("Períodos da CTC importados com sucesso!", true);
+        } catch (err) {
+            ui.showToast("Erro ao processar o arquivo Excel da CTC.", false);
+            console.error(err);
+        } finally {
+            event.target.value = ''; // Limpa o input
+        }
+    };
+    reader.readAsArrayBuffer(file);
+}
+// FIM: NOVAS FUNÇÕES PARA CTC
+
+
 Object.assign(window, {
     auth, ui, handleNavClick, atualizarDashboardView, irParaPasso, alternarCamposBeneficio,
     adicionarLinha, limparTabela, exportarExcel, importarExcel, atualizarSalarioLinha, excluirLinha,
@@ -2635,7 +2748,9 @@ Object.assign(window, {
     gerarDeclaracaoNaoPercepcaoIndividual,
     gerarAutoDeclaracaoRenda,
     gerarDeclaracaoConvivioMarital,
-    cadastro // <-- ADICIONADO PARA ACESSO GLOBAL
+    cadastro,
+    // Novas funções da CTC expostas globalmente
+    exportarCTCExcel, importarCTCExcel
 });
 
 window.simulacao = simulacao;
