@@ -2489,8 +2489,30 @@ document.addEventListener('DOMContentLoaded', () => {
 function gerarReqPensaoMorte() {
     const dadosSimulacao = coletarDadosSimulacao();
     const dadosInstituidor = dadosSimulacao.passo1 || {};
+    const dadosDependentes = dadosSimulacao.dependentes || []; // Pega a lista de dependentes
     const dataAtual = new Date();
     const dataFormatada = `${dataAtual.getDate()} de ${dataAtual.toLocaleDateString('pt-BR', { month: 'long' })} de ${dataAtual.getFullYear()}`;
+
+    // --- INÍCIO DA LÓGICA ADICIONADA ---
+    // Cria as linhas da tabela de dependentes dinamicamente
+    let dependentesTabelaHTML = '';
+    if (dadosDependentes.length > 0) {
+        dependentesTabelaHTML = dadosDependentes.map(dep => `
+            <tr>
+                <td>${dep.nome || ''}</td>
+                <td>${dep.parentesco || ''}</td>
+                <td>${formatarDataBR(dep.dataNasc) || ''}</td>
+                <td></td> </tr>
+        `).join('');
+    } else {
+        // Se não houver dependentes, gera linhas vazias como antes
+        dependentesTabelaHTML = `
+            <tr><td>&nbsp;</td><td></td><td></td><td></td></tr>
+            <tr><td>&nbsp;</td><td></td><td></td><td></td></tr>
+            <tr><td>&nbsp;</td><td></td><td></td><td></td></tr>
+        `;
+    }
+    // --- FIM DA LÓGICA ADICIONADA ---
 
     const htmlConteudo = `
     <!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Requerimento de Pensão por Morte</title>
@@ -2540,10 +2562,7 @@ function gerarReqPensaoMorte() {
         <table>
             <thead><tr><th>Nome Completo</th><th>Parentesco</th><th>Data de Nasc.</th><th>CPF</th></tr></thead>
             <tbody>
-                <tr><td>&nbsp;</td><td></td><td></td><td></td></tr>
-                <tr><td>&nbsp;</td><td></td><td></td><td></td></tr>
-                <tr><td>&nbsp;</td><td></td><td></td><td></td></tr>
-            </tbody>
+                ${dependentesTabelaHTML} </tbody>
         </table>
 
         <p style="margin-top: 30px;">Vem, respeitosamente, requerer a concessão do benefício de Pensão por Morte, nos termos do Art. 40, §7º da Constituição Federal (com redação dada pela EC nº 103/2019) e da legislação municipal aplicável, na condição de dependente(s) do(a) ex-servidor(a) acima identificado(a).</p>
@@ -2930,6 +2949,7 @@ Object.assign(window, {
 });
 
 window.simulacao = simulacao;
+
 
 
 
