@@ -624,9 +624,8 @@ async function generatePdf(formId, baseFilename) {
     }
 }
 
-
 // =================================================================================
-// NOVA FUNÇÃO PARA CONECTAR SIMULAÇÃO E CHECKLIST
+// NOVA FUNÇÃO PARA CONECTAR SIMULAÇÃO E CHECKLIST (VERSÃO MODIFICADA)
 // =================================================================================
 function preencherChecklistComDadosDaSimulacao() {
     // 1. Coletar dados da simulação atual
@@ -639,10 +638,13 @@ function preencherChecklistComDadosDaSimulacao() {
         lotacao: document.getElementById('lotacaoServidor').value
     };
 
+    // NOVO: Capturar o tipo de benefício da simulação atual
+    const tipoBeneficio = document.getElementById('tipoBeneficio').value;
+
     // 2. Navegar para a nova tela de checklist
     handleNavClick(null, 'geradorChecklists');
 
-    // 3. Aguardar um instante para a tela carregar e então preencher os campos
+    // 3. Aguardar um instante para a tela carregar e então preencher os campos e ativar a aba correta
     setTimeout(() => {
         // Itera sobre todos os formulários de checklist para preencher os dados
         const forms = document.querySelectorAll('.checklist-form');
@@ -666,7 +668,29 @@ function preencherChecklistComDadosDaSimulacao() {
             if (lotacaoInput) lotacaoInput.value = dados.lotacao;
         });
 
-        ui.showToast("Dados do servidor preenchidos no checklist!", true);
+        // NOVO: Lógica para ativar a aba correta do checklist
+        try {
+            const mapeamentoAbas = {
+                'voluntaria': '#idade-tempo-pane',
+                'idade': '#idade-pane', // Embora não esteja no select principal, o código o trata, então mapeamos.
+                'incapacidade': '#incapacidade-pane',
+                'compulsoria': '#compulsoria-pane',
+                'pensao_ativo': '#pensao-pane',
+                'pensao_aposentado': '#pensao-pane'
+            };
+
+            const targetId = mapeamentoAbas[tipoBeneficio] || '#idade-tempo-pane'; // Padrão para a primeira aba se não encontrar
+            const triggerEl = document.querySelector(`button[data-bs-target="${targetId}"]`);
+
+            if (triggerEl) {
+                const tab = new bootstrap.Tab(triggerEl);
+                tab.show();
+            }
+        } catch (e) {
+            console.error("Erro ao tentar ativar a aba do checklist:", e);
+        }
+        
+        ui.showToast("Dados do servidor preenchidos e checklist correto selecionado!", true); // NOVO: Mensagem atualizada
     }, 250); // um pequeno delay para garantir que a UI foi atualizada
 }
 
@@ -2906,6 +2930,7 @@ Object.assign(window, {
 });
 
 window.simulacao = simulacao;
+
 
 
 
