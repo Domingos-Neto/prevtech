@@ -1653,7 +1653,23 @@ async function gerarDocumentoCTC(button) {
             deducoes: parseInt(tr.querySelector('.ctc-deducoes').value) || 0,
             fonte: tr.querySelector('.ctc-fonte').value,
         }));
-        
+
+// ✅ INÍCIO DO CÓDIGO DE SEGURANÇA ADICIONADO
+for (const periodo of periodosInput) {
+    if (periodo.inicio && periodo.fim) {
+        const anoInicio = new Date(periodo.inicio).getFullYear();
+        const anoFim = new Date(periodo.fim).getFullYear();
+        const duracaoAnos = anoFim - anoInicio;
+
+        if (duracaoAnos > 100) { // Limite de 100 anos para um único período
+            ui.showToast(`ERRO: Período muito longo detectado (${duracaoAnos} anos). Verifique as datas de ${periodo.inicio} a ${periodo.fim}.`, false);
+            ui.toggleSpinner(button, false); // Libera o botão
+            return; // Interrompe a execução da função
+        }
+    }
+}
+// ✅ FIM DO CÓDIGO DE SEGURANÇA ADICIONADO
+      
         const periodosProcessados = { RGPS: [], RPPS: [] };
         let totalLiquidoRGPS = 0, totalLiquidoRPPS = 0;
 
@@ -2804,6 +2820,7 @@ Object.assign(window, {
 });
 
 window.simulacao = simulacao;
+
 
 
 
