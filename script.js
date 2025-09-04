@@ -2435,7 +2435,6 @@ function gerarDeclaracaoNaoPercepcao() {
         .header { text-align: center; }
         .header h3, .header p { margin: 2px 0; }
         h2 { text-align: center; font-weight: bold; margin: 40px 0; }
-        input[type="text"] { border: none; background: #f0f0f0; padding: 3px; font-family: inherit; font-size: inherit; font-weight: bold; }
         .signature-block { margin-top: 80px; text-align: center; }
         .signature-line { border-bottom: 1px solid #000; margin-top: 60px; width: 80%; margin-left: auto; margin-right: auto;}
         .signature-block p { margin: 5px 0 0 0; }
@@ -2450,9 +2449,9 @@ function gerarDeclaracaoNaoPercepcao() {
             O Instituto de Previdência dos Servidores Municipais de Itapipoca - ITAPREV, declara para os
             devidos fins de direito e sob as penas da lei, junto ao Tribunal de Contas do Estado do Ceará -
             TCE-CE, que o(a) Sr.(a) <b>${dadosServidor.nomeServidor || '________________'}</b>, 
-            portador(a) do RG nº <input type="text" size="20" value="${dadosServidor.rgServidor || ''}">,
-            CPF nº <input type="text" size="15" value="${dadosServidor.cpfServidor || ''}"> e
-            matrícula nº <input type="text" size="10" value="${dadosServidor.matriculaServidor || ''}">, 
+            portador(a) do RG nº <b>${dadosServidor.rgServidor || '________________'}</b>,
+            CPF nº <b>${dadosServidor.cpfServidor || '________________'}</b> e
+            matrícula nº <b>${dadosServidor.matriculaServidor || '________________'}</b>, 
             não recebe benefício previdenciário pago por este Instituto de Previdência Social do
             Município de Itapipoca-CE, até a presente data.
         </p>
@@ -2637,7 +2636,6 @@ function gerarDeclaracaoNaoPercepcaoIndividual() {
         .header { text-align: center; margin-bottom: 40px; }
         .header h3, .header p { margin: 2px 0; }
         h2 { text-align: center; font-weight: bold; }
-        input[type="text"] { border: none; background-color: #f0f0f0; padding: 3px; font-weight: bold; font-family: inherit; font-size: inherit; }
         .signature-block { margin-top: 80px; text-align: center; }
         .signature-line { border-bottom: 1px solid #000; margin-top: 60px; width: 80%; margin-left: auto; margin-right: auto;}
         .signature-block p { margin: 5px 0 0 0; }
@@ -2649,10 +2647,10 @@ function gerarDeclaracaoNaoPercepcaoIndividual() {
         </div>
         <h2>DECLARAÇÃO</h2>
         <p>
-            Eu, <input type="text" size="40" value="${dadosServidor.nomeServidor || ''}">, 
-            portador(a) do RG nº <input type="text" size="20" value="${dadosServidor.rgServidor || ''}">, 
-            inscrito(a) no CPF sob o n° <input type="text" size="20" value="${dadosServidor.cpfServidor || ''}">,
-            residente e domiciliado(a) em <input type="text" size="50" value="">, 
+            Eu, <b>${dadosServidor.nomeServidor || '________________'}</b>, 
+            portador(a) do RG nº <b>${dadosServidor.rgServidor || '________________'}</b>, 
+            inscrito(a) no CPF sob o n° <b>${dadosServidor.cpfServidor || '________________'}</b>,
+            residente e domiciliado(a) em <b>________________________________________</b>, 
             declaro para os devidos fins de direito e sob as penas da lei, que não recebo benefício previdenciário de nenhum outro Regime de Previdência, até a presente data.
         </p>
         <p style="margin-top: 40px;">Itapipoca - CE, ${dataFormatada}.</p>
@@ -2949,6 +2947,7 @@ Object.assign(window, {
 });
 
 window.simulacao = simulacao;
+
 
 
 
