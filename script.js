@@ -1973,18 +1973,81 @@ function excluirDoHistorico(id) {
 }
 
 function salvarCTC() {
-    const n = prompt("Nome para salvar esta CTC:"); if (!n || !AppState.usuarioAtual) return;
-    const ctc = { id: crypto.randomUUID(), nome: n, data: new Date().toISOString(), dados: {
-        nomeServidor: document.getElementById('ctc-nomeServidor').value, numero: document.getElementById('ctc-numero').value, matricula: document.getElementById('ctc-matricula').value,
-        cpf: document.getElementById('ctc-cpf').value, rg: document.getElementById('ctc-rg').value, dataNascimento: document.getElementById('ctc-dataNascimento').value,
-        sexo: document.getElementById('ctc-sexo').value, pis_pasep: document.getElementById('ctc-pis_pasep').value, filiacao: document.getElementById('ctc-filiacao').value,
-        cargo: document.getElementById('ctc-cargo').value, lotacao: document.getElementById('ctc-lotacao').value, dataAdmissao: document.getElementById('ctc-dataAdmissao').value,
+    const n = prompt("Nome para salvar esta CTC no histórico:"); 
+    if (!n || !AppState.usuarioAtual) return;
+
+    // Agora usa a função centralizada para coletar os dados
+    const dadosCTC = coletarDadosCTC(); 
+    
+    const ctc = { 
+        id: crypto.randomUUID(), 
+        nome: n, 
+        data: new Date().toISOString(), 
+        dados: dadosCTC // Atribui os dados coletados
+    };
+
+    const ch = `ctcs_salvas_${AppState.usuarioAtual.uid}`;
+    const cs = JSON.parse(localStorage.getItem(ch) || "[]");
+    cs.unshift(ctc); 
+    localStorage.setItem(ch, JSON.stringify(cs));
+    
+    listarCTCsSalvas(); 
+    ui.showToast("CTC salva no histórico!", true); 
+    atualizarIndicadoresDashboard();
+}
+
+/**
+ * Coleta todos os dados do formulário da CTC em um objeto.
+ * @returns {object} Objeto com os dados da CTC.
+ */
+function coletarDadosCTC() {
+    return {
+        nomeServidor: document.getElementById('ctc-nomeServidor').value,
+        numero: document.getElementById('ctc-numero').value,
+        matricula: document.getElementById('ctc-matricula').value,
+        cpf: document.getElementById('ctc-cpf').value,
+        rg: document.getElementById('ctc-rg').value,
+        dataNascimento: document.getElementById('ctc-dataNascimento').value,
+        sexo: document.getElementById('ctc-sexo').value,
+        pis_pasep: document.getElementById('ctc-pis_pasep').value,
+        filiacao: document.getElementById('ctc-filiacao').value,
+        cargo: document.getElementById('ctc-cargo').value,
+        lotacao: document.getElementById('ctc-lotacao').value,
+        dataAdmissao: document.getElementById('ctc-dataAdmissao').value,
         dataRequerimento: document.getElementById('ctc-dataRequerimento').value,
-        periodos: Array.from(document.querySelectorAll("#corpo-tabela-periodos-ctc tr")).map(l => ({ inicio: l.querySelector('.ctc-inicio').value, fim: l.querySelector('.ctc-fim').value, regime: l.querySelector('.ctc-regime').value, deducoes: l.querySelector('.ctc-deducoes').value, fonte: l.querySelector('.ctc-fonte').value }))
-    }};
-    const ch = `ctcs_salvas_${AppState.usuarioAtual.uid}`, cs = JSON.parse(localStorage.getItem(ch) || "[]");
-    cs.unshift(ctc); localStorage.setItem(ch, JSON.stringify(cs));
-    listarCTCsSalvas(); ui.showToast("CTC salva!", true); atualizarIndicadoresDashboard();
+        periodos: Array.from(document.querySelectorAll("#corpo-tabela-periodos-ctc tr")).map(l => ({
+            inicio: l.querySelector('.ctc-inicio').value,
+            fim: l.querySelector('.ctc-fim').value,
+            regime: l.querySelector('.ctc-regime').value,
+            deducoes: l.querySelector('.ctc-deducoes').value,
+            fonte: l.querySelector('.ctc-fonte').value
+        }))
+    };
+}
+
+/**
+ * Salva os dados da CTC em um arquivo JSON no computador do usuário.
+ */
+function salvarCTCLocal() {
+    const nomeServidor = document.getElementById('ctc-nomeServidor').value.trim();
+    if (!nomeServidor) {
+        ui.showToast("Preencha o nome do servidor para salvar o arquivo.", false);
+        return;
+    }
+    
+    const nomeArquivo = `CTC_${nomeServidor.replace(/[^a-z0-9]/gi, '_')}`;
+    const dados = coletarDadosCTC();
+
+    const blob = new Blob([JSON.stringify(dados, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${nomeArquivo}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    ui.showToast("CTC salva no seu computador!", true);
 }
 
 function listarCTCsSalvas() {
@@ -2838,10 +2901,12 @@ Object.assign(window, {
     gerarDeclaracaoConvivioMarital,
     cadastro,
     // Novas funções da CTC expostas globalmente
-    exportarCTCExcel, importarCTCExcel
+    exportarCTCExcel, importarCTCExcel, 
+    salvarCTCLocal
 });
 
 window.simulacao = simulacao;
+
 
 
 
