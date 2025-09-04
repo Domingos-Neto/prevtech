@@ -1654,9 +1654,6 @@ async function gerarDocumentoCTC(button) {
             fonte: tr.querySelector('.ctc-fonte').value,
         }));
 
-        // =================================================================================
-        // INÍCIO: NOVO ALGORITMO OTIMIZADO PARA PROCESSAMENTO DE PERÍODOS
-        // =================================================================================
         const periodosProcessados = { RGPS: [], RPPS: [] };
         let totalLiquidoRGPS = 0;
         let totalLiquidoRPPS = 0;
@@ -1668,7 +1665,6 @@ async function gerarDocumentoCTC(button) {
             const dataInicioPeriodo = new Date(periodo.inicio + 'T00:00:00Z');
             const dataFimPeriodo = new Date(periodo.fim + 'T00:00:00Z');
 
-            // Validação para evitar loops infinitos ou erros com datas inválidas
             if (isNaN(dataInicioPeriodo.getTime()) || isNaN(dataFimPeriodo.getTime()) || dataInicioPeriodo > dataFimPeriodo) {
                 console.warn("Período inválido ou data de início posterior à data fim, pulando:", periodo);
                 continue;
@@ -1677,18 +1673,15 @@ async function gerarDocumentoCTC(button) {
             const anoInicio = dataInicioPeriodo.getUTCFullYear();
             const anoFim = dataFimPeriodo.getUTCFullYear();
 
-            // Loop numérico pelos anos do período (muito mais rápido que o while com datas)
             for (let ano = anoInicio; ano <= anoFim; ano++) {
                 const inicioDoAno = new Date(Date.UTC(ano, 0, 1));
                 const fimDoAno = new Date(Date.UTC(ano, 11, 31));
 
-                // Lógica mais direta para encontrar a interseção de datas
                 const dataInicioEfetiva = dataInicioPeriodo > inicioDoAno ? dataInicioPeriodo : inicioDoAno;
                 const dataFimEfetiva = dataFimPeriodo < fimDoAno ? dataFimPeriodo : fimDoAno;
 
                 const tempoBruto = Math.round((dataFimEfetiva - dataInicioEfetiva) / MS_POR_DIA) + 1;
                 
-                // Aplica as deduções apenas no último ano do período para manter consistência com a lógica anterior
                 const deducaoNesteAno = (ano === anoFim) ? periodo.deducoes : 0;
                 const tempoLiquido = tempoBruto - deducaoNesteAno;
 
@@ -1710,9 +1703,6 @@ async function gerarDocumentoCTC(button) {
                 }
             }
         }
-        // =================================================================================
-        // FIM: NOVO ALGORITMO OTIMIZADO
-        // =================================================================================
       
         const criarTabelaHTML = (titulo, dados, subtotal) => {
             if (dados.length === 0) return '';
@@ -1736,7 +1726,7 @@ async function gerarDocumentoCTC(button) {
         <!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>CTC - ${dadosServidor.nome}</title>
             <style>
                 body { font-family: Arial, sans-serif; font-size: 10pt; line-height: 1.4; color: #000; margin:0; }
-                .container {display:flex; flex-direction:column; width: 210mm; min-height: 297mm; box-sizing: border-box; margin:auto; background-image: url('https://i.postimg.cc/1tC5TV16/Papel-Timbrado-ITAPREV-1.png'); background-size: 100% 100%; -webkit-print-color-adjust: exact; padding: 4.5cm 2cm 3.5cm 2cm;}
+                .container {display:flex; flex-direction:column; width: 210mm; min-height: 297mm; box-sizing: border-box; margin:auto; /* REMOVIDO: background-image e background-size */ padding: 4.5cm 2cm 3.5cm 2cm;}
                 .content-body {flex-grow: 1;} .header { text-align: center; font-weight: bold; } .header h4 { margin: 1cm 0 1.5cm 0; font-size: 11pt; }
                 .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 15px; margin: 15px 0; font-size: 9.5pt; }
                 .info-grid p { margin: 0; } .info-grid span { font-weight: bold; } .periodo-summary p { margin: 2px 0; }
@@ -2852,6 +2842,7 @@ Object.assign(window, {
 });
 
 window.simulacao = simulacao;
+
 
 
 
