@@ -1654,49 +1654,72 @@ async function gerarDocumentoCTC(button) {
             fonte: tr.querySelector('.ctc-fonte').value,
         }));
 
-// ✅ INÍCIO DO CÓDIGO DE SEGURANÇA ADICIONADO
-for (const periodo of periodosInput) {
-    if (periodo.inicio && periodo.fim) {
-        const anoInicio = new Date(periodo.inicio).getFullYear();
-        const anoFim = new Date(periodo.fim).getFullYear();
-        const duracaoAnos = anoFim - anoInicio;
-
-        if (duracaoAnos > 100) { // Limite de 100 anos para um único período
-            ui.showToast(`ERRO: Período muito longo detectado (${duracaoAnos} anos). Verifique as datas de ${periodo.inicio} a ${periodo.fim}.`, false);
-            ui.toggleSpinner(button, false); // Libera o botão
-            return; // Interrompe a execução da função
-        }
-    }
-}
-// ✅ FIM DO CÓDIGO DE SEGURANÇA ADICIONADO
-      
+        // =================================================================================
+        // INÍCIO: NOVO ALGORITMO OTIMIZADO PARA PROCESSAMENTO DE PERÍODOS
+        // =================================================================================
         const periodosProcessados = { RGPS: [], RPPS: [] };
-        let totalLiquidoRGPS = 0, totalLiquidoRPPS = 0;
+        let totalLiquidoRGPS = 0;
+        let totalLiquidoRPPS = 0;
+        const MS_POR_DIA = 1000 * 60 * 60 * 24;
 
         for (const periodo of periodosInput) {
             if (!periodo.inicio || !periodo.fim) continue;
-            let dataCorrente = new Date(periodo.inicio + 'T00:00:00Z');
-            const dataFinal = new Date(periodo.fim + 'T00:00:00Z');
-            while (dataCorrente <= dataFinal) {
-                const ano = dataCorrente.getFullYear();
-                const inicioAno = new Date(Date.UTC(ano, 0, 1));
-                const fimAno = new Date(Date.UTC(ano, 11, 31));
-                const periodoInicio = dataCorrente > inicioAno ? dataCorrente : inicioAno;
-                const periodoFim = dataFinal < fimAno ? dataFinal : fimAno;
-                const tempoBruto = Math.ceil((periodoFim - periodoInicio) / 86400000) + 1;
-                const deducaoNesteAno = (periodoFim.getFullYear() === dataFinal.getFullYear()) ? periodo.deducoes : 0;
+
+            const dataInicioPeriodo = new Date(periodo.inicio + 'T00:00:00Z');
+            const dataFimPeriodo = new Date(periodo.fim + 'T00:00:00Z');
+
+            // Validação para evitar loops infinitos ou erros com datas inválidas
+            if (isNaN(dataInicioPeriodo.getTime()) || isNaN(dataFimPeriodo.getTime()) || dataInicioPeriodo > dataFimPeriodo) {
+                console.warn("Período inválido ou data de início posterior à data fim, pulando:", periodo);
+                continue;
+            }
+
+            const anoInicio = dataInicioPeriodo.getUTCFullYear();
+            const anoFim = dataFimPeriodo.getUTCFullYear();
+
+            // Loop numérico pelos anos do período (muito mais rápido que o while com datas)
+            for (let ano = anoInicio; ano <= anoFim; ano++) {
+                const inicioDoAno = new Date(Date.UTC(ano, 0, 1));
+                const fimDoAno = new Date(Date.UTC(ano, 11, 31));
+
+                // Lógica mais direta para encontrar a interseção de datas
+                const dataInicioEfetiva = dataInicioPeriodo > inicioDoAno ? dataInicioPeriodo : inicioDoAno;
+                const dataFimEfetiva = dataFimPeriodo < fimDoAno ? dataFimPeriodo : fimDoAno;
+
+                const tempoBruto = Math.round((dataFimEfetiva - dataInicioEfetiva) / MS_POR_DIA) + 1;
+                
+                // Aplica as deduções apenas no último ano do período para manter consistência com a lógica anterior
+                const deducaoNesteAno = (ano === anoFim) ? periodo.deducoes : 0;
                 const tempoLiquido = tempoBruto - deducaoNesteAno;
-                periodosProcessados[periodo.regime].push({ ano, periodoStr: `${periodoInicio.toLocaleDateString('pt-BR', {timeZone: 'UTC'})} a ${periodoFim.toLocaleDateString('pt-BR', {timeZone: 'UTC'})}`, regime: periodo.regime, tempoApurado: tempoBruto, tempoLiquido });
-                if(periodo.regime === 'RGPS') totalLiquidoRGPS += tempoLiquido; else totalLiquidoRPPS += tempoLiquido;
-                dataCorrente = new Date(Date.UTC(ano + 1, 0, 1));
+
+                if (tempoLiquido > 0) {
+                    const dadosDoAno = {
+                        ano: ano,
+                        periodoStr: `${dataInicioEfetiva.toLocaleDateString('pt-BR', {timeZone: 'UTC'})} a ${dataFimEfetiva.toLocaleDateString('pt-BR', {timeZone: 'UTC'})}`,
+                        regime: periodo.regime,
+                        tempoApurado: tempoBruto,
+                        tempoLiquido: tempoLiquido
+                    };
+
+                    periodosProcessados[periodo.regime].push(dadosDoAno);
+                    if (periodo.regime === 'RGPS') {
+                        totalLiquidoRGPS += tempoLiquido;
+                    } else {
+                        totalLiquidoRPPS += tempoLiquido;
+                    }
+                }
             }
         }
-        
+        // =================================================================================
+        // FIM: NOVO ALGORITMO OTIMIZADO
+        // =================================================================================
+      
         const criarTabelaHTML = (titulo, dados, subtotal) => {
             if (dados.length === 0) return '';
             let rows = dados.map(d => `<tr><td>${d.ano}</td><td>${d.periodoStr.replace(/ a /g, ' à ')}</td><td>${d.regime}</td><td>${d.tempoApurado}</td><td>-</td><td>-</td><td>-</td><td>${d.tempoLiquido}</td></tr>`).join('');
             return `<h4 class="table-title">${titulo}</h4><table><thead><tr><th>Ano</th><th>Período</th><th>Regime</th><th>T. Apurado</th><th>Faltas</th><th>Licenças</th><th>Outros</th><th>T. Líquido</th></tr></thead><tbody>${rows}</tbody><tfoot><tr><td colspan="7" class="subtotal-label">SUBTOTAL</td><td class="subtotal-value">${subtotal}</td></tr></tfoot></table>`;
         };
+
         const tabelaRGPS_HTML = criarTabelaHTML('REGIME GERAL DE PREVIDÊNCIA SOCIAL', periodosProcessados.RGPS, totalLiquidoRGPS);
         const tabelaRPPS_HTML = criarTabelaHTML('REGIME PRÓPRIO DE PREVIDÊNCIA SOCIAL', periodosProcessados.RPPS, totalLiquidoRPPS);
         
@@ -2829,6 +2852,7 @@ Object.assign(window, {
 });
 
 window.simulacao = simulacao;
+
 
 
 
