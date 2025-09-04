@@ -2052,13 +2052,22 @@ function calcularTempoTotalCTC() {
     return tD;
 }
 
-function diasParaAnosMesesDias(tD) {
-    if (isNaN(tD) || tD < 0) return { anos: 0, meses: 0, dias: 0 };
-    let d = Math.floor(tD), a = Math.floor(d / 365.25);
-    d -= a * 365.25;
-    const m = Math.floor(d / 30.4375);
-    d -= m * 30.4375;
-    return { anos: a, meses: m, dias: Math.round(d) };
+// CÓDIGO NOVO (CORRIGIDO)
+function diasParaAnosMesesDias(totalDias) {
+    if (isNaN(totalDias) || totalDias < 0) {
+        return { anos: 0, meses: 0, dias: 0 };
+    }
+    
+    // Usa uma lógica mais estável com números inteiros
+    let diasRestantes = Math.floor(totalDias);
+    
+    const anos = Math.floor(diasRestantes / 365);
+    diasRestantes = diasRestantes % 365;
+    
+    const meses = Math.floor(diasRestantes / 30);
+    diasRestantes = diasRestantes % 30;
+    
+    return { anos: anos, meses: meses, dias: diasRestantes };
 }
 
 function exportarTudoZIP(b) {
@@ -2820,6 +2829,7 @@ Object.assign(window, {
 });
 
 window.simulacao = simulacao;
+
 
 
 
