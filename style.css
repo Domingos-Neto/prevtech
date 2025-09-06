@@ -1074,3 +1074,137 @@ body.dark-mode .nav-tabs .nav-link.active {
     background-color: var(--cor-superficie);
     border-color: var(--cor-borda) var(--cor-borda) var(--cor-superficie);
 }
+
+/* INÍCIO: ESTILOS PARA O MÓDULO DE GESTÃO DE PROCESSOS */
+.processo-controls {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    background-color: var(--cor-fundo);
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid var(--cor-borda);
+}
+
+.processo-controls label {
+    flex-grow: 1;
+}
+
+.processo-controls button {
+    margin-top: 0;
+}
+
+.processo-layout {
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    gap: 20px;
+    align-items: flex-start;
+}
+
+#processo-documentos-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.processo-summary {
+    position: sticky;
+    top: 80px; /* Abaixo do topbar */
+    background-color: var(--cor-fundo);
+    border: 1px solid var(--cor-borda);
+    border-radius: 8px;
+    padding: 20px;
+}
+
+.processo-summary h4 {
+    margin-top: 0;
+    text-align: center;
+    border-color: var(--prevtech-azul-escuro);
+}
+
+.processo-summary p {
+    margin: 5px 0;
+    font-size: 0.9em;
+}
+
+#group-size-list {
+    list-style: none;
+    padding: 0;
+    margin-top: 15px;
+    font-size: 0.85em;
+    max-height: 250px;
+    overflow-y: auto;
+}
+
+#group-size-list li {
+    display: flex;
+    justify-content: space-between;
+    padding: 4px 0;
+    border-bottom: 1px solid var(--cor-borda);
+}
+
+.grupo-documentos {
+    border: 1px solid var(--cor-borda);
+    border-radius: 8px;
+}
+
+.grupo-documentos .accordion-toggle {
+    background-color: var(--cor-fundo);
+    padding: 15px;
+    border-radius: 8px 8px 0 0;
+}
+
+.grupo-documentos .accordion-content {
+    padding: 15px;
+}
+
+.documento-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 10px;
+    border-radius: 6px;
+    margin-bottom: 8px;
+    background-color: var(--cor-superficie);
+    border: 1px solid var(--cor-borda);
+}
+
+.documento-item .status-icon {
+    font-size: 1.5rem;
+    flex-shrink: 0;
+}
+.status-icon.pending { color: var(--cor-texto-secundario); }
+.status-icon.attached { color: var(--cor-sucesso); }
+
+.documento-info {
+    flex-grow: 1;
+}
+.documento-info p { margin: 0; font-weight: 500; }
+.documento-info small { color: var(--cor-texto-secundario); }
+
+.documento-actions {
+    display: flex;
+    gap: 5px;
+}
+.documento-actions .btn-tabela {
+    padding: 5px 8px;
+    font-size: 1rem;
+}
+
+.drop-zone {
+    border: 2px dashed var(--cor-borda);
+    border-radius: 8px;
+    padding: 20px;
+    text-align: center;
+    cursor: pointer;
+    background-color: var(--cor-fundo);
+    color: var(--cor-texto-secundario);
+    margin-top: 10px;
+}
+.drop-zone.dragover {
+    border-color: var(--prevtech-laranja);
+    background-color: rgba(255, 111, 0, 0.05);
+}
+/* FIM: ESTILOS PARA O MÓDULO DE GESTÃO DE PROCESSOS */
