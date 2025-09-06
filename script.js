@@ -3000,7 +3000,6 @@ function gerarDeclaracaoNaoAcumulacao() {
         .header { text-align: center; margin-bottom: 40px; }
         .header h3, .header p { margin: 2px 0; }
         h2 { text-align: center; font-weight: bold; }
-        input[type="text"] { border: none; background-color: #f0f0f0; padding: 3px; font-weight: bold; font-family: inherit; font-size: inherit; }
         .signature-block { margin-top: 80px; text-align: center; }
         .signature-line { border-bottom: 1px solid #000; margin-top: 60px; width: 80%; margin-left: auto; margin-right: auto;}
         .signature-block p { margin: 5px 0 0 0; }
@@ -3012,11 +3011,11 @@ function gerarDeclaracaoNaoAcumulacao() {
         </div>
         <h2>DECLARAÇÃO DE NÃO ACUMULAÇÃO DE CARGOS</h2>
         <p>
-            Eu, <input type="text" size="40" value="${dadosServidor.nomeServidor || ''}">, 
-            portador(a) do RG nº <input type="text" size="20" value="${dadosServidor.rgServidor || ''}"> e
-            inscrito(a) no CPF sob o nº <input type="text" size="20" value="${dadosServidor.cpfServidor || ''}">, 
-            matrícula nº <input type="text" size="15" value="${dadosServidor.matriculaServidor || ''}">, 
-            residente e domiciliado(a) em <input type="text" size="50" value="">, 
+            Eu, <b>${dadosServidor.nomeServidor || '__________________________________'}</b>, 
+            portador(a) do RG nº <b>${dadosServidor.rgServidor || '________________'}</b> e
+            inscrito(a) no CPF sob o nº <b>${dadosServidor.cpfServidor || '________________'}</b>, 
+            matrícula nº <b>${dadosServidor.matriculaServidor || '________________'}</b>, 
+            residente e domiciliado(a) em <b>___________________________________________________________</b>, 
             declaro, para os devidos fins de direito, que não exerço acumulativamente nenhum outro cargo ou função pública, em conformidade com o princípio constitucional previsto no Art. 37, XVI e XVII, da Constituição da República Federativa do Brasil e em observância às normas estabelecidas no Estatuto dos Servidores Públicos do Município de Itapipoca.
         </p>
         <p>E por ser a expressão da verdade, firmo a presente para que surta seus efeitos legais.</p>
@@ -3356,6 +3355,7 @@ Object.assign(window, {
 });
 
 window.simulacao = simulacao;
+
 
 
 
