@@ -774,11 +774,10 @@ function closeTimeCalcModal() {
 }
 
 // =================================================================================
-// MÓDULO DE GESTÃO DE PROCESSOS (NOVO E INTEGRADO) - VERSÃO CORRIGIDA
+// MÓDULO DE GESTÃO DE PROCESSOS (NOVO E INTEGRADO) - VERSÃO COM SALVAR/CARREGAR
 // =================================================================================
 const gestaoProcessos = {
     state: {},
-    // Definição do checklist com base no documento "ORDEM DE DOCUMENTOS - PROCESSOS TCE CE.pdf"
     CHECKLIST_DEFINICOES: {
         aposentadoria: {
             '01_Oficio_de_Encaminhamento': ['Ofício de Encaminhamento ao TCE'],
@@ -792,7 +791,6 @@ const gestaoProcessos = {
             '09_Legislacao': ['Leis e decretos que embasam o benefício']
         },
         pensao: {
-            // Checklist simplificado para Pensão, pode ser expandido
             '01_Oficio_de_Encaminhamento': ['Ofício de Encaminhamento ao TCE'],
             '02_Requerimento_do_Dependente': ['Requerimento formal do dependente'],
             '03_Documentos_Instituidor': ['RG do Servidor', 'CPF do Servidor', 'Certidão de Óbito'],
@@ -809,7 +807,7 @@ const gestaoProcessos = {
                 acc + grupo.itens.reduce((itemAcc, item) => itemAcc + item.arquivos.length, 0), 0);
             
             if (totalArquivos > 0 && !confirm("Isso limpará o processo atual, que já contém arquivos. Deseja continuar?")) {
-                document.getElementById('processo-tipo').value = gestaoProcessos.state.tipo; // Reverte a seleção
+                document.getElementById('processo-tipo').value = gestaoProcessos.state.tipo;
                 return;
             }
         }
@@ -828,7 +826,7 @@ const gestaoProcessos = {
                 nome: grupoId.replace(/_/g, ' '),
                 itens: definicao[grupoId].map(itemTexto => ({ texto: itemTexto, arquivos: [] })),
                 tamanhoTotal: 0,
-                limite: 10 * 1024 * 1024 // 10MB
+                limite: 10 * 1024 * 1024
             };
         }
         
@@ -907,13 +905,11 @@ const gestaoProcessos = {
                 const numArquivos = grupo.itens.reduce((acc, item) => acc + item.arquivos.length, 0);
                 totalArquivos += numArquivos;
                 tamanhoTotalProcesso += grupo.tamanhoTotal;
-
                 html += `<li><b>${grupo.nome}</b> <span>${numArquivos} arq. / ${(grupo.tamanhoTotal / (1024*1024)).toFixed(2)} MB</span></li>`;
             }
         }
         html += '</ul>';
         html += `<div id="processo-resumo-total"><span>TOTAL</span> <span>${totalArquivos} arq. / ${(tamanhoTotalProcesso / (1024*1024)).toFixed(2)} MB</span></div>`;
-        
         container.innerHTML = html;
     },
     
@@ -962,11 +958,8 @@ const gestaoProcessos = {
     },
 
     gerarPacoteProcessoZIP: async (button) => {
-        // ### INÍCIO DA CORREÇÃO ###
-        // Atualiza o estado com os valores atuais dos campos de texto antes de prosseguir.
         gestaoProcessos.state.servidor = document.getElementById('processo-nome-servidor').value.trim();
         gestaoProcessos.state.numero = document.getElementById('processo-numero').value.trim();
-        // ### FIM DA CORREÇÃO ###
 
         const { servidor, numero, grupos } = gestaoProcessos.state;
         if (!servidor) {
@@ -1027,9 +1020,123 @@ const gestaoProcessos = {
         } else {
             ui.showToast("Nenhum nome encontrado na simulação atual.", false);
         }
+    },
+
+    // FUNÇÕES ADICIONADAS PARA SALVAR E CARREGAR
+    salvarProcessoLocal: async (button) => {
+        gestaoProcessos.state.servidor = document.getElementById('processo-nome-servidor').value.trim();
+        gestaoProcessos.state.numero = document.getElementById('processo-numero').value.trim();
+        const { servidor, numero } = gestaoProcessos.state;
+
+        if (!servidor) {
+            return ui.showToast("Preencha o nome do servidor antes de salvar.", false);
+        }
+        ui.toggleSpinner(button, true);
+
+        try {
+            const stateToSave = JSON.parse(JSON.stringify(gestaoProcessos.state));
+            const filePromises = [];
+
+            for (const grupoId in gestaoProcessos.state.grupos) {
+                for (const itemIndex in gestaoProcessos.state.grupos[grupoId].itens) {
+                    for (const anexoIndex in gestaoProcessos.state.grupos[grupoId].itens[itemIndex].arquivos) {
+                        const file = gestaoProcessos.state.grupos[grupoId].itens[itemIndex].arquivos[anexoIndex].file;
+                        const promise = new Promise((resolve) => {
+                            const reader = new FileReader();
+                            reader.onload = (e) => resolve({
+                                grupoId, itemIndex, anexoIndex,
+                                name: file.name, type: file.type, content: e.target.result
+                            });
+                            reader.readAsDataURL(file);
+                        });
+                        filePromises.push(promise);
+                    }
+                }
+            }
+
+            const fileContents = await Promise.all(filePromises);
+            fileContents.forEach(fc => {
+                stateToSave.grupos[fc.grupoId].itens[fc.itemIndex].arquivos[fc.anexoIndex] = { file: { name: fc.name, type: fc.type, content: fc.content } };
+            });
+
+            const blob = new Blob([JSON.stringify(stateToSave, null, 2)], { type: 'application/json' });
+            const nomeArquivo = `PREVTECH_Processo_${(servidor || 'rascunho').replace(/ /g, '_')}.json`;
+            const a = document.createElement("a");
+            a.href = URL.createObjectURL(blob);
+            a.download = nomeArquivo;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(a.href);
+            ui.showToast("Processo salvo no seu computador!", true);
+
+        } catch (error) {
+            ui.showToast("Erro ao salvar o processo.", false);
+            console.error(error);
+        } finally {
+            ui.toggleSpinner(button, false);
+        }
+    },
+
+    carregarProcessoLocal: (event) => {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+            try {
+                const loadedState = JSON.parse(e.target.result);
+                
+                // Função auxiliar para converter base64 para File
+                const base64ToFile = (b64Data, filename, contentType) => {
+                    const sliceSize = 512;
+                    const byteCharacters = atob(b64Data.split(',')[1]);
+                    const byteArrays = [];
+                    for (let offset = 0; offset < byteCharacters.length; offset += sliceSize) {
+                        const slice = byteCharacters.slice(offset, offset + sliceSize);
+                        const byteNumbers = new Array(slice.length);
+                        for (let i = 0; i < slice.length; i++) {
+                            byteNumbers[i] = slice.charCodeAt(i);
+                        }
+                        const byteArray = new Uint8Array(byteNumbers);
+                        byteArrays.push(byteArray);
+                    }
+                    const blob = new Blob(byteArrays, {type: contentType});
+                    return new File([blob], filename, { type: contentType });
+                };
+
+                // Restaura os arquivos
+                for (const grupoId in loadedState.grupos) {
+                    for (const item of loadedState.grupos[grupoId].itens) {
+                        for (const anexo of item.arquivos) {
+                            if (anexo.file && anexo.file.content) {
+                                anexo.file = base64ToFile(anexo.file.content, anexo.file.name, anexo.file.type);
+                            }
+                        }
+                    }
+                }
+
+                gestaoProcessos.state = loadedState;
+                document.getElementById('processo-tipo').value = loadedState.tipo;
+                document.getElementById('processo-nome-servidor').value = loadedState.servidor || '';
+                document.getElementById('processo-numero').value = loadedState.numero || '';
+
+                gestaoProcessos.renderChecklist();
+                gestaoProcessos.renderResumo();
+                ui.showToast("Processo carregado com sucesso!", true);
+
+            } catch (error) {
+                ui.showToast("Erro ao carregar o arquivo. Verifique se é um arquivo de processo válido.", false);
+                console.error(error);
+            } finally {
+                event.target.value = '';
+            }
+        };
+        reader.readAsText(file);
     }
 };
 
+// MODIFICAÇÃO: Preserva o estado do módulo de processo ao navegar
 function handleNavClick(event, targetView) {
     if (event) event.preventDefault();
     ui.updateActiveNav(targetView);
@@ -1055,11 +1162,14 @@ function handleNavClick(event, targetView) {
         case 'geradorDocumentos':
             document.getElementById('doc-nome-servidor').value = '';
             break;
-        case 'telaCadastro': // <-- LINHA ADICIONADA
+        case 'telaCadastro':
             cadastro.renderTabela();
             break;
-        case 'telaProcessos': // <-- LINHA ADICIONADA
-            gestaoProcessos.iniciarNovoProcesso();
+        case 'telaProcessos':
+            // Só inicia um novo processo se não houver um em andamento
+            if (!gestaoProcessos.state.tipo) {
+                gestaoProcessos.iniciarNovoProcesso();
+            }
             break;
     }
 }
@@ -3206,6 +3316,7 @@ Object.assign(window, {
 });
 
 window.simulacao = simulacao;
+
 
 
 
