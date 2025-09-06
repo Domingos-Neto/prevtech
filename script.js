@@ -774,274 +774,252 @@ function closeTimeCalcModal() {
 }
 
 // =================================================================================
-// INÍCIO: MÓDULO DE GESTÃO DE PROCESSOS (INTEGRADO)
+// MÓDULO DE GESTÃO DE PROCESSOS (NOVO E INTEGRADO)
 // =================================================================================
 const gestaoProcessos = {
-    currentState: {},
-    MAX_GROUP_SIZE_MB: 10,
-
-    DOCUMENTOS_TCE: {
-        '01_Oficio_Encaminhamento': {
-            titulo: 'Ofício de Encaminhamento',
-            itens: { 'Oficio_TCE': 'Ofício de Encaminhamento ao TCE-CE' }
+    state: {},
+    // Definição do checklist com base no documento "ORDEM DE DOCUMENTOS - PROCESSOS TCE CE.pdf"
+    CHECKLIST_DEFINICOES: {
+        aposentadoria: {
+            '01_Oficio_de_Encaminhamento': ['Ofício de Encaminhamento ao TCE'],
+            '02_Requerimento_do_Servidor': ['Requerimento formal do servidor'],
+            '03_Documentos_Pessoais': ['Documento de identidade (RG)', 'Cadastro de Pessoa Física (CPF)', 'Comprovante de residência atualizado'],
+            '04_Documentacao_Funcional': ['Documento de ingresso (Ato, Portaria, CTPS)', 'Portarias de nomeação/exoneração', 'Ficha funcional completa', 'Certidão de tempo de contribuição (ITAPREV)', 'Declaração de tempo de serviço', 'Comprovantes de afastamentos/licenças', 'Decisões judiciais (se houver)', 'CTC de outros regimes (se houver)', 'Diploma/Certificado (se aplicável)', 'Publicação da última progressão/promoção', 'Fichas financeiras (últimos 60 meses)'],
+            '05_Calculo_dos_Proventos': ['Planilha detalhada do cálculo', 'Memória de cálculo'],
+            '06_Outros_Documentos': ['Declaração de acumulação de cargos', 'Declaração de percepção de outros benefícios (RGPS/RPPS)', 'Declaração de ausência de PAD', 'Declaração de efetivo exercício (Professor)'],
+            '07_Pareceres_Tecnicos_e_Juridicos': ['Parecer da unidade de gestão de pessoas'],
+            '08_Ato_Administrativo': ['Ato de aposentadoria publicado'],
+            '09_Legislacao': ['Leis e decretos que embasam o benefício']
         },
-        '02_Requerimento_Servidor': {
-            titulo: 'Requerimento do Servidor',
-            itens: { 'Requerimento_Aposentadoria': 'Pedido formal do servidor solicitando a aposentadoria' }
-        },
-        '03_Documentos_Pessoais': {
-            titulo: 'Documentos Pessoais',
-            itens: { 'RG': 'Documento de identidade com foto (RG ou CNH)', 'CPF': 'Cadastro de Pessoa Física (CPF)', 'Comprovante_Residencia': 'Comprovante de residência atualizado' }
-        },
-        '04_Documentacao_Funcional': {
-            titulo: 'Documentação Funcional',
-            itens: {
-                'Ingresso_Servico_Publico': 'Documento de ingresso (ato, portaria, CTPS) para admissões pré-CF/88',
-                'Portarias_Nomeacao_Exoneracao': 'Portarias de nomeação e de exoneração, se houver',
-                'Ficha_Funcional': 'Ficha funcional completa com histórico de cargos',
-                'Certidao_Tempo_Contribuicao': 'Certidão de tempo de contribuição emitida pelo órgão',
-                'Declaracao_Tempo_Servico': 'Declaração de tempo de serviço (períodos de efetivo exercício)',
-                'Comprovantes_Afastamentos': 'Comprovantes de afastamentos, licenças, gratificações',
-                'Decisoes_Judiciais': 'Cópia de decisões judiciais, quando houver',
-                'CTC_Outros_Regimes': 'CTC do RGPS ou outro RPPS, se houver',
-                'Certificado_Diploma': 'Cópia de certificado/diploma, se for requisito para o cargo/vantagem',
-                'Ultima_Progressao': 'Cópia da publicação da última progressão/promoção',
-                'Fichas_Financeiras': 'Fichas financeiras dos últimos 60 meses'
-            }
-        },
-        '05_Calculo_Proventos': {
-            titulo: 'Cálculo dos Proventos',
-            itens: { 'Planilha_Calculo': 'Planilha detalhada com o cálculo dos proventos', 'Memoria_Calculo': 'Memória de cálculo demonstrando a metodologia' }
-        },
-        '06_Outros_Documentos': {
-            titulo: 'Outros Documentos',
-            itens: {
-                'Declaracao_Acumulacao': 'Declaração de acumulação ou não de cargos públicos',
-                'Declaracao_Percepcao_Beneficios': 'Declaração de percepção de outros benefícios (RGPS/RPPS)',
-                'Declaracao_PAD': 'Declaração sobre existência de Processo Administrativo Disciplinar (PAD)',
-                'Declaracao_Magisterio': 'Declaração de efetivo exercício em funções de magistério (para professores)'
-            }
-        },
-        '07_Pareceres': {
-            titulo: 'Pareceres Técnicos e Jurídicos',
-            itens: { 'Parecer_Gestao_Pessoas': 'Parecer da unidade de gestão de pessoas ou equivalente' }
-        },
-        '08_Ato_Administrativo': {
-            titulo: 'Ato Administrativo',
-            itens: { 'Ato_Aposentadoria': 'Ato de aposentadoria com comprovante de publicação' }
-        },
-        '09_Legislacao': {
-            titulo: 'Legislação',
-            itens: { 'Leis_Decretos': 'Leis e decretos que embasaram a concessão do benefício' }
+        pensao: {
+            // Checklist simplificado para Pensão, pode ser expandido
+            '01_Oficio_de_Encaminhamento': ['Ofício de Encaminhamento ao TCE'],
+            '02_Requerimento_do_Dependente': ['Requerimento formal do dependente'],
+            '03_Documentos_Instituidor': ['RG do Servidor', 'CPF do Servidor', 'Certidão de Óbito'],
+            '04_Documentos_Dependente': ['RG do Dependente', 'CPF do Dependente', 'Comprovante de Residência', 'Certidão (Casamento/Nascimento)', 'Prova de dependência econômica (se aplicável)'],
+            '05_Documentacao_Funcional': ['Documento de ingresso do servidor', 'Último contracheque do servidor'],
+            '06_Ato_Administrativo': ['Ato de concessão de pensão publicado'],
+            '07_Legislacao': ['Leis e decretos que embasam o benefício']
         }
     },
 
-    init: () => {
-        gestaoProcessos.novoProcesso();
-    },
-
-    novoProcesso: () => {
-        gestaoProcessos.currentState = {
-            id: crypto.randomUUID(),
-            nome: '',
-            documentos: {}
-        };
-        document.getElementById('processo-nome').value = '';
-        gestaoProcessos.renderProcesso();
-    },
-    
-    renderProcesso: () => {
-        const container = document.getElementById('processo-documentos-container');
-        container.innerHTML = '';
-
-        for (const grupoKey in gestaoProcessos.DOCUMENTOS_TCE) {
-            const grupo = gestaoProcessos.DOCUMENTOS_TCE[grupoKey];
-            
-            const grupoDiv = document.createElement('div');
-            grupoDiv.className = 'grupo-documentos';
-            
-            let itensHTML = '';
-            for (const itemKey in grupo.itens) {
-                const item = gestaoProcessos.currentState.documentos[itemKey];
-                const anexo = item && item.file;
-                
-                itensHTML += `
-                    <div class="documento-item" id="item-${itemKey}">
-                        <i class="ri-checkbox-blank-circle-line status-icon ${anexo ? 'attached' : 'pending'}"></i>
-                        <div class="documento-info">
-                            <p>${grupo.itens[itemKey]}</p>
-                            <small id="info-${itemKey}">${anexo ? `${anexo.name} - ${(anexo.size / 1024 / 1024).toFixed(3)} MB` : 'Pendente'}</small>
-                        </div>
-                        <div class="documento-actions">
-                            <button class="primary btn-tabela" title="Anexar PDF" onclick="document.getElementById('file-input-${itemKey}').click()">
-                                <i class="ri-attachment-2"></i>
-                            </button>
-                            <button class="danger btn-tabela" title="Remover Anexo" onclick="gestaoProcessos.removerAnexo('${itemKey}')" ${!anexo ? 'disabled' : ''}>
-                                <i class="ri-delete-bin-line"></i>
-                            </button>
-                            <input type="file" id="file-input-${itemKey}" accept=".pdf" style="display:none;" onchange="gestaoProcessos.anexarArquivo(event, '${grupoKey}', '${itemKey}')">
-                        </div>
-                    </div>
-                `;
+    iniciarNovoProcesso: (confirmado = false) => {
+        if (!confirmado && Object.keys(gestaoProcessos.state).length > 0) {
+            if (!confirm("Isso limpará o processo atual. Deseja continuar?")) {
+                document.getElementById('processo-tipo').value = gestaoProcessos.state.tipo; // Reverte a seleção
+                return;
             }
+        }
 
-            grupoDiv.innerHTML = `
-                <h4 class="accordion-toggle">${grupo.titulo}</h4>
-                <div class="accordion-content">
-                    ${itensHTML}
+        const tipo = document.getElementById('processo-tipo').value;
+        gestaoProcessos.state = {
+            tipo: tipo,
+            servidor: document.getElementById('processo-nome-servidor').value,
+            numero: document.getElementById('processo-numero').value,
+            grupos: {}
+        };
+
+        const definicao = gestaoProcessos.CHECKLIST_DEFINICOES[tipo];
+        for (const grupoId in definicao) {
+            gestaoProcessos.state.grupos[grupoId] = {
+                nome: grupoId.replace(/_/g, ' '),
+                itens: definicao[grupoId].map(itemTexto => ({ texto: itemTexto, arquivos: [] })),
+                tamanhoTotal: 0,
+                limite: 10 * 1024 * 1024 // 10MB
+            };
+        }
+        
+        gestaoProcessos.renderChecklist();
+        gestaoProcessos.renderResumo();
+    },
+
+    renderChecklist: () => {
+        const container = document.getElementById('processo-checklist-container');
+        container.innerHTML = '';
+        const { tipo, grupos } = gestaoProcessos.state;
+
+        if (!tipo) {
+            container.innerHTML = '<p>Selecione um tipo de processo para começar.</p>';
+            return;
+        }
+
+        for (const grupoId in grupos) {
+            const grupo = grupos[grupoId];
+            const grupoEl = document.createElement('div');
+            grupoEl.className = 'processo-grupo';
+            grupoEl.innerHTML = `<div class="processo-grupo-header">${grupo.nome}</div>`;
+
+            grupo.itens.forEach((item, itemIndex) => {
+                const completo = item.arquivos.length > 0;
+                const itemEl = document.createElement('div');
+                itemEl.className = `processo-checklist-item ${completo ? 'completo' : ''}`;
+                
+                let anexosHTML = '<ul class="processo-anexos-lista">';
+                item.arquivos.forEach((arq, arqIndex) => {
+                    anexosHTML += `
+                        <li class="processo-anexo-item">
+                            <span><i class="ri-file-pdf-2-line"></i> ${arq.file.name} (${(arq.file.size / 1024).toFixed(1)} KB)</span>
+                            <button class="danger btn-tabela" onclick="gestaoProcessos.removerArquivo('${grupoId}', ${itemIndex}, ${arqIndex})"><i class="ri-close-line"></i></button>
+                        </li>`;
+                });
+                anexosHTML += '</ul>';
+
+                itemEl.innerHTML = `
+                    <i class="ri-checkbox-${completo ? 'circle' : 'blank'}-line"></i>
+                    <span>${item.texto}</span>
+                    <button class="secondary btn-tabela" onclick="gestaoProcessos.abrirSelecaoArquivo('${grupoId}', ${itemIndex})">
+                        <i class="ri-attachment-2"></i> Anexar
+                    </button>
+                `;
+                grupoEl.appendChild(itemEl);
+                if(completo) grupoEl.insertAdjacentHTML('beforeend', anexosHTML);
+            });
+            
+            // Barra de progresso
+            const percentualUso = (grupo.tamanhoTotal / grupo.limite) * 100;
+            const limiteAtingido = percentualUso >= 100;
+            const progressoEl = document.createElement('div');
+            progressoEl.className = 'processo-grupo-progresso';
+            progressoEl.innerHTML = `
+                <small>Uso do grupo: ${(grupo.tamanhoTotal / (1024*1024)).toFixed(2)} MB de 10 MB</small>
+                <div class="processo-progress-bar">
+                    <div class="processo-progress-bar-fill ${limiteAtingido ? 'limite-atingido' : ''}" style="width: ${percentualUso}%;"></div>
                 </div>
             `;
-            container.appendChild(grupoDiv);
-        }
-        
-        // Re-inicializa os toggles dos accordions
-        document.querySelectorAll(".accordion-toggle").forEach(toggle => {
-            toggle.addEventListener("click", () => {
-                toggle.classList.toggle("active");
-                const content = toggle.nextElementSibling;
-                if (content.style.maxHeight) {
-                    content.style.maxHeight = null;
-                } else {
-                    content.style.maxHeight = content.scrollHeight + "px";
-                }
-            });
-        });
+            grupoEl.appendChild(progressoEl);
 
-        gestaoProcessos.atualizarSumario();
+            container.appendChild(grupoEl);
+        }
     },
 
-    anexarArquivo: (event, grupoKey, itemKey) => {
-        const file = event.target.files[0];
-        if (!file) return;
+    renderResumo: () => {
+        const container = document.getElementById('processo-resumo-container');
+        const { grupos } = gestaoProcessos.state;
+        let totalArquivos = 0;
+        let tamanhoTotalProcesso = 0;
 
-        if (file.type !== 'application/pdf') {
-            ui.showToast('Apenas arquivos PDF são permitidos.', false);
+        let html = '<ul>';
+        for (const grupoId in grupos) {
+            const grupo = grupos[grupoId];
+            const numArquivos = grupo.itens.reduce((acc, item) => acc + item.arquivos.length, 0);
+            totalArquivos += numArquivos;
+            tamanhoTotalProcesso += grupo.tamanhoTotal;
+
+            html += `<li><b>${grupo.nome}</b> <span>${numArquivos} arq. / ${(grupo.tamanhoTotal / (1024*1024)).toFixed(2)} MB</span></li>`;
+        }
+        html += '</ul>';
+        html += `<div id="processo-resumo-total"><span>TOTAL</span> <span>${totalArquivos} arq. / ${(tamanhoTotalProcesso / (1024*1024)).toFixed(2)} MB</span></div>`;
+        
+        container.innerHTML = html;
+    },
+    
+    abrirSelecaoArquivo: (grupoId, itemIndex) => {
+        const fileInput = document.getElementById('processo-file-input');
+        fileInput.onchange = (event) => gestaoProcessos.handleAnexarArquivos(event, grupoId, itemIndex);
+        fileInput.click();
+    },
+
+    handleAnexarArquivos: (event, grupoId, itemIndex) => {
+        const files = event.target.files;
+        if (!files.length) return;
+
+        const grupo = gestaoProcessos.state.grupos[grupoId];
+        let tamanhoAdicional = 0;
+        for (const file of files) {
+            tamanhoAdicional += file.size;
+        }
+
+        if (grupo.tamanhoTotal + tamanhoAdicional > grupo.limite) {
+            ui.showToast(`Erro: Adicionar este(s) arquivo(s) ultrapassa o limite de 10MB do grupo.`, false);
             return;
         }
 
-        // Verifica se o tamanho do grupo excederá o limite
-        const tamanhoAtualGrupo = gestaoProcessos.getTamanhoGrupo(grupoKey);
-        if (((tamanhoAtualGrupo + file.size) / 1024 / 1024) > gestaoProcessos.MAX_GROUP_SIZE_MB) {
-            ui.showToast(`Erro: Adicionar este arquivo excederá o limite de ${gestaoProcessos.MAX_GROUP_SIZE_MB}MB para o grupo "${gestaoProcessos.DOCUMENTOS_TCE[grupoKey].titulo}".`, false);
-            return;
-        }
-
-        gestaoProcessos.currentState.documentos[itemKey] = {
-            file: file,
-            grupo: grupoKey
-        };
-        
-        // Atualiza a UI para este item específico
-        const itemDiv = document.getElementById(`item-${itemKey}`);
-        itemDiv.querySelector('.status-icon').className = 'ri-checkbox-circle-line status-icon attached';
-        document.getElementById(`info-${itemKey}`).textContent = `${file.name} - ${(file.size / 1024 / 1024).toFixed(3)} MB`;
-        itemDiv.querySelector('.danger.btn-tabela').disabled = false;
-        
-        gestaoProcessos.atualizarSumario();
-        event.target.value = ''; // Limpa o input
-    },
-
-    removerAnexo: (itemKey) => {
-        delete gestaoProcessos.currentState.documentos[itemKey];
-
-        const itemDiv = document.getElementById(`item-${itemKey}`);
-        itemDiv.querySelector('.status-icon').className = 'ri-checkbox-blank-circle-line status-icon pending';
-        document.getElementById(`info-${itemKey}`).textContent = 'Pendente';
-        itemDiv.querySelector('.danger.btn-tabela').disabled = true;
-
-        gestaoProcessos.atualizarSumario();
-    },
-
-    getTamanhoGrupo: (grupoKey) => {
-        let tamanho = 0;
-        for (const itemKey in gestaoProcessos.currentState.documentos) {
-            const item = gestaoProcessos.currentState.documentos[itemKey];
-            if (item.grupo === grupoKey) {
-                tamanho += item.file.size;
+        for (const file of files) {
+            if (file.type !== "application/pdf") {
+                ui.showToast(`Apenas arquivos PDF são permitidos. '${file.name}' foi ignorado.`, false);
+                continue;
             }
+            grupo.itens[itemIndex].arquivos.push({ id: crypto.randomUUID(), file: file });
+            grupo.tamanhoTotal += file.size;
         }
-        return tamanho;
+
+        gestaoProcessos.renderChecklist();
+        gestaoProcessos.renderResumo();
+        document.getElementById('processo-file-input').value = ''; // Limpa o input
     },
 
-    atualizarSumario: () => {
-        let totalFiles = 0;
-        let totalSize = 0;
-        const totalItens = Object.values(gestaoProcessos.DOCUMENTOS_TCE).reduce((acc, grupo) => acc + Object.keys(grupo.itens).length, 0);
-
-        for (const key in gestaoProcessos.currentState.documentos) {
-            totalFiles++;
-            totalSize += gestaoProcessos.currentState.documentos[key].file.size;
-        }
-
-        const progresso = totalItens > 0 ? (totalFiles / totalItens) * 100 : 0;
-        document.getElementById('processo-progress-bar').style.width = `${progresso}%`;
-        document.getElementById('processo-progress-text').textContent = `${progresso.toFixed(1)}% completo (${totalFiles} de ${totalItens} documentos)`;
-
-        document.getElementById('total-files-count').textContent = totalFiles;
-        document.getElementById('total-files-size').textContent = `${(totalSize / 1024 / 1024).toFixed(3)} MB`;
-
-        const groupList = document.getElementById('group-size-list');
-        groupList.innerHTML = '';
-        for (const grupoKey in gestaoProcessos.DOCUMENTOS_TCE) {
-            const tamanhoGrupo = gestaoProcessos.getTamanhoGrupo(grupoKey);
-            const li = document.createElement('li');
-            li.innerHTML = `<span>${gestaoProcessos.DOCUMENTOS_TCE[grupoKey].titulo}</span> <strong>${(tamanhoGrupo / 1024 / 1024).toFixed(3)} MB</strong>`;
-            if ((tamanhoGrupo / 1024 / 1024) > gestaoProcessos.MAX_GROUP_SIZE_MB) {
-                li.style.color = 'var(--cor-erro)';
-            }
-            groupList.appendChild(li);
-        }
+    removerArquivo: (grupoId, itemIndex, arqIndex) => {
+        const grupo = gestaoProcessos.state.grupos[grupoId];
+        const arquivoRemovido = grupo.itens[itemIndex].arquivos.splice(arqIndex, 1)[0];
+        grupo.tamanhoTotal -= arquivoRemovido.file.size;
+        
+        gestaoProcessos.renderChecklist();
+        gestaoProcessos.renderResumo();
     },
 
-    downloadZip: async (button) => {
-        const nomeProcesso = document.getElementById('processo-nome').value.trim();
-        if (!nomeProcesso) {
-            ui.showToast('Por favor, defina um nome para o processo.', false);
-            return;
-        }
-        if (Object.keys(gestaoProcessos.currentState.documentos).length === 0) {
-            ui.showToast('Nenhum documento foi anexado para gerar o ZIP.', false);
-            return;
+    gerarPacoteProcessoZIP: async (button) => {
+        const { servidor, numero, grupos } = gestaoProcessos.state;
+        if (!servidor) {
+            return ui.showToast("Preencha o nome do servidor/instituidor.", false);
         }
 
         ui.toggleSpinner(button, true);
-
         try {
             const zip = new JSZip();
-            for (const itemKey in gestaoProcessos.currentState.documentos) {
-                const doc = gestaoProcessos.currentState.documentos[itemKey];
-                const pasta = zip.folder(doc.grupo);
-                
-                const nomeItem = gestaoProcessos.DOCUMENTOS_TCE[doc.grupo].itens[itemKey].replace(/[^a-zA-Z0-9]/g, '_').substring(0, 30);
-                const nomeFinal = `${nomeItem}.pdf`;
-                
-                pasta.file(nomeFinal, doc.file);
+            let hasFiles = false;
+
+            for (const grupoId in grupos) {
+                const grupo = grupos[grupoId];
+                const pasta = zip.folder(grupoId);
+                let contadorArquivo = 1;
+
+                for (const item of grupo.itens) {
+                    for (const anexo of item.arquivos) {
+                        hasFiles = true;
+                        const nomeItemSanitizado = item.texto.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-zA-Z0-9]/g, '_');
+                        const nomeArquivo = `${String(contadorArquivo).padStart(2, '0')}_${nomeItemSanitizado}.pdf`;
+                        pasta.file(nomeArquivo, anexo.file);
+                        contadorArquivo++;
+                    }
+                }
             }
 
+            if (!hasFiles) {
+                throw new Error("Nenhum arquivo foi anexado ao processo.");
+            }
+
+            const nomeZip = `Processo_${(numero || 'SN').replace(/[^a-zA-Z0-9]/g, '-')}_${servidor.replace(/ /g, '_')}.zip`;
             const content = await zip.generateAsync({ type: "blob" });
-            const nomeArquivo = `${nomeProcesso.replace(/[^a-zA-Z0-9]/g, '_')}_TCE.zip`;
             
+            // Simula o download
             const a = document.createElement("a");
             a.href = URL.createObjectURL(content);
-            a.download = nomeArquivo;
+            a.download = nomeZip;
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
             URL.revokeObjectURL(a.href);
-            
-            ui.showToast('ZIP do processo gerado com sucesso!', true);
+
+            ui.showToast("Pacote ZIP gerado com sucesso!", true);
 
         } catch (error) {
-            console.error("Erro ao gerar ZIP:", error);
-            ui.showToast('Ocorreu um erro ao gerar o arquivo ZIP.', false);
+            ui.showToast(error.message, false);
+            console.error(error);
         } finally {
             ui.toggleSpinner(button, false);
         }
+    },
+    
+    puxarDadosSimulacao: () => {
+        const nomeSimulacao = document.getElementById('nomeServidor').value;
+        if(nomeSimulacao) {
+            document.getElementById('processo-nome-servidor').value = nomeSimulacao;
+            ui.showToast("Nome do servidor preenchido.", true);
+        } else {
+            ui.showToast("Nenhum nome encontrado na simulação atual.", false);
+        }
     }
 };
-// =================================================================================
-// FIM: MÓDULO DE GESTÃO DE PROCESSOS
-// =================================================================================
 
 function handleNavClick(event, targetView) {
     if (event) event.preventDefault();
@@ -1070,6 +1048,9 @@ function handleNavClick(event, targetView) {
             break;
         case 'telaCadastro': // <-- LINHA ADICIONADA
             cadastro.renderTabela();
+            break;
+        case 'telaProcessos': // <-- LINHA ADICIONADA
+            gestaoProcessos.iniciarNovoProcesso();
             break;
     }
 }
@@ -3216,6 +3197,7 @@ Object.assign(window, {
 });
 
 window.simulacao = simulacao;
+
 
 
 
