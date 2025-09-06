@@ -73,7 +73,7 @@
             
             <li class="sidebar-section-title">Módulos de Gestão</li>
             <li><a href="#" onclick="handleNavClick(event, 'telaCadastro')"><i class="ri-user-settings-line"></i> Gestão Cadastral</a></li>
-            <li><a href="#" onclick="handleNavClick(event, 'telaProcessos')"><i class="ri-node-tree"></i> Acomp. de Processos</a></li>
+            <li><a href="#" onclick="handleNavClick(event, 'telaProcessos')"><i class="ri-node-tree"></i> Gestão de Processos</a></li>
             <li><a href="#" onclick="handleNavClick(event, 'telaFinanceiro')"><i class="ri-line-chart-line"></i> Financeiro</a></li>
             <li><a href="#" onclick="handleNavClick(event, 'telaRelatorios')"><i class="ri-file-chart-line"></i> Relatórios e BI</a></li>
 
@@ -988,45 +988,49 @@
                 </div>
                 
                 <div id="telaProcessos" style="display:none;">
-                    <h2><i class="ri-node-tree"></i> Módulo de Acompanhamento de Processos</h2>
-                    <p>Acompanhe o andamento dos processos de concessão de benefícios de forma visual e organizada.</p>
-                     <div class="kanban-board">
-                        <div class="kanban-column">
-                            <h4><i class="ri-inbox-line"></i> Novos Pedidos</h4>
-                            <div class="kanban-card">
-                                <p>Aposentadoria Voluntária</p>
-                                <small>Requerente: CARLOS SOUZA</small>
-                                <small>Processo: 2025/00123</small>
-                                <small>Data de Entrada: 25/07/2025</small>
+                    <h2><i class="ri-node-tree"></i> Gestão de Processos para o TCE</h2>
+                    <p>Organize e monte os processos de aposentadoria e pensão, anexe os documentos em PDF e baixe um arquivo ZIP pronto para o envio ao Tribunal de Contas.</p>
+                    
+                    <div class="processo-controls">
+                        <label for="processo-nome">Nome do Processo (Servidor):
+                            <input type="text" id="processo-nome" placeholder="Ex: Aposentadoria - João da Silva">
+                        </label>
+                        <button class="success" onclick="gestaoProcessos.salvarProcesso()">
+                            <i class="ri-save-line"></i> Salvar Processo
+                        </button>
+                         <button class="secondary" onclick="gestaoProcessos.carregarProcesso()">
+                            <i class="ri-folder-open-line"></i> Carregar Processo
+                        </button>
+                        <button class="primary" onclick="gestaoProcessos.novoProcesso()">
+                            <i class="ri-add-line"></i> Novo Processo
+                        </button>
+                    </div>
+
+                    <div class="processo-layout">
+                        <div id="processo-documentos-container">
                             </div>
-                        </div>
-                        <div class="kanban-column">
-                            <h4><i class="ri-file-search-line"></i> Em Análise</h4>
-                             <div class="kanban-card">
-                                <p>Pensão por Morte</p>
-                                <small>Requerente: ANA LIMA (Dependente)</small>
-                                <small>Processo: 2025/00119</small>
-                                <small>Data de Entrada: 22/07/2025</small>
+                        <div class="processo-summary">
+                            <h4>Resumo do Processo</h4>
+                            <div class="progress-bar-container">
+                                <div id="processo-progress-bar" class="progress-bar-fill"></div>
                             </div>
-                             <div class="kanban-card">
-                                <p>Emissão de CTC</p>
-                                <small>Requerente: JOSÉ ALMEIDA</small>
-                                <small>Processo: 2025/00121</small>
-                                <small>Data de Entrada: 23/07/2025</small>
+                            <span id="processo-progress-text" class="progress-text">0% completo</span>
+
+                            <div id="processo-info-size">
+                                <p><strong>Total de Arquivos:</strong> <span id="total-files-count">0</span></p>
+                                <p><strong>Tamanho Total:</strong> <span id="total-files-size">0 MB</span></p>
                             </div>
-                        </div>
-                        <div class="kanban-column">
-                            <h4><i class="ri-check-double-line"></i> Concluídos</h4>
-                             <div class="kanban-card">
-                                <p>Aposentadoria por Incapacidade</p>
-                                <small>Requerente: RITA DE CÁSSIA</small>
-                                <small>Processo: 2025/00115</small>
-                                <small>Data de Entrada: 15/07/2025</small>
-                            </div>
+
+                            <ul id="group-size-list">
+                                </ul>
+                            
+                            <button class="primary" onclick="gestaoProcessos.downloadZip(this)" style="width: 100%; margin-top: 20px;">
+                                <span class="button-text"><i class="ri-download-2-line"></i> Baixar Processo em ZIP</span>
+                                <span class="spinner"></span>
+                            </button>
                         </div>
                     </div>
                 </div>
-
                 <div id="telaFinanceiro" style="display:none;">
                     <h2><i class="ri-line-chart-fill"></i> Módulo Financeiro e Contribuições</h2>
                     <p>Controle a arrecadação, despesas e a saúde financeira do fundo de previdência.</p>
@@ -1140,4 +1144,3 @@
 
 </body>
 </html>
-
