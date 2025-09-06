@@ -2377,72 +2377,31 @@ function listarHistorico() {
     });
 }
 
+// ***** INÍCIO DA SEÇÃO CORRIGIDA *****
 function carregarDoHistorico(id) {
     if (!AppState.usuarioAtual) return;
-    const c = `historicoSimulacoes_${AppState.usuarioAtual.uid}`, h = JSON.parse(localStorage.getItem(c) || "[]");
-    const rE = h.find(r => r.id === id); if (!rE) return ui.showToast("Erro: Simulação não encontrada.", false);
-    restaurarDados: (dados) => {
-    handleNavClick(null, 'simulacao');
-    
-    setTimeout(() => {
-        try {
-            limparFormularioCompleto();
-
-            if (dados.passo1) {
-                for (const key in dados.passo1) {
-                    const el = document.getElementById(key);
-                    if (el) el.value = dados.passo1[key];
-                }
-            }
-            document.getElementById('nomeSimulacao').value = dados.nome || 'Simulação Carregada';
-
-            if (dados.periodosExternos) {
-                dados.periodosExternos.forEach(p => adicionarPeriodoExterno(p.inicio, p.fim));
-            }
-
-            if (dados.tabela) {
-                dados.tabela.forEach(linha => adicionarLinha(linha[0], linha[1], linha[2]));
-            }
-
-            // ATUALIZADO PARA CARREGAR O CPF DO DEPENDENTE
-            if (dados.dependentes) {
-                dados.dependentes.forEach(dep => adicionarLinhaDependente(dep.nome, dep.dataNasc, dep.parentesco, dep.invalido, dep.cpf));
-            }
-            
-            if (dados.proventosAto) {
-                document.getElementById('corpo-tabela-proventos-ato').innerHTML = '';
-                dados.proventosAto.forEach(p => adicionarLinhaProvento(p.descricao, p.valor));
-            }
-
-            if (dados.resultados && dados.resultados.checklistState) {
-                AppState.simulacaoResultados.checklistState = dados.resultados.checklistState;
-            }
-
-            alternarCamposBeneficio();
-            
-            const tipoBeneficio = document.getElementById('tipoBeneficio').value;
-            if (tipoBeneficio !== 'pensao_aposentado') {
-                irParaPasso(2);
-            }
-            calcularBeneficio(true);
-            
-            ui.showToast(`Simulação "${dados.nome || 'Sem nome'}" carregada com sucesso!`, true);
-
-        } catch (error) {
-            console.error("Erro ao restaurar dados da simulação:", error);
-            ui.showToast("Falha ao carregar dados da simulação. O arquivo pode estar corrompido.", false);
-        }
-    }, 150);
-  },
+    const c = `historicoSimulacoes_${AppState.usuarioAtual.uid}`;
+    const h = JSON.parse(localStorage.getItem(c) || "[]");
+    const rE = h.find(r => r.id === id);
+    if (!rE) {
+        return ui.showToast("Erro: Simulação não encontrada.", false);
+    }
+    // A CHAMADA CORRETA É PARA A FUNÇÃO DO OBJETO 'simulacao'
+    simulacao.restaurarDados(rE.dados);
+}
+// ***** FIM DA SEÇÃO CORRIGIDA *****
 
 function excluirDoHistorico(id) {
     if (!AppState.usuarioAtual) return;
-    const c = `historicoSimulacoes_${AppState.usuarioAtual.uid}`, h = JSON.parse(localStorage.getItem(c) || "[]");
+    const c = `historicoSimulacoes_${AppState.usuarioAtual.uid}`;
+    const h = JSON.parse(localStorage.getItem(c) || "[]");
     const nDR = h.find(r => r.id === id)?.nome || "Simulação";
     if (confirm(`Excluir "${nDR}"?`)) {
         const nH = h.filter(r => r.id !== id);
         localStorage.setItem(c, JSON.stringify(nH));
-        listarHistorico(); ui.showToast("Simulação excluída.", true); atualizarIndicadoresDashboard();
+        listarHistorico();
+        ui.showToast("Simulação excluída.", true);
+        atualizarIndicadoresDashboard();
     }
 }
 
@@ -3395,6 +3354,7 @@ Object.assign(window, {
 });
 
 window.simulacao = simulacao;
+
 
 
 
