@@ -73,7 +73,7 @@
             
             <li class="sidebar-section-title">Módulos de Gestão</li>
             <li><a href="#" onclick="handleNavClick(event, 'telaCadastro')"><i class="ri-user-settings-line"></i> Gestão Cadastral</a></li>
-            <li><a href="#" onclick="handleNavClick(event, 'telaProcessos')"><i class="ri-node-tree"></i> Gestão de Processos</a></li>
+            <li><a href="#" onclick="handleNavClick(event, 'telaProcessos')"><i class="ri-folders-line"></i> Gestão de Processos</a></li>
             <li><a href="#" onclick="handleNavClick(event, 'telaFinanceiro')"><i class="ri-line-chart-line"></i> Financeiro</a></li>
             <li><a href="#" onclick="handleNavClick(event, 'telaRelatorios')"><i class="ri-file-chart-line"></i> Relatórios e BI</a></li>
 
@@ -854,7 +854,7 @@
             <p style="font-size:0.9em; margin-top: 10px; margin-bottom:15px; flex-grow:1; color: var(--text-secondary-color);">
              Altera dispositivos da Lei n° 047/2008, de 16 de dezembro de 2008, que cria o Regime Próprio de Previdência do Municipio de Itapipoca.
             </p>
-            <a href="https://itaprev.com.br/wp-content/uploads/2021/08/Itapipoca-Lei-N%C2%BA-005.2020-ALTERA-LEI-047-DE-2008.pdf" target="_blank" style="text-decoration: none; width:100%;"><button style="width:100%; margin-top: auto;">Visualizar PDF</button></a>
+            <a href="https://itaprev.com.br/wp-content/uploads/2021/08/Itapipoca-Lei-N%C2%B0-005.2020-ALTERA-LEI-047-DE-2008.pdf" target="_blank" style="text-decoration: none; width:100%;"><button style="width:100%; margin-top: auto;">Visualizar PDF</button></a>
         </div>
       
       <div class="dashboard-card" style="cursor: default; text-align: left; align-items: flex-start; flex-direction: column;">
@@ -881,7 +881,7 @@
             <p style="font-size:0.9em; margin-top: 10px; margin-bottom:15px; flex-grow:1; color: var(--text-secondary-color);">
              Dispõe sobre as regras de concessão e manutenção das aposentadorias e pensões dos servidores públicos do Município de Itapipoca/CE, conforme previsto na EC 103/2019, de 12 de novembro de 2019, Emenda a Lei Orgânica N° 001/2022, Lei n° 035/2022 de 25 de abril de 2022 e Portaria Federal MPT N° 1467, de 02 de junho de 2022.
             </p>
-            <a href="https://itaprev.com.br/wp-content/uploads/2022/08/DECRETO-1132022-REGRAS-DE-CONCESSO-E-MANUTENO-DAS-APOSENTADORIAS-E-PENSES.pdf" target="_blank" style="text-decoration: none; width:100%;"><button style="width:100%; margin-top: auto;">Visualizar PDF</button></a>
+            <a href="https://itaprev.com.br/wp-content/uploads/2022/08/DECRETO-1132022-REGRAS-DE-CONCESSO-E-MANUTENO-DAS-APOSENTADORIAS-E-PENSES.pdf" target="_blank" rel="noopener noreferrer" style="text-decoration: none; width:100%;"><button style="width:100%; margin-top: auto;">Visualizar PDF</button></a>
         </div>
     </div>
 </div>
@@ -988,49 +988,54 @@
                 </div>
                 
                 <div id="telaProcessos" style="display:none;">
-                    <h2><i class="ri-node-tree"></i> Gestão de Processos para o TCE</h2>
-                    <p>Organize e monte os processos de aposentadoria e pensão, anexe os documentos em PDF e baixe um arquivo ZIP pronto para o envio ao Tribunal de Contas.</p>
-                    
-                    <div class="processo-controls">
-                        <label for="processo-nome">Nome do Processo (Servidor):
-                            <input type="text" id="processo-nome" placeholder="Ex: Aposentadoria - João da Silva">
-                        </label>
-                        <button class="success" onclick="gestaoProcessos.salvarProcesso()">
-                            <i class="ri-save-line"></i> Salvar Processo
-                        </button>
-                         <button class="secondary" onclick="gestaoProcessos.carregarProcesso()">
-                            <i class="ri-folder-open-line"></i> Carregar Processo
-                        </button>
-                        <button class="primary" onclick="gestaoProcessos.novoProcesso()">
-                            <i class="ri-add-line"></i> Novo Processo
-                        </button>
-                    </div>
-
-                    <div class="processo-layout">
-                        <div id="processo-documentos-container">
-                            </div>
-                        <div class="processo-summary">
-                            <h4>Resumo do Processo</h4>
-                            <div class="progress-bar-container">
-                                <div id="processo-progress-bar" class="progress-bar-fill"></div>
-                            </div>
-                            <span id="processo-progress-text" class="progress-text">0% completo</span>
-
-                            <div id="processo-info-size">
-                                <p><strong>Total de Arquivos:</strong> <span id="total-files-count">0</span></p>
-                                <p><strong>Tamanho Total:</strong> <span id="total-files-size">0 MB</span></p>
-                            </div>
-
-                            <ul id="group-size-list">
-                                </ul>
-                            
-                            <button class="primary" onclick="gestaoProcessos.downloadZip(this)" style="width: 100%; margin-top: 20px;">
-                                <span class="button-text"><i class="ri-download-2-line"></i> Baixar Processo em ZIP</span>
-                                <span class="spinner"></span>
+                    <h2><i class="ri-folders-fill"></i> Módulo de Gestão de Processos para o TCE</h2>
+                    <p>Organize e monte os processos de aposentadoria e pensão, seguindo a ordem de documentos exigida pelo TCE-CE, com controle de tamanho por grupo.</p>
+                
+                    <div id="processo-setup">
+                        <h4>1. Informações do Processo</h4>
+                        <div class="form-grid">
+                            <label>Tipo de Processo:
+                                <select id="processo-tipo" onchange="gestaoProcessos.iniciarNovoProcesso()">
+                                    <option value="aposentadoria">Aposentadoria</option>
+                                    <option value="pensao">Pensão por Morte</option>
+                                </select>
+                            </label>
+                            <label>Nº do Processo (Opcional):
+                                <input type="text" id="processo-numero" placeholder="Ex: 2025/00123">
+                            </label>
+                            <label style="flex-grow: 1;">Nome do Servidor/Instituidor:
+                                <input type="text" id="processo-nome-servidor" placeholder="Digite o nome ou puxe da simulação">
+                            </label>
+                            <button class="primary" onclick="gestaoProcessos.puxarDadosSimulacao()" style="margin-top: 5px;">
+                                <i class="ri-user-search-line"></i> Puxar da Simulação
                             </button>
                         </div>
                     </div>
+                
+                    <h4 style="margin-top:30px;">2. Checklist e Anexo de Documentos</h4>
+                    <div class="processo-main-layout">
+                        <div id="processo-checklist-container" class="processo-coluna-checklist">
+                            <p>Selecione um tipo de processo para carregar o checklist.</p>
+                        </div>
+                        <div class="processo-coluna-resumo">
+                            <h4>Resumo do Pacote</h4>
+                            <div id="processo-resumo-container">
+                                <p>Nenhum arquivo adicionado.</p>
+                            </div>
+                            <div class="wizard-nav" style="margin-top:20px; flex-direction: column; gap:10px;">
+                                <button class="success" onclick="gestaoProcessos.gerarPacoteProcessoZIP(this)" style="width:100%;">
+                                    <span class="button-text"><i class="ri-file-zip-line"></i> Gerar Pacote ZIP para o TCE</span>
+                                    <span class="spinner"></span>
+                                </button>
+                                <button class="danger" onclick="gestaoProcessos.iniciarNovoProcesso(true)" style="width:100%; margin:0;">
+                                    <i class="ri-delete-bin-line"></i> Limpar e Reiniciar Processo
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <input type="file" id="processo-file-input" accept="application/pdf" multiple style="display:none;">
                 </div>
+
                 <div id="telaFinanceiro" style="display:none;">
                     <h2><i class="ri-line-chart-fill"></i> Módulo Financeiro e Contribuições</h2>
                     <p>Controle a arrecadação, despesas e a saúde financeira do fundo de previdência.</p>
