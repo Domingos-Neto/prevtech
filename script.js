@@ -215,37 +215,38 @@ const cadastro = {
 
     // Salva um servidor novo ou atualiza um existente
     salvarServidor: (event) => {
-        event.preventDefault();
-        const id = document.getElementById('servidorId').value;
-        const servidores = cadastro.getServidores();
+    event.preventDefault();
+    const id = document.getElementById('servidorId').value;
+    const servidores = cadastro.getServidores();
 
-        const servidorData = {
-            id: id || crypto.randomUUID(),
-            nomeServidor: document.getElementById('form-nomeServidor').value,
-            matriculaServidor: document.getElementById('form-matriculaServidor').value,
-            cpfServidor: document.getElementById('form-cpfServidor').value,
-            rgServidor: document.getElementById('form-rgServidor').value,
-            cargoServidor: document.getElementById('form-cargoServidor').value,
-            cargaHorariaServidor: document.getElementById('form-cargaHorariaServidor').value,
-            lotacaoServidor: document.getElementById('form-lotacaoServidor').value,
-            isMagisterio: document.getElementById('form-isMagisterio').value,
-            dataAdmissao: document.getElementById('form-dataAdmissao').value,
-            dataNascimento: document.getElementById('form-dataNascimento').value,
-            sexo: document.getElementById('form-sexo').value,
-        };
+    const servidorData = {
+        id: id || crypto.randomUUID(),
+        nomeServidor: document.getElementById('form-nomeServidor').value,
+        matriculaServidor: document.getElementById('form-matriculaServidor').value,
+        cpfServidor: document.getElementById('form-cpfServidor').value,
+        rgServidor: document.getElementById('form-rgServidor').value,
+        enderecoServidor: document.getElementById('form-enderecoServidor').value, // CAMPO ADICIONADO
+        cargoServidor: document.getElementById('form-cargoServidor').value,
+        cargaHorariaServidor: document.getElementById('form-cargaHorariaServidor').value,
+        lotacaoServidor: document.getElementById('form-lotacaoServidor').value,
+        isMagisterio: document.getElementById('form-isMagisterio').value,
+        dataAdmissao: document.getElementById('form-dataAdmissao').value,
+        dataNascimento: document.getElementById('form-dataNascimento').value,
+        sexo: document.getElementById('form-sexo').value,
+    };
 
-        if (id) { // Editando
-            const index = servidores.findIndex(s => s.id === id);
-            servidores[index] = servidorData;
-        } else { // Adicionando
-            servidores.unshift(servidorData);
-        }
+    if (id) { // Editando
+        const index = servidores.findIndex(s => s.id === id);
+        servidores[index] = servidorData;
+    } else { // Adicionando
+        servidores.unshift(servidorData);
+    }
 
-        cadastro.saveServidores(servidores);
-        cadastro.renderTabela();
-        cadastro.fecharModal();
-        ui.showToast(`Servidor ${id ? 'atualizado' : 'salvo'} com sucesso!`, true);
-    },
+    cadastro.saveServidores(servidores);
+    cadastro.renderTabela();
+    cadastro.fecharModal();
+    ui.showToast(`Servidor ${id ? 'atualizado' : 'salvo'} com sucesso!`, true);
+},
 
     // Preenche o modal com dados de um servidor para edição
     editarServidor: (id) => {
@@ -421,36 +422,37 @@ const simulacao = {
   },
 
   selecionarServidor: (id) => {
-      const servidores = cadastro.getServidores();
-      const servidor = servidores.find(s => s.id === id);
-      if (!servidor) {
-          ui.showToast("Servidor não encontrado.", false);
-          return;
-      }
+    const servidores = cadastro.getServidores();
+    const servidor = servidores.find(s => s.id === id);
+    if (!servidor) {
+        ui.showToast("Servidor não encontrado.", false);
+        return;
+    }
 
-      // Mapeia os dados do servidor para os campos do formulário da simulação
-      const mapping = {
-          nomeServidor: 'nomeServidor',
-          matriculaServidor: 'matriculaServidor',
-          cpfServidor: 'cpfServidor',
-          rgServidor: 'rgServidor',
-          cargoServidor: 'cargoServidor',
-          cargaHorariaServidor: 'cargaHorariaServidor',
-          lotacaoServidor: 'lotacaoServidor',
-          isMagisterio: 'isMagisterio',
-          dataAdmissao: 'dataAdmissao',
-          dataNascimento: 'dataNascimento',
-          sexo: 'sexo'
-      };
+    // Mapeia os dados do servidor para os campos do formulário da simulação
+    const mapping = {
+        nomeServidor: 'nomeServidor',
+        matriculaServidor: 'matriculaServidor',
+        cpfServidor: 'cpfServidor',
+        rgServidor: 'rgServidor',
+        enderecoServidor: 'enderecoServidor', // CAMPO ADICIONADO
+        cargoServidor: 'cargoServidor',
+        cargaHorariaServidor: 'cargaHorariaServidor',
+        lotacaoServidor: 'lotacaoServidor',
+        isMagisterio: 'isMagisterio',
+        dataAdmissao: 'dataAdmissao',
+        dataNascimento: 'dataNascimento',
+        sexo: 'sexo'
+    };
 
-      for (const key in mapping) {
-          const el = document.getElementById(mapping[key]);
-          if (el) el.value = servidor[key] || '';
-      }
-      
-      simulacao.fecharModalBusca();
-      ui.showToast("Dados do servidor preenchidos!", true);
-  },
+    for (const key in mapping) {
+        const el = document.getElementById(mapping[key]);
+        if (el) el.value = servidor[key] || '';
+    }
+    
+    simulacao.fecharModalBusca();
+    ui.showToast("Dados do servidor preenchidos!", true);
+},
 
   filtrarBusca: () => {
       const filtro = document.getElementById('buscaServidorSimulacao').value.toLowerCase();
@@ -3057,7 +3059,7 @@ function gerarDeclaracaoNaoPercepcaoIndividual() {
             Eu, <b>${dadosServidor.nomeServidor || '________________'}</b>, 
             portador(a) do RG nº <b>${dadosServidor.rgServidor || '________________'}</b>, 
             inscrito(a) no CPF sob o n° <b>${dadosServidor.cpfServidor || '________________'}</b>,
-            residente e domiciliado(a) em <b>________________________________________</b>, 
+            residente e domiciliado(a) em <b>${dadosServidor.enderecoServidor || '________________________________________'}</b>, 
             declaro para os devidos fins de direito e sob as penas da lei, que não recebo benefício previdenciário de nenhum outro Regime de Previdência, até a presente data.
         </p>
         <p style="margin-top: 40px;">Itapipoca - CE, ${dataFormatada}.</p>
@@ -3354,6 +3356,7 @@ Object.assign(window, {
 });
 
 window.simulacao = simulacao;
+
 
 
 
