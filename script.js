@@ -2993,7 +2993,7 @@ function gerarDeclaracaoNaoAcumulacao() {
     const dataFormatada = `${dataAtual.getDate()} de ${dataAtual.toLocaleDateString('pt-BR', { month: 'long' })} de ${dataAtual.getFullYear()}`;
 
     const htmlConteudo = `
-    <!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Declaração de Não Acumulação</title>
+    <!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Declaração de Não Acumulação de Cargos</title>
     <style>
         body { font-family: Arial, sans-serif; font-size: 12pt; line-height: 1.8; }
         .container { width: 210mm; margin: auto; padding: 2cm; text-align: justify; }
@@ -3010,15 +3010,8 @@ function gerarDeclaracaoNaoAcumulacao() {
             <p>INSTITUTO DE PREVIDÊNCIA DOS SERVIDORES MUNICIPAIS DE ITAPIPOCA</p>
         </div>
         <h2>DECLARAÇÃO DE NÃO ACUMULAÇÃO DE CARGOS</h2>
-        <p>
-            Eu, <b>${dadosServidor.nomeServidor || '__________________________________'}</b>, 
-            portador(a) do RG nº <b>${dadosServidor.rgServidor || '________________'}</b> e
-            inscrito(a) no CPF sob o nº <b>${dadosServidor.cpfServidor || '________________'}</b>, 
-            matrícula nº <b>${dadosServidor.matriculaServidor || '________________'}</b>, 
-            residente e domiciliado(a) em <b>___________________________________________________________</b>, 
-            declaro, para os devidos fins de direito, que não exerço acumulativamente nenhum outro cargo ou função pública, em conformidade com o princípio constitucional previsto no Art. 37, XVI e XVII, da Constituição da República Federativa do Brasil e em observância às normas estabelecidas no Estatuto dos Servidores Públicos do Município de Itapipoca.
-        </p>
-        <p>E por ser a expressão da verdade, firmo a presente para que surta seus efeitos legais.</p>
+        <p>Eu, <b>${dadosServidor.nomeServidor || '_________________________'}</b>, portador(a) do RG nº <b>${dadosServidor.rgServidor || '________________'}</b> e inscrito(a) no CPF sob o nº <b>${dadosServidor.cpfServidor || '________________'}</b>, matrícula nº <b>${dadosServidor.matriculaServidor || '________________'}</b>, residente e domiciliado(a) em ____________________________________________________________________, declaro, para os devidos fins de direito, que não exerço acumulativamente nenhum outro cargo ou função pública, em conformidade com o princípio constitucional previsto no Art. 37, XVI e XVII, da Constituição da República Federativa do Brasil e em observância às normas estabelecidas no Estatuto dos Servidores Públicos do Município de Itapipoca. [cite: 4, 6, 9, 10]</p>
+        <p>E por ser a expressão da verdade, firmo a presente para que surta seus efeitos legais. [cite: 11]</p>
         <p style="margin-top: 40px;">Itapipoca - CE, ${dataFormatada}.</p>
         <div class="signature-block">
             <div class="signature-line"></div>
@@ -3355,6 +3348,7 @@ Object.assign(window, {
 });
 
 window.simulacao = simulacao;
+
 
 
 
