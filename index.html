@@ -1006,9 +1006,14 @@
                             <label style="flex-grow: 1;">Nome do Servidor/Instituidor:
                                 <input type="text" id="processo-nome-servidor" placeholder="Digite o nome ou puxe da simulação">
                             </label>
-                            <button class="primary" onclick="gestaoProcessos.puxarDadosSimulacao()" style="margin-top: 5px;">
-                                <i class="ri-user-search-line"></i> Puxar da Simulação
-                            </button>
+                            <div style="display: flex; gap: 10px; align-items: flex-end;">
+                                <button class="secondary" onclick="gestaoProcessos.puxarDadosSimulacao()" style="margin-top: 5px; width: 100%;">
+                                    <i class="ri-user-search-line"></i> Puxar
+                                </button>
+                                <button class="secondary" onclick="document.getElementById('carregarProcessoInput').click()" style="margin-top: 5px; width: 100%;">
+                                    <i class="ri-upload-2-line"></i> Carregar
+                                </button>
+                            </div>
                         </div>
                     </div>
                 
@@ -1023,7 +1028,11 @@
                                 <p>Nenhum arquivo adicionado.</p>
                             </div>
                             <div class="wizard-nav" style="margin-top:20px; flex-direction: column; gap:10px;">
-                                <button class="success" onclick="gestaoProcessos.gerarPacoteProcessoZIP(this)" style="width:100%;">
+                                <button class="primary" onclick="gestaoProcessos.salvarProcessoLocal(this)" style="width:100%; margin:0;">
+                                    <span class="button-text"><i class="ri-save-3-line"></i> Salvar no Computador</span>
+                                    <span class="spinner"></span>
+                                </button>
+                                <button class="success" onclick="gestaoProcessos.gerarPacoteProcessoZIP(this)" style="width:100%; margin:0;">
                                     <span class="button-text"><i class="ri-file-zip-line"></i> Gerar Pacote ZIP para o TCE</span>
                                     <span class="spinner"></span>
                                 </button>
@@ -1146,6 +1155,7 @@
 <script type="module" src="script.js"></script>
 <input type="file" id="carregarSimulacaoInput" accept=".json" style="display:none;" onchange="simulacao.carregarLocal(event)" />
 <input type="file" id="arquivoExcelCTC" accept=".xlsx, .xls" style="display:none;" />
-
+<input type="file" id="carregarProcessoInput" accept=".json" style="display:none;" onchange="gestaoProcessos.carregarProcessoLocal(event)" />
 </body>
 </html>
+
