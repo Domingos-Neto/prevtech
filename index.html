@@ -160,7 +160,7 @@
                                 <input type="date" id="dataInicioIncapacidade" />
                             </label>
                         </div>
-                        <div id="containerGestaoDependentes" style="display:none;"><h4>Dependentes para Pensão</h4><table id="tabela-dependentes"><thead><tr><th>Nome Completo</th><th style="width: 150px;">Data de Nasc.</th><th style="width: 180px;">Parentesco</th><th style="width: 110px;">Inválido?</th><th style="width: 100px;">Ações</th></tr></thead><tbody id="corpo-tabela-dependentes"></tbody></table><button type="button" class="primary" onclick="adicionarLinhaDependente()">+ Adicionar Dependente</button></div>
+                        <div id="containerGestaoDependentes" style="display:none;"><h4>Dependentes para Pensão</h4><table id="tabela-dependentes"><thead><tr><th>Nome Completo</th><th style="width: 150px;">Data de Nasc.</th><th style="width: 180px;">Parentesco</th><th style="width: 200px;">CPF</th><th style="width: 110px;">Inválido?</th><th style="width: 100px;">Ações</th></tr></thead><tbody id="corpo-tabela-dependentes"></tbody></table><button type="button" class="primary" onclick="adicionarLinhaDependente()">+ Adicionar Dependente</button></div>
                         <div id="camposPensaoAtivo" style="display:none;"></div>
                         <div id="camposPensaoAposentado" style="display:none;"><label>Valor do Provento Bruto do Aposentado (R$): <input type="number" id="proventoAposentado" value="0" /></label></div>
                         <h4>Informações do Servidor (Instituidor)</h4>
@@ -1158,4 +1158,5 @@
 <input type="file" id="carregarProcessoInput" accept=".json" style="display:none;" onchange="gestaoProcessos.carregarProcessoLocal(event)" />
 </body>
 </html>
+
 
