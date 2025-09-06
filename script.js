@@ -774,7 +774,7 @@ function closeTimeCalcModal() {
 }
 
 // =================================================================================
-// MÓDULO DE GESTÃO DE PROCESSOS (NOVO E INTEGRADO)
+// MÓDULO DE GESTÃO DE PROCESSOS (NOVO E INTEGRADO) - VERSÃO CORRIGIDA
 // =================================================================================
 const gestaoProcessos = {
     state: {},
@@ -804,8 +804,11 @@ const gestaoProcessos = {
     },
 
     iniciarNovoProcesso: (confirmado = false) => {
-        if (!confirmado && Object.keys(gestaoProcessos.state).length > 0) {
-            if (!confirm("Isso limpará o processo atual. Deseja continuar?")) {
+        if (!confirmado && Object.keys(gestaoProcessos.state).length > 0 && gestaoProcessos.state.grupos) {
+            const totalArquivos = Object.values(gestaoProcessos.state.grupos).reduce((acc, grupo) => 
+                acc + grupo.itens.reduce((itemAcc, item) => itemAcc + item.arquivos.length, 0), 0);
+            
+            if (totalArquivos > 0 && !confirm("Isso limpará o processo atual, que já contém arquivos. Deseja continuar?")) {
                 document.getElementById('processo-tipo').value = gestaoProcessos.state.tipo; // Reverte a seleção
                 return;
             }
@@ -875,7 +878,6 @@ const gestaoProcessos = {
                 if(completo) grupoEl.insertAdjacentHTML('beforeend', anexosHTML);
             });
             
-            // Barra de progresso
             const percentualUso = (grupo.tamanhoTotal / grupo.limite) * 100;
             const limiteAtingido = percentualUso >= 100;
             const progressoEl = document.createElement('div');
@@ -899,13 +901,15 @@ const gestaoProcessos = {
         let tamanhoTotalProcesso = 0;
 
         let html = '<ul>';
-        for (const grupoId in grupos) {
-            const grupo = grupos[grupoId];
-            const numArquivos = grupo.itens.reduce((acc, item) => acc + item.arquivos.length, 0);
-            totalArquivos += numArquivos;
-            tamanhoTotalProcesso += grupo.tamanhoTotal;
+        if (grupos) {
+            for (const grupoId in grupos) {
+                const grupo = grupos[grupoId];
+                const numArquivos = grupo.itens.reduce((acc, item) => acc + item.arquivos.length, 0);
+                totalArquivos += numArquivos;
+                tamanhoTotalProcesso += grupo.tamanhoTotal;
 
-            html += `<li><b>${grupo.nome}</b> <span>${numArquivos} arq. / ${(grupo.tamanhoTotal / (1024*1024)).toFixed(2)} MB</span></li>`;
+                html += `<li><b>${grupo.nome}</b> <span>${numArquivos} arq. / ${(grupo.tamanhoTotal / (1024*1024)).toFixed(2)} MB</span></li>`;
+            }
         }
         html += '</ul>';
         html += `<div id="processo-resumo-total"><span>TOTAL</span> <span>${totalArquivos} arq. / ${(tamanhoTotalProcesso / (1024*1024)).toFixed(2)} MB</span></div>`;
@@ -945,7 +949,7 @@ const gestaoProcessos = {
 
         gestaoProcessos.renderChecklist();
         gestaoProcessos.renderResumo();
-        document.getElementById('processo-file-input').value = ''; // Limpa o input
+        document.getElementById('processo-file-input').value = ''; 
     },
 
     removerArquivo: (grupoId, itemIndex, arqIndex) => {
@@ -958,6 +962,12 @@ const gestaoProcessos = {
     },
 
     gerarPacoteProcessoZIP: async (button) => {
+        // ### INÍCIO DA CORREÇÃO ###
+        // Atualiza o estado com os valores atuais dos campos de texto antes de prosseguir.
+        gestaoProcessos.state.servidor = document.getElementById('processo-nome-servidor').value.trim();
+        gestaoProcessos.state.numero = document.getElementById('processo-numero').value.trim();
+        // ### FIM DA CORREÇÃO ###
+
         const { servidor, numero, grupos } = gestaoProcessos.state;
         if (!servidor) {
             return ui.showToast("Preencha o nome do servidor/instituidor.", false);
@@ -991,7 +1001,6 @@ const gestaoProcessos = {
             const nomeZip = `Processo_${(numero || 'SN').replace(/[^a-zA-Z0-9]/g, '-')}_${servidor.replace(/ /g, '_')}.zip`;
             const content = await zip.generateAsync({ type: "blob" });
             
-            // Simula o download
             const a = document.createElement("a");
             a.href = URL.createObjectURL(content);
             a.download = nomeZip;
@@ -3197,6 +3206,7 @@ Object.assign(window, {
 });
 
 window.simulacao = simulacao;
+
 
 
 
