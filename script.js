@@ -1593,10 +1593,31 @@ function calculateTotalProventos() {
     return t;
 }
 
-function adicionarLinhaDependente(n = '', d = '', p = '', inv = 'Nao') {
+function adicionarLinhaDependente(n = '', d = '', p = '', inv = 'Nao', cpf = '') {
     const t = document.getElementById('corpo-tabela-dependentes'),
         l = document.createElement('tr');
-    l.innerHTML = `<td><input type="text" class="dependente-nome" value="${n}"></td><td><input type="date" class="dependente-dataNasc" value="${d}"></td><td><select class="dependente-parentesco"><option ${p==='Cônjuge'?'selected':''}>Cônjuge</option><option ${p==='Companheiro(a)'?'selected':''}>Companheiro(a)</option><option ${p==='Filho(a)'?'selected':''}>Filho(a)</option><option ${p==='Filho(a) Inválido(a)'?'selected':''}>Filho(a) Inválido(a)</option><option ${p==='Mãe'?'selected':''}>Mãe</option><option ${p==='Pai'?'selected':''}>Pai</option></select></td><td><select class="dependente-invalido"><option value="Nao" ${inv==='Nao'?'selected':''}>Não</option><option value="Sim" ${inv==='Sim'?'selected':''}>Sim</option></select></td><td><button class="danger btn-tabela" onclick="removerLinhaDependente(this)" title="Remover Dependente"><i class="ri-delete-bin-line"></i></button></td>`;
+    // ADICIONADO CAMPO PARA O CPF DO DEPENDENTE
+    l.innerHTML = `
+        <td><input type="text" class="dependente-nome" value="${n}"></td>
+        <td><input type="date" class="dependente-dataNasc" value="${d}"></td>
+        <td>
+            <select class="dependente-parentesco">
+                <option ${p==='Cônjuge'?'selected':''}>Cônjuge</option>
+                <option ${p==='Companheiro(a)'?'selected':''}>Companheiro(a)</option>
+                <option ${p==='Filho(a)'?'selected':''}>Filho(a)</option>
+                <option ${p==='Filho(a) Inválido(a)'?'selected':''}>Filho(a) Inválido(a)</option>
+                <option ${p==='Mãe'?'selected':''}>Mãe</option>
+                <option ${p==='Pai'?'selected':''}>Pai</option>
+            </select>
+        </td>
+        <td><input type="text" class="dependente-cpf" placeholder="000.000.000-00" value="${cpf}"></td>
+        <td>
+            <select class="dependente-invalido">
+                <option value="Nao" ${inv==='Nao'?'selected':''}>Não</option>
+                <option value="Sim" ${inv==='Sim'?'selected':''}>Sim</option>
+            </select>
+        </td>
+        <td><button class="danger btn-tabela" onclick="removerLinhaDependente(this)" title="Remover Dependente"><i class="ri-delete-bin-line"></i></button></td>`;
     t.appendChild(l);
 }
 
@@ -2312,7 +2333,16 @@ function coletarDadosSimulacao() {
     
     document.querySelectorAll("#corpo-tabela tr").forEach(l => dados.tabela.push(Array.from(l.querySelectorAll("input"), i => i.value).slice(0, 3)));
     document.querySelectorAll("#corpo-tabela-proventos-ato tr").forEach(l => dados.proventosAto.push({ descricao: l.querySelector(".provento-descricao").value, valor: l.querySelector(".provento-valor").value }));
-    document.querySelectorAll("#corpo-tabela-dependentes tr").forEach(l => dados.dependentes.push({ nome: l.querySelector('.dependente-nome').value, dataNasc: l.querySelector('.dependente-dataNasc').value, parentesco: l.querySelector('.dependente-parentesco').value, invalido: l.querySelector('.dependente-invalido').value }));
+    
+    // ATUALIZADO PARA COLETAR O CPF DO DEPENDENTE
+    document.querySelectorAll("#corpo-tabela-dependentes tr").forEach(l => dados.dependentes.push({ 
+        nome: l.querySelector('.dependente-nome').value, 
+        dataNasc: l.querySelector('.dependente-dataNasc').value, 
+        parentesco: l.querySelector('.dependente-parentesco').value, 
+        invalido: l.querySelector('.dependente-invalido').value,
+        cpf: l.querySelector('.dependente-cpf').value 
+    }));
+
     document.querySelectorAll("#corpo-tabela-tempo-externo tr").forEach(row => dados.periodosExternos.push({ inicio: row.dataset.inicio, fim: row.dataset.fim }));
 
     const checklistContainer = document.getElementById('checklist-content');
@@ -2351,8 +2381,59 @@ function carregarDoHistorico(id) {
     if (!AppState.usuarioAtual) return;
     const c = `historicoSimulacoes_${AppState.usuarioAtual.uid}`, h = JSON.parse(localStorage.getItem(c) || "[]");
     const rE = h.find(r => r.id === id); if (!rE) return ui.showToast("Erro: Simulação não encontrada.", false);
-    simulacao.restaurarDados(rE.dados);
-}
+    restaurarDados: (dados) => {
+    handleNavClick(null, 'simulacao');
+    
+    setTimeout(() => {
+        try {
+            limparFormularioCompleto();
+
+            if (dados.passo1) {
+                for (const key in dados.passo1) {
+                    const el = document.getElementById(key);
+                    if (el) el.value = dados.passo1[key];
+                }
+            }
+            document.getElementById('nomeSimulacao').value = dados.nome || 'Simulação Carregada';
+
+            if (dados.periodosExternos) {
+                dados.periodosExternos.forEach(p => adicionarPeriodoExterno(p.inicio, p.fim));
+            }
+
+            if (dados.tabela) {
+                dados.tabela.forEach(linha => adicionarLinha(linha[0], linha[1], linha[2]));
+            }
+
+            // ATUALIZADO PARA CARREGAR O CPF DO DEPENDENTE
+            if (dados.dependentes) {
+                dados.dependentes.forEach(dep => adicionarLinhaDependente(dep.nome, dep.dataNasc, dep.parentesco, dep.invalido, dep.cpf));
+            }
+            
+            if (dados.proventosAto) {
+                document.getElementById('corpo-tabela-proventos-ato').innerHTML = '';
+                dados.proventosAto.forEach(p => adicionarLinhaProvento(p.descricao, p.valor));
+            }
+
+            if (dados.resultados && dados.resultados.checklistState) {
+                AppState.simulacaoResultados.checklistState = dados.resultados.checklistState;
+            }
+
+            alternarCamposBeneficio();
+            
+            const tipoBeneficio = document.getElementById('tipoBeneficio').value;
+            if (tipoBeneficio !== 'pensao_aposentado') {
+                irParaPasso(2);
+            }
+            calcularBeneficio(true);
+            
+            ui.showToast(`Simulação "${dados.nome || 'Sem nome'}" carregada com sucesso!`, true);
+
+        } catch (error) {
+            console.error("Erro ao restaurar dados da simulação:", error);
+            ui.showToast("Falha ao carregar dados da simulação. O arquivo pode estar corrompido.", false);
+        }
+    }, 150);
+  },
 
 function excluirDoHistorico(id) {
     if (!AppState.usuarioAtual) return;
@@ -2857,30 +2938,27 @@ document.addEventListener('DOMContentLoaded', () => {
 function gerarReqPensaoMorte() {
     const dadosSimulacao = coletarDadosSimulacao();
     const dadosInstituidor = dadosSimulacao.passo1 || {};
-    const dadosDependentes = dadosSimulacao.dependentes || []; // Pega a lista de dependentes
+    const dadosDependentes = dadosSimulacao.dependentes || [];
     const dataAtual = new Date();
     const dataFormatada = `${dataAtual.getDate()} de ${dataAtual.toLocaleDateString('pt-BR', { month: 'long' })} de ${dataAtual.getFullYear()}`;
 
-    // --- INÍCIO DA LÓGICA ADICIONADA ---
-    // Cria as linhas da tabela de dependentes dinamicamente
     let dependentesTabelaHTML = '';
     if (dadosDependentes.length > 0) {
+        // ATUALIZADO PARA INCLUIR O CPF NA TABELA DO DOCUMENTO
         dependentesTabelaHTML = dadosDependentes.map(dep => `
             <tr>
                 <td>${dep.nome || ''}</td>
                 <td>${dep.parentesco || ''}</td>
                 <td>${formatarDataBR(dep.dataNasc) || ''}</td>
-                <td></td> </tr>
+                <td>${dep.cpf || ''}</td>
+            </tr>
         `).join('');
     } else {
-        // Se não houver dependentes, gera linhas vazias como antes
         dependentesTabelaHTML = `
-            <tr><td>&nbsp;</td><td></td><td></td><td></td></tr>
             <tr><td>&nbsp;</td><td></td><td></td><td></td></tr>
             <tr><td>&nbsp;</td><td></td><td></td><td></td></tr>
         `;
     }
-    // --- FIM DA LÓGICA ADICIONADA ---
 
     const htmlConteudo = `
     <!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Requerimento de Pensão por Morte</title>
@@ -2930,7 +3008,8 @@ function gerarReqPensaoMorte() {
         <table>
             <thead><tr><th>Nome Completo</th><th>Parentesco</th><th>Data de Nasc.</th><th>CPF</th></tr></thead>
             <tbody>
-                ${dependentesTabelaHTML} </tbody>
+                ${dependentesTabelaHTML}
+            </tbody>
         </table>
 
         <p style="margin-top: 30px;">Vem, respeitosamente, requerer a concessão do benefício de Pensão por Morte, nos termos do Art. 40, §7º da Constituição Federal (com redação dada pela EC nº 103/2019) e da legislação municipal aplicável, na condição de dependente(s) do(a) ex-servidor(a) acima identificado(a).</p>
@@ -3316,6 +3395,7 @@ Object.assign(window, {
 });
 
 window.simulacao = simulacao;
+
 
 
 
