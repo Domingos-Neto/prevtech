@@ -2747,7 +2747,7 @@ function preencherDocumentosComDadosSimulacao() {
 }
 
 function gerarRequerimentoAposentadoria() {
-    const dadosSimulacao = coletarDadosSimulacao();
+    const dadosSimulacao = coletarDadosSimulação();
     const dadosServidor = dadosSimulacao.passo1 || {};
     const dataAtual = new Date().toLocaleDateString('pt-BR', {
         day: 'numeric', month: 'long', year: 'numeric'
@@ -2764,14 +2764,14 @@ function gerarRequerimentoAposentadoria() {
         h2 { text-align: center; font-weight: bold; margin: 40px 0; }
         .section-title { font-weight: bold; margin-top: 20px; margin-bottom: 10px; border-bottom: 1px solid #ccc; padding-bottom: 5px; }
         table { width: 100%; border-collapse: collapse; margin-bottom: 20px; table-layout: fixed; }
-        td { padding: 4px; vertical-align: bottom; }
+        td { padding: 4px 8px 4px 0; vertical-align: bottom; } /* Adicionado padding à direita */
         label { display: block; margin-top: 5px; }
         input[type="text"] { border: none; border-bottom: 1px dotted #888; width: 100%; padding: 4px; box-sizing: border-box; font-family: inherit; font-size: inherit; }
         .checkbox-group label { display: block; margin-bottom: 8px; font-weight: normal; }
         .signature-block { margin-top: 60px; text-align: center; }
         .signature-line { border-bottom: 1px solid #000; margin-top: 40px; margin-left: auto; margin-right: auto; width: 80%;}
         .signature-block p { margin: 5px 0 0 0; font-size: 11pt; }
-        .protocol-section { margin-top: 20px; } /* Linha tracejada removida daqui */
+        .protocol-section { margin-top: 20px; }
         .legal-notice { font-size: 10pt; text-align: center; margin-top: 20px; }
         @media print { input[type="text"] { border-bottom: 1px solid #000; } }
     </style></head><body>
@@ -2791,17 +2791,15 @@ function gerarRequerimentoAposentadoria() {
                 <td style="width:30%;"><label>Matrícula:<input type="text" value="${dadosServidor.matriculaServidor || ''}"></label></td>
             </tr>
             <tr>
-                <td style="width:50%;"><label>RG:<input type="text" value="${dadosServidor.rgServidor || ''}"></label></td>
-                <td style="width:50%;"><label>CPF:<input type="text" value="${dadosServidor.cpfServidor || ''}"></label></td>
+                <td style="width:33.3%;"><label>RG:<input type="text" value="${dadosServidor.rgServidor || ''}"></label></td>
+                <td style="width:33.3%;"><label>CPF:<input type="text" value="${dadosServidor.cpfServidor || ''}"></label></td>
+                <td style="width:33.3%;"><label>Data de Nascimento:<input type="text" value="${formatarDataBR(dadosServidor.dataNascimento) || ''}"></label></td>
             </tr>
             <tr>
-                <td colspan="2"><label>Data de Nascimento:<input type="text" value="${formatarDataBR(dadosServidor.dataNascimento) || ''}"></label></td>
+                <td colspan="3"><label>Endereço Residencial:<input type="text" value="${dadosServidor.enderecoServidor || ''}"></label></td>
             </tr>
             <tr>
-                <td colspan="2"><label>Endereço Residencial:<input type="text" value="${dadosServidor.enderecoServidor || ''}"></label></td>
-            </tr>
-            <tr>
-                <td style="width:50%;"><label>Telefone:<input type="text" value=""></label></td>
+                <td style="width:50%;" colspan="2"><label>Telefone:<input type="text" value=""></label></td>
                 <td style="width:50%;"><label>E-mail:<input type="text" value=""></label></td>
             </tr>
         </table>
@@ -3371,6 +3369,7 @@ Object.assign(window, {
 });
 
 window.simulacao = simulacao;
+
 
 
 
