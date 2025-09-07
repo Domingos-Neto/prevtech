@@ -2771,7 +2771,7 @@ function gerarRequerimentoAposentadoria() {
         .signature-block { margin-top: 60px; text-align: center; }
         .signature-line { border-bottom: 1px solid #000; margin-top: 40px; margin-left: auto; margin-right: auto; width: 80%;}
         .signature-block p { margin: 5px 0 0 0; font-size: 11pt; }
-        .protocol-section { margin-top: 60px; border-top: 1px dashed #aaa; padding-top: 20px; }
+        .protocol-section { margin-top: 20px; } /* Linha tracejada removida daqui */
         .legal-notice { font-size: 10pt; text-align: center; margin-top: 20px; }
         @media print { input[type="text"] { border-bottom: 1px solid #000; } }
     </style></head><body>
@@ -3371,6 +3371,7 @@ Object.assign(window, {
 });
 
 window.simulacao = simulacao;
+
 
 
 
