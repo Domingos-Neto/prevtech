@@ -2746,9 +2746,12 @@ function preencherDocumentosComDadosSimulacao() {
     }
 }
 
-function gerarRequerimentoAposentadoria(dados) {
+function gerarRequerimentoAposentadoria() {
     const { jsPDF } = window.jspdf;
     const pdf = new jsPDF();
+
+    // ⬇️ coleta os dados do formulário preenchido
+    const dados = coletarDadosSimulacao().passo1;
 
     // Cabeçalho
     drawHeader(pdf);
@@ -2798,7 +2801,6 @@ function gerarRequerimentoAposentadoria(dados) {
     // Salvar
     pdf.save(`Requerimento_Aposentadoria_${dados.nomeServidor || "Servidor"}.pdf`);
 }
-
 
 function gerarDeclaracaoNaoPercepcao() {
     const dadosSimulacao = coletarDadosSimulacao();
@@ -3320,6 +3322,7 @@ Object.assign(window, {
 });
 
 window.simulacao = simulacao;
+
 
 
 
