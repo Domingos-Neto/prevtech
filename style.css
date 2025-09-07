@@ -1357,3 +1357,21 @@ body.dark-mode .nav-tabs .nav-link.active {
     display: flex;
     justify-content: space-between;
 }
+/* ============================================= */
+/* SOLUÇÃO DEFINITIVA PARA ALINHAMENTO DO CPF    */
+/* ============================================= */
+
+/* 1. Define o <label> como um contexto de posicionamento, sem alterar sua aparência. */
+.form-grid label {
+  position: relative;
+}
+
+/* 2. Retira a mensagem de status do fluxo normal do layout. */
+/* Isso faz com que ela não ocupe espaço vertical e não afete o alinhamento. */
+.status-message {
+  position: absolute;   /* Tira o elemento do cálculo de altura do <label> */
+  top: 100%;            /* Posiciona logo abaixo do campo de input */
+  left: 0;
+  padding-top: 3px;     /* Adiciona um pequeno espaço superior */
+  white-space: nowrap;  /* Impede que a mensagem quebre a linha */
+}
