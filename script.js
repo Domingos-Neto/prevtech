@@ -2763,8 +2763,8 @@ function gerarRequerimentoAposentadoria() {
         .header h3, .header p { margin: 2px 0; }
         h2 { text-align: center; font-weight: bold; margin: 40px 0; }
         .section-title { font-weight: bold; margin-top: 20px; margin-bottom: 10px; border-bottom: 1px solid #ccc; padding-bottom: 5px; }
-        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-        td { padding: 4px; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; table-layout: fixed; }
+        td { padding: 4px; vertical-align: bottom; }
         label { display: block; margin-top: 5px; }
         input[type="text"] { border: none; border-bottom: 1px dotted #888; width: 100%; padding: 4px; box-sizing: border-box; font-family: inherit; font-size: inherit; }
         .checkbox-group label { display: block; margin-bottom: 8px; font-weight: normal; }
@@ -2786,21 +2786,33 @@ function gerarRequerimentoAposentadoria() {
 
         <div class="section-title">Dados do(a) Servidor(a)</div>
         <table>
-            <tr><td colspan="3"><label>Nome Completo:<input type="text" value="${dadosServidor.nomeServidor || ''}"></label></td>
-                <td colspan="1"><label>Matrícula:<input type="text" value="${dadosServidor.matriculaServidor || ''}"></label></td></tr>
-            <tr><td colspan="2"><label>RG:<input type="text" value="${dadosServidor.rgServidor || ''}"></label></td>
-                <td colspan="1"><label>CPF:<input type="text" value="${dadosServidor.cpfServidor || ''}"></label></td>
-                <td colspan="1"><label>Data de Nascimento:<input type="text" value="${formatarDataBR(dadosServidor.dataNascimento) || ''}"></label></td></tr>
-            <tr><td colspan="4"><label>Endereço Residencial:<input type="text" value="${dadosServidor.enderecoServidor || ''}"></label></td></tr>
-            <tr><td colspan="2"><label>Telefone:<input type="text" value=""></label></td>
-                <td colspan="2"><label>E-mail:<input type="text" value=""></label></td></tr>
+            <tr>
+                <td style="width:70%;"><label>Nome Completo:<input type="text" value="${dadosServidor.nomeServidor || ''}"></label></td>
+                <td style="width:30%;"><label>Matrícula:<input type="text" value="${dadosServidor.matriculaServidor || ''}"></label></td>
+            </tr>
+            <tr>
+                <td style="width:33.3%;"><label>RG:<input type="text" value="${dadosServidor.rgServidor || ''}"></label></td>
+                <td style="width:33.3%;"><label>CPF:<input type="text" value="${dadosServidor.cpfServidor || ''}"></label></td>
+                <td style="width:33.3%;"><label>Data de Nascimento:<input type="text" value="${formatarDataBR(dadosServidor.dataNascimento) || ''}"></label></td>
+            </tr>
+             <tr>
+                <td colspan="3"><label>Endereço Residencial:<input type="text" value="${dadosServidor.enderecoServidor || ''}"></label></td>
+            </tr>
+            <tr>
+                <td style="width:50%;"><label>Telefone:<input type="text" value=""></label></td>
+                <td style="width:50%;" colspan="2"><label>E-mail:<input type="text" value=""></label></td>
+            </tr>
         </table>
         
         <div class="section-title">Dados Funcionais</div>
          <table>
-            <tr><td colspan="2"><label>Cargo:<input type="text" value="${dadosServidor.cargoServidor || ''}"></label></td>
-                <td colspan="2"><label>Admissão:<input type="text" value="${formatarDataBR(dadosServidor.dataAdmissao) || ''}"></label></td></tr>
-            <tr><td colspan="4"><label>Lotação:<input type="text" value="${dadosServidor.lotacaoServidor || ''}"></label></td></tr>
+            <tr>
+                <td style="width:60%;"><label>Cargo:<input type="text" value="${dadosServidor.cargoServidor || ''}"></label></td>
+                <td style="width:40%;"><label>Admissão:<input type="text" value="${formatarDataBR(dadosServidor.dataAdmissao) || ''}"></label></td>
+            </tr>
+            <tr>
+                <td colspan="2"><label>Lotação:<input type="text" value="${dadosServidor.lotacaoServidor || ''}"></label></td>
+            </tr>
         </table>
 
         <div class="section-title">Modalidade de Aposentadoria Requerida</div>
@@ -3357,6 +3369,7 @@ Object.assign(window, {
 });
 
 window.simulacao = simulacao;
+
 
 
 
