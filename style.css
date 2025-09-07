@@ -1357,3 +1357,41 @@ body.dark-mode .nav-tabs .nav-link.active {
     display: flex;
     justify-content: space-between;
 }
+/*
+ * =============================================
+ * AJUSTES E CORREÇÕES - PASSO 1 (SOLICITAÇÃO)
+ * =============================================
+ */
+
+/* 1. PADRONIZAÇÃO DO CAMPO DE E-MAIL */
+/* Adicionando 'input[type="email"]' à regra principal para garantir que ele tenha o mesmo estilo dos outros. */
+input[type="date"],
+input[type="text"],
+input[type="number"],
+input[type="email"], /* <<< ADICIONADO AQUI */
+input[type="password"],
+select,
+textarea {
+  padding: 10px;
+  margin-top: 5px;
+  border: 1px solid var(--cor-borda);
+  border-radius: 6px;
+  font-family: 'Inter', sans-serif;
+  background-color: var(--cor-superficie);
+  color: var(--cor-texto);
+}
+
+
+/* 2. LAYOUT PARA CAMPOS LADO A LADO (RG e Data de Nascimento) */
+/* Nova classe '.form-row' a ser usada no container que agrupa os campos. */
+.form-row {
+  display: flex; /* Usa Flexbox para alinhar os itens internamente */
+  gap: 20px;     /* Cria um espaçamento de 20px entre os campos */
+  align-items: end; /* Mantém o alinhamento na base, igual aos outros campos do grid */
+}
+
+/* Classe para os labels que devem ocupar metade do espaço dentro do .form-row */
+.form-row > .form-group-half {
+  flex: 1; /* Faz com que cada campo ocupe 50% do espaço disponível */
+  min-width: 0; /* Necessário para o flexbox funcionar corretamente em todos os navegadores */
+}
