@@ -225,7 +225,9 @@ const cadastro = {
         matriculaServidor: document.getElementById('form-matriculaServidor').value,
         cpfServidor: document.getElementById('form-cpfServidor').value,
         rgServidor: document.getElementById('form-rgServidor').value,
-        enderecoServidor: document.getElementById('form-enderecoServidor').value, // CAMPO ADICIONADO
+        enderecoServidor: document.getElementById('form-enderecoServidor').value,
+        telefoneServidor: document.getElementById('form-telefoneServidor').value,
+        emailServidor: document.getElementById('form-emailServidor').value,
         cargoServidor: document.getElementById('form-cargoServidor').value,
         cargaHorariaServidor: document.getElementById('form-cargaHorariaServidor').value,
         lotacaoServidor: document.getElementById('form-lotacaoServidor').value,
@@ -436,6 +438,8 @@ const simulacao = {
         cpfServidor: 'cpfServidor',
         rgServidor: 'rgServidor',
         enderecoServidor: 'enderecoServidor', // CAMPO ADICIONADO
+        telefoneServidor: 'telefoneServidor',
+        emailServidor: 'emailServidor',
         cargoServidor: 'cargoServidor',
         cargaHorariaServidor: 'cargaHorariaServidor',
         lotacaoServidor: 'lotacaoServidor',
@@ -2790,7 +2794,7 @@ function gerarRequerimentoAposentadoria() {
             <tr><td colspan="2"><label>RG:<input type="text" value="${dadosServidor.rgServidor || ''}"></label></td>
                 <td colspan="1"><label>CPF:<input type="text" value="${dadosServidor.cpfServidor || ''}"></label></td>
                 <td colspan="1"><label>Data de Nascimento:<input type="text" value="${formatarDataBR(dadosServidor.dataNascimento) || ''}"></label></td></tr>
-            <tr><td colspan="4"><label>Endereço Residencial:<input type="text" value="${dadosServidor.endereçoServidor || ''}"></label></td></tr>
+            <tr><td colspan="4"><label>Endereço Residencial:<input type="text" value="${dadosServidor.enderecoServidor || ''}"></label></td></tr>
             <tr><td colspan="2"><label>Telefone:<input type="text" value="${dadosServidor.telefoneServidor || ''}"></label></td>
                 <td colspan="2"><label>E-mail:<input type="text" value="${dadosServidor.emailServidor || ''}"></label></td></tr>
         </table>
@@ -3348,6 +3352,7 @@ Object.assign(window, {
 });
 
 window.simulacao = simulacao;
+
 
 
 
