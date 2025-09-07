@@ -2768,9 +2768,10 @@ function gerarRequerimentoAposentadoria() {
         label { display: block; margin-top: 5px; }
         input[type="text"] { border: none; border-bottom: 1px dotted #888; width: 100%; padding: 4px; box-sizing: border-box; font-family: inherit; font-size: inherit; }
         .checkbox-group label { display: block; margin-bottom: 8px; font-weight: normal; }
-        .signature-block { margin-top: 80px; text-align: center; }
-        .signature-line { border-bottom: 1px solid #000; margin-top: 60px; margin-left: auto; margin-right: auto; width: 80%;}
+        .signature-block { margin-top: 60px; text-align: center; }
+        .signature-line { border-bottom: 1px solid #000; margin-top: 40px; margin-left: auto; margin-right: auto; width: 80%;}
         .signature-block p { margin: 5px 0 0 0; font-size: 11pt; }
+        .protocol-section { margin-top: 60px; border-top: 1px dashed #aaa; padding-top: 20px; }
         .legal-notice { font-size: 10pt; text-align: center; margin-top: 20px; }
         @media print { input[type="text"] { border-bottom: 1px solid #000; } }
     </style></head><body>
@@ -2790,7 +2791,7 @@ function gerarRequerimentoAposentadoria() {
             <tr><td colspan="2"><label>RG:<input type="text" value="${dadosServidor.rgServidor || ''}"></label></td>
                 <td colspan="1"><label>CPF:<input type="text" value="${dadosServidor.cpfServidor || ''}"></label></td>
                 <td colspan="1"><label>Data de Nascimento:<input type="text" value="${formatarDataBR(dadosServidor.dataNascimento) || ''}"></label></td></tr>
-            <tr><td colspan="4"><label>Endereço Residencial:<input type="text" value=""></label></td></tr>
+            <tr><td colspan="4"><label>Endereço Residencial:<input type="text" value="${dadosServidor.enderecoServidor || ''}"></label></td></tr>
             <tr><td colspan="2"><label>Telefone:<input type="text" value=""></label></td>
                 <td colspan="2"><label>E-mail:<input type="text" value=""></label></td></tr>
         </table>
@@ -2820,6 +2821,14 @@ function gerarRequerimentoAposentadoria() {
             <p>${dadosServidor.nomeServidor || 'Nome do(a) Requerente'}</p>
             <p>Assinatura do(a) Servidor(a)</p>
         </div>
+
+        <div class="protocol-section">
+             <div class="signature-block">
+                <div class="signature-line"></div>
+                <p>Protocolo - Assinatura do Funcionário(a) do ITAPREV</p>
+            </div>
+        </div>
+
     </div></body></html>`;
     
     const newWindow = window.open();
@@ -3348,6 +3357,7 @@ Object.assign(window, {
 });
 
 window.simulacao = simulacao;
+
 
 
 
