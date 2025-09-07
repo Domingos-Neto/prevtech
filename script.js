@@ -2746,87 +2746,59 @@ function preencherDocumentosComDadosSimulacao() {
     }
 }
 
-function gerarRequerimentoAposentadoria() {
-    const dadosSimulacao = coletarDadosSimulacao();
-    const dadosServidor = dadosSimulacao.passo1 || {};
-    const dataAtual = new Date().toLocaleDateString('pt-BR', {
-        day: 'numeric', month: 'long', year: 'numeric'
-    });
+function gerarRequerimentoAposentadoria(dados) {
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF();
 
-    const htmlConteudo = `
-    <!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">
-    <title>Requerimento de Aposentadoria</title>
-    <style>
-        body { font-family: Arial, sans-serif; font-size: 12pt; color: #333; }
-        .container { width: 210mm; margin: auto; padding: 2cm; }
-        .header { text-align: center; }
-        .header h3, .header p { margin: 2px 0; }
-        h2 { text-align: center; font-weight: bold; margin: 40px 0; }
-        .section-title { font-weight: bold; margin-top: 20px; margin-bottom: 10px; border-bottom: 1px solid #ccc; padding-bottom: 5px; }
-        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-        td { padding: 4px; }
-        label { display: block; margin-top: 5px; }
-        input[type="text"] { border: none; border-bottom: 1px dotted #888; width: 100%; padding: 4px; box-sizing: border-box; font-family: inherit; font-size: inherit; }
-        .checkbox-group label { display: block; margin-bottom: 8px; font-weight: normal; }
-        .signature-block { margin-top: 80px; text-align: center; }
-        .signature-line { border-bottom: 1px solid #000; margin-top: 60px; margin-left: auto; margin-right: auto; width: 80%;}
-        .signature-block p { margin: 5px 0 0 0; font-size: 11pt; }
-        .legal-notice { font-size: 10pt; text-align: center; margin-top: 20px; }
-        @media print { input[type="text"] { border-bottom: 1px solid #000; } }
-    </style></head><body>
-    <div class="container">
-        <div class="header">
-            <h3>ITAPREV</h3>
-            <p>INSTITUTO DE PREVIDÊNCIA DOS SERVIDORES MUNICIPAIS DE ITAPIPOCA</p>
-        </div>
-        <h2>REQUERIMENTO DE APOSENTADORIA</h2>
-        
-        <p>Eu, ${dadosServidor.nomeServidor || '__________________________________'}, com fundamento no direito de petição assegurado pelo Art. 5º, XXXIV, 'a', da Constituição Federal, e com base nas disposições da Lei Municipal nº 035/2022 e do Decreto Municipal nº 113/2022, venho, respeitosamente, requerer a concessão do benefício de Aposentadoria, na modalidade abaixo assinalada:</p>
+    // Cabeçalho
+    drawHeader(pdf);
+    let y = 50;
 
-        <div class="section-title">Dados do(a) Servidor(a)</div>
-        <table>
-            <tr><td colspan="3"><label>Nome Completo:<input type="text" value="${dadosServidor.nomeServidor || ''}"></label></td>
-                <td colspan="1"><label>Matrícula:<input type="text" value="${dadosServidor.matriculaServidor || ''}"></label></td></tr>
-            <tr><td colspan="2"><label>RG:<input type="text" value="${dadosServidor.rgServidor || ''}"></label></td>
-                <td colspan="1"><label>CPF:<input type="text" value="${dadosServidor.cpfServidor || ''}"></label></td>
-                <td colspan="1"><label>Data de Nascimento:<input type="text" value="${formatarDataBR(dadosServidor.dataNascimento) || ''}"></label></td></tr>
-            <tr><td colspan="4"><label>Endereço Residencial:<input type="text" value=""></label></td></tr>
-            <tr><td colspan="2"><label>Telefone:<input type="text" value=""></label></td>
-                <td colspan="2"><label>E-mail:<input type="text" value=""></label></td></tr>
-        </table>
-        
-        <div class="section-title">Dados Funcionais</div>
-         <table>
-            <tr><td colspan="2"><label>Cargo:<input type="text" value="${dadosServidor.cargoServidor || ''}"></label></td>
-                <td colspan="2"><label>Admissão:<input type="text" value="${formatarDataBR(dadosServidor.dataAdmissao) || ''}"></label></td></tr>
-            <tr><td colspan="4"><label>Lotação:<input type="text" value="${dadosServidor.lotacaoServidor || ''}"></label></td></tr>
-        </table>
+    pdf.setFont("helvetica", "bold");
+    pdf.setFontSize(14);
+    pdf.text("REQUERIMENTO DE APOSENTADORIA", 105, y, { align: "center" });
+    y += 15;
 
-        <div class="section-title">Modalidade de Aposentadoria Requerida</div>
-        <div class="checkbox-group">
-            <label><input type="checkbox"> Aposentadoria por Incapacidade Permanente</label>
-            <label><input type="checkbox"> Aposentadoria Compulsória</label>
-            <label><input type="checkbox"> Aposentadoria por Idade</label>
-            <label><input type="checkbox"> Aposentadoria por Idade e Tempo de Contribuição</label>
-            <label><input type="checkbox"> Aposentadoria Especial de Professor</label>
-        </div>
-        
-        <p class="legal-notice">Declaro, sob as penas da lei, que as informações aqui prestadas são verdadeiras e que estou ciente de que a apresentação de informações falsas pode acarretar em sanções administrativas, cíveis e criminais.</p>
+    pdf.setFont("helvetica", "normal");
+    pdf.setFontSize(12);
 
-        <p style="text-align:left; margin-top: 40px;">Itapipoca - CE, ${dataAtual}.</p>
-        
-        <div class="signature-block">
-            <div class="signature-line"></div>
-            <p>${dadosServidor.nomeServidor || 'Nome do(a) Requerente'}</p>
-            <p>Assinatura do(a) Servidor(a)</p>
-        </div>
-    </div></body></html>`;
-    
-    const newWindow = window.open();
-    newWindow.document.open();
-    newWindow.document.write(htmlConteudo);
-    newWindow.document.close();
+    // Dados principais do servidor
+    pdf.text(`Nome: ${dados.nomeServidor || ""}`, 15, y); y += 7;
+    pdf.text(`Matrícula: ${dados.matriculaServidor || ""}`, 15, y); y += 7;
+    pdf.text(`CPF: ${dados.cpfServidor || ""}`, 15, y); y += 7;
+    pdf.text(`RG: ${dados.rgServidor || ""}`, 15, y); y += 7;
+    pdf.text(`Endereço Residencial: ${dados.enderecoServidor || ""}`, 15, y); y += 7;
+    pdf.text(`Telefone: ${dados.telefoneServidor || ""}`, 15, y); y += 7;
+    pdf.text(`E-mail: ${dados.emailServidor || ""}`, 15, y); y += 12;
+
+    // Texto do requerimento
+    const texto = `Venho por meio deste requerer minha aposentadoria junto ao Instituto de Previdência, nos termos da legislação vigente.`;
+    const linhas = pdf.splitTextToSize(texto, 180);
+    pdf.text(linhas, 15, y);
+    y += linhas.length * 7 + 15;
+
+    // Assinatura do servidor
+    pdf.text("_________________________________________", 105, y, { align: "center" });
+    y += 6;
+    pdf.text("Assinatura do(a) Servidor(a)", 105, y, { align: "center" });
+    y += 20;
+
+    // Protocolo / assinatura funcionário
+    pdf.text("_________________________________________", 105, y, { align: "center" });
+    y += 6;
+    pdf.text("Protocolo / Assinatura do Funcionário", 105, y, { align: "center" });
+
+    // Rodapé
+    const totalPages = pdf.internal.getNumberOfPages();
+    for (let i = 1; i <= totalPages; i++) {
+        pdf.setPage(i);
+        drawFooter(pdf, i, totalPages);
+    }
+
+    // Salvar
+    pdf.save(`Requerimento_Aposentadoria_${dados.nomeServidor || "Servidor"}.pdf`);
 }
+
 
 function gerarDeclaracaoNaoPercepcao() {
     const dadosSimulacao = coletarDadosSimulacao();
@@ -3348,6 +3320,7 @@ Object.assign(window, {
 });
 
 window.simulacao = simulacao;
+
 
 
 
