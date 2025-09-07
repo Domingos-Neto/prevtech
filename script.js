@@ -2791,16 +2791,18 @@ function gerarRequerimentoAposentadoria() {
                 <td style="width:30%;"><label>Matrícula:<input type="text" value="${dadosServidor.matriculaServidor || ''}"></label></td>
             </tr>
             <tr>
-                <td style="width:33.3%;"><label>RG:<input type="text" value="${dadosServidor.rgServidor || ''}"></label></td>
-                <td style="width:33.3%;"><label>CPF:<input type="text" value="${dadosServidor.cpfServidor || ''}"></label></td>
-                <td style="width:33.3%;"><label>Data de Nascimento:<input type="text" value="${formatarDataBR(dadosServidor.dataNascimento) || ''}"></label></td>
+                <td style="width:50%;"><label>RG:<input type="text" value="${dadosServidor.rgServidor || ''}"></label></td>
+                <td style="width:50%;"><label>CPF:<input type="text" value="${dadosServidor.cpfServidor || ''}"></label></td>
             </tr>
-             <tr>
-                <td colspan="3"><label>Endereço Residencial:<input type="text" value="${dadosServidor.enderecoServidor || ''}"></label></td>
+            <tr>
+                <td colspan="2"><label>Data de Nascimento:<input type="text" value="${formatarDataBR(dadosServidor.dataNascimento) || ''}"></label></td>
+            </tr>
+            <tr>
+                <td colspan="2"><label>Endereço Residencial:<input type="text" value="${dadosServidor.enderecoServidor || ''}"></label></td>
             </tr>
             <tr>
                 <td style="width:50%;"><label>Telefone:<input type="text" value=""></label></td>
-                <td style="width:50%;" colspan="2"><label>E-mail:<input type="text" value=""></label></td>
+                <td style="width:50%;"><label>E-mail:<input type="text" value=""></label></td>
             </tr>
         </table>
         
@@ -3369,6 +3371,7 @@ Object.assign(window, {
 });
 
 window.simulacao = simulacao;
+
 
 
 
