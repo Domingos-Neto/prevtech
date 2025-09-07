@@ -2790,9 +2790,9 @@ function gerarRequerimentoAposentadoria() {
             <tr><td colspan="2"><label>RG:<input type="text" value="${dadosServidor.rgServidor || ''}"></label></td>
                 <td colspan="1"><label>CPF:<input type="text" value="${dadosServidor.cpfServidor || ''}"></label></td>
                 <td colspan="1"><label>Data de Nascimento:<input type="text" value="${formatarDataBR(dadosServidor.dataNascimento) || ''}"></label></td></tr>
-            <tr><td colspan="4"><label>Endereço Residencial:<input type="text" value=""></label></td></tr>
-            <tr><td colspan="2"><label>Telefone:<input type="text" value=""></label></td>
-                <td colspan="2"><label>E-mail:<input type="text" value=""></label></td></tr>
+            <tr><td colspan="4"><label>Endereço Residencial:<input type="text" value="${dadosServidor.endereçoServidor || ''}"></label></td></tr>
+            <tr><td colspan="2"><label>Telefone:<input type="text" value="${dadosServidor.telefoneServidor || ''}"></label></td>
+                <td colspan="2"><label>E-mail:<input type="text" value="${dadosServidor.emailServidor || ''}"></label></td></tr>
         </table>
         
         <div class="section-title">Dados Funcionais</div>
@@ -3348,6 +3348,7 @@ Object.assign(window, {
 });
 
 window.simulacao = simulacao;
+
 
 
 
