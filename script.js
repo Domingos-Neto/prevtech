@@ -2820,6 +2820,14 @@ function gerarRequerimentoAposentadoria() {
             <p>${dadosServidor.nomeServidor || 'Nome do(a) Requerente'}</p>
             <p>Assinatura do(a) Servidor(a)</p>
         </div>
+
+        <div class="protocol-section">
+             <div class="signature-block">
+                <div class="signature-line"></div>
+                <p>Protocolo - Assinatura do Funcionário(a) do ITAPREV</p>
+            </div>
+        </div>
+
     </div></body></html>`;
     
     const newWindow = window.open();
@@ -3348,6 +3356,7 @@ Object.assign(window, {
 });
 
 window.simulacao = simulacao;
+
 
 
 
