@@ -2904,12 +2904,12 @@ function gerarReqPensaoMorte() {
     const dadosSimulacao = coletarDadosSimulacao();
     const dadosInstituidor = dadosSimulacao.passo1 || {};
     const dadosDependentes = dadosSimulacao.dependentes || [];
+    const requerenteData = dadosDependentes.length > 0 ? dadosDependentes[0] : {};
     const dataAtual = new Date();
     const dataFormatada = `${dataAtual.getDate()} de ${dataAtual.toLocaleDateString('pt-BR', { month: 'long' })} de ${dataAtual.getFullYear()}`;
 
     let dependentesTabelaHTML = '';
     if (dadosDependentes.length > 0) {
-        // ATUALIZADO PARA INCLUIR O CPF NA TABELA DO DOCUMENTO
         dependentesTabelaHTML = dadosDependentes.map(dep => `
             <tr>
                 <td>${dep.nome || ''}</td>
@@ -2951,10 +2951,12 @@ function gerarReqPensaoMorte() {
         
         <div class="section-title">Dados do Requerente</div>
         <div class="form-grid">
-            <div class="grid-span-2"><label>Nome Completo:<input type="text"></label></div>
-            <div><label>RG:<input type="text"></label></div>
-            <div><label>CPF:<input type="text"></label></div>
-            <div><label>Data de Nascimento:<input type="text"></label></div>
+            <div class="grid-span-2"><label>Nome Completo:<input type="text" value="${requerenteData.nome || ''}"></label></div>
+            <div class="grid-span-2" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
+                <label>RG:<input type="text"></label>
+                <label>CPF:<input type="text" value="${requerenteData.cpf || ''}"></label>
+                <label>Data de Nascimento:<input type="text" value="${formatarDataBR(requerenteData.dataNasc) || ''}"></label>
+            </div>
             <div class="grid-span-2"><label>Endereço Residencial Atualizado:<input type="text"></label></div>
             <div><label>Telefone:<input type="text"></label></div>
             <div><label>E-mail:<input type="text"></label></div>
@@ -3353,6 +3355,7 @@ Object.assign(window, {
 });
 
 window.simulacao = simulacao;
+
 
 
 
