@@ -3156,6 +3156,10 @@ function gerarDeclaracaoConvivioMarital() {
         return;
     }
     const dadosInstituidor = AppState.dadosSimulacaoAtiva.passo1 || {};
+    // ADICIONADO: Busca os dados dos dependentes da simulação
+    const dependentes = AppState.dadosSimulacaoAtiva.dependentes || [];
+    const declaranteData = dependentes.length > 0 ? dependentes[0] : {}; // Pega o primeiro dependente como o declarante
+
     const dataAtual = new Date();
     const dataFormatada = `${dataAtual.getDate()} de ${dataAtual.toLocaleDateString('pt-BR', { month: 'long' })} de ${dataAtual.getFullYear()}`;
 
@@ -3176,11 +3180,11 @@ function gerarDeclaracaoConvivioMarital() {
     <div class="container">
         <h2>DECLARAÇÃO DE CONVÍVIO MARITAL (UNIÃO ESTÁVEL)</h2>
         <p>
-            Eu, <span class="placeholder">[Nome do(a) Declarante]</span>,
-            portador(a) do RG de N° <span class="placeholder">[RG do(a) Declarante]</span> e
-            CPF n° <span class="placeholder">[CPF do(a) Declarante]</span>,
-            residente e domiciliado(a) à <span class="placeholder">[Endereço Completo]</span>,
-            declaro expressamente, para todos os fins de direito e sob as penas do Art. 299 do Código Penal (Falsidade Ideológica), que mantinha união estável, pública, contínua e duradoura, com o objetivo de constituição de família, nos termos do Art. 1.723 do Código Civil, com
+            Eu, <b>${declaranteData.nome || '[Nome do(a) Declarante]'}</b>,
+            portador(a) do RG de N° <b>${declaranteData.rg || '[RG do(a) Declarante]'}</b> e
+            CPF n° <b>${declaranteData.cpf || '[CPF do(a) Declarante]'}</b>,
+            residente e domiciliado(a) à <b>${declaranteData.endereco || '[Endereço Completo]'}</b>,
+            declaro expressamente, for todos os fins de direito e sob as penas do Art. 299 do Código Penal (Falsidade Ideológica), que mantinha união estável, pública, contínua e duradoura, com o objetivo de constituição de família, nos termos do Art. 1.723 do Código Civil, com
             <b>${dadosInstituidor.nomeServidor || '________________'}</b>,
             portador(a) do CPF n° <b>${dadosInstituidor.cpfServidor || '________________'}</b>,
             quando do seu falecimento em <b>${formatarDataBR(dadosInstituidor.dataObito) || '[Data do Falecimento]'}</b>.
@@ -3191,7 +3195,7 @@ function gerarDeclaracaoConvivioMarital() {
         <p style="text-align:left; margin-top: 40px; text-indent: 0;">Itapipoca - CE, ${dataFormatada}.</p>
         <div class="signature-block">
             <div class="signature-line"></div>
-            <p>Assinatura do(a) Requerente</p>
+            <p><b>${declaranteData.nome || 'Assinatura do(a) Requerente'}</b></p>
         </div>
 
         <div class="witness-section">
@@ -3387,6 +3391,7 @@ Object.assign(window, {
 });
 
 window.simulacao = simulacao;
+
 
 
 
