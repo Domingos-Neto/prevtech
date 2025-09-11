@@ -1,4 +1,4 @@
-// =================================================================================
+  // =================================================================================
 // MÓDULO DE AUTENTICAção E CONFIGURAÇÃO (Firebase)
 // =================================================================================
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
@@ -43,6 +43,7 @@ const SALARIO_MINIMO = 1518.00;
 
 const AppState = {
     usuarioAtual: null,
+    dadosSimulacaoAtiva: null,
     salarioChart: null,
     tiposBeneficioChart: null,
     simulacaoResultados: {},
@@ -2742,15 +2743,25 @@ function planejarAposentadoria(button) {
 
 function preencherDocumentosComDadosSimulacao() {
     try {
-        const nome = document.getElementById('nomeServidor').value;
+        // Coleta todos os dados do formulário de simulação
+        const dadosColetados = coletarDadosSimulacao();
+        const nome = dadosColetados.passo1.nomeServidor;
+
         if (!nome) {
             ui.showToast("Nenhum nome encontrado. Preencha os dados na tela de 'Nova Simulação' primeiro.", false);
             return;
         }
+
+        // Armazena os dados coletados no estado global da aplicação
+        AppState.dadosSimulacaoAtiva = dadosColetados;
+
+        // Atualiza o campo de nome na tela para feedback visual
         document.getElementById('doc-nome-servidor').value = nome;
-        ui.showToast("Dados do servidor prontos para uso!", true);
+        ui.showToast("Dados da simulação carregados com sucesso!", true);
+
     } catch (e) {
         console.error("Erro ao buscar dados da simulação:", e);
+        AppState.dadosSimulacaoAtiva = null; // Limpa em caso de erro
         ui.showToast("Falha ao buscar dados. Verifique o console.", false);
     }
 }
@@ -3078,8 +3089,12 @@ function gerarDeclaracaoNaoPercepcaoIndividual() {
 }
 
 function gerarAutoDeclaracaoRenda() {
-    const dadosSimulacao = coletarDadosSimulacao();
-    const dadosInstituidor = dadosSimulacao.passo1 || {};
+    // Verifica se os dados foram previamente carregados
+    if (!AppState.dadosSimulacaoAtiva) {
+        ui.showToast("Por favor, clique em 'Puxar Dados da Simulação' primeiro.", false);
+        return;
+    }
+    const dadosInstituidor = AppState.dadosSimulacaoAtiva.passo1 || {};
     const dataAtual = new Date();
     const dataFormatada = `${dataAtual.getDate()} de ${dataAtual.toLocaleDateString('pt-BR', { month: 'long' })} de ${dataAtual.getFullYear()}`;
 
@@ -3131,8 +3146,12 @@ function gerarAutoDeclaracaoRenda() {
 }
 
 function gerarDeclaracaoConvivioMarital() {
-    const dadosSimulacao = coletarDadosSimulacao();
-    const dadosInstituidor = dadosSimulacao.passo1 || {};
+    // Verifica se os dados foram previamente carregados
+    if (!AppState.dadosSimulacaoAtiva) {
+        ui.showToast("Por favor, clique em 'Puxar Dados da Simulação' primeiro.", false);
+        return;
+    }
+    const dadosInstituidor = AppState.dadosSimulacaoAtiva.passo1 || {};
     const dataAtual = new Date();
     const dataFormatada = `${dataAtual.getDate()} de ${dataAtual.toLocaleDateString('pt-BR', { month: 'long' })} de ${dataAtual.getFullYear()}`;
 
@@ -3364,6 +3383,7 @@ Object.assign(window, {
 });
 
 window.simulacao = simulacao;
+
 
 
 
