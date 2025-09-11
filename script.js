@@ -3089,12 +3089,17 @@ function gerarDeclaracaoNaoPercepcaoIndividual() {
 }
 
 function gerarAutoDeclaracaoRenda() {
-    // Verifica se os dados foram previamente carregados
+    // 1. Verifica se os dados da simulação foram carregados
     if (!AppState.dadosSimulacaoAtiva) {
         ui.showToast("Por favor, clique em 'Puxar Dados da Simulação' primeiro.", false);
         return;
     }
+
+    // 2. Pega os dados do instituidor E da lista de dependentes
     const dadosInstituidor = AppState.dadosSimulacaoAtiva.passo1 || {};
+    const dependentes = AppState.dadosSimulacaoAtiva.dependentes || [];
+    const primeiroDependente = dependentes.length > 0 ? dependentes[0] : {}; // Pega o primeiro da lista
+
     const dataAtual = new Date();
     const dataFormatada = `${dataAtual.getDate()} de ${dataAtual.toLocaleDateString('pt-BR', { month: 'long' })} de ${dataAtual.getFullYear()}`;
 
@@ -3110,21 +3115,20 @@ function gerarAutoDeclaracaoRenda() {
         .signature-block { margin-top: 80px; text-align: center; }
         .signature-line { border-bottom: 1px solid #000; margin-top: 60px; width: 80%; margin-left: auto; margin-right: auto;}
         .signature-block p { margin: 5px 0 0 0; }
-        .placeholder { font-weight: bold; font-style: italic; color: #555; }
     </style></head><body>
     <div class="container">
         <h2>AUTODECLARAÇÃO DE RENDA</h2>
         <p>
-            Eu, <span class="placeholder">[Nome do Dependente]</span>,
-            portador(a) do RG N° <span class="placeholder">[RG do Dependente]</span> e
-            CPF N° <span class="placeholder">[CPF do Dependente]</span>,
+            Eu, <b>${primeiroDependente.nome || '[Nome do Dependente]'}</b>,
+            portador(a) do RG N° <b>${primeiroDependente.rg || '[RG do Dependente]'}</b> e
+            CPF N° <b>${primeiroDependente.cpf || '[CPF do Dependente]'}</b>,
             na qualidade de dependente de <b>${dadosInstituidor.nomeServidor || '________________'}</b>,
             CPF N° <b>${dadosInstituidor.cpfServidor || '________________'}</b>,
             ex-servidor(a) segurado(a) do Instituto de Previdência dos Servidores Municipais de Itapipoca - ITAPREV, DECLARO, para fins de comprovação de dependência econômica:
         </p>
         <div class="options">
             <label><input type="checkbox"> <b>NÃO POSSUO</b> renda formal de qualquer natureza.</label>
-            <label><input type="checkbox"> <b>POSSUO</b> renda formal no valor mensal de R$ <span class="placeholder">[Valor da Renda]</span>, oriunda de <span class="placeholder">[Fonte da Renda]</span>.</label>
+            <label><input type="checkbox"> <b>POSSUO</b> renda formal no valor mensal de R$ ______________, oriunda de __________________.</label>
         </div>
         <p>
              Declaro que as informações acima são a expressão da verdade, estando ciente das sanções cíveis, administrativas e criminais previstas em lei para o caso de falsidade.
@@ -3383,6 +3387,7 @@ Object.assign(window, {
 });
 
 window.simulacao = simulacao;
+
 
 
 
