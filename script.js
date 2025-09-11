@@ -3088,27 +3088,28 @@ function gerarAutoDeclaracaoRenda() {
     <style>
         body { font-family: Arial, sans-serif; font-size: 12pt; line-height: 1.8; }
         .container { width: 210mm; margin: auto; padding: 2cm; text-align: justify; }
-        h2 { text-align: center; font-weight: bold; }
-        input[type="text"] { border: none; background-color: #f0f0f0; padding: 3px; font-weight: bold; font-family: inherit; font-size: inherit; }
-        .options { margin: 20px 0; }
-        .options label { display: block; margin-bottom: 10px; }
-        .signature-block { margin-top: 60px; text-align: center; }
+        h2 { text-align: center; font-weight: bold; margin-bottom: 40px; }
+        p { text-indent: 50px; }
+        .options { margin: 30px 0; padding-left: 50px; text-indent: 0;}
+        .options label { display: block; margin-bottom: 15px; }
+        .signature-block { margin-top: 80px; text-align: center; }
         .signature-line { border-bottom: 1px solid #000; margin-top: 60px; width: 80%; margin-left: auto; margin-right: auto;}
         .signature-block p { margin: 5px 0 0 0; }
+        .placeholder { font-weight: bold; font-style: italic; color: #555; }
     </style></head><body>
     <div class="container">
         <h2>AUTODECLARAÇÃO DE RENDA</h2>
         <p>
-            Eu, <input type="text" size="30" placeholder="Nome do Dependente">, 
-            portador(a) do RG N° <input type="text" size="15" placeholder="RG do Dependente"> e 
-            CPF N° <input type="text" size="15" placeholder="CPF do Dependente">, 
-            na qualidade de dependente de <b>${dadosInstituidor.nomeServidor || '________________'}</b>, 
-            CPF N° <b>${dadosInstituidor.cpfServidor || '________________'}</b>, 
+            Eu, <span class="placeholder">[Nome do Dependente]</span>,
+            portador(a) do RG N° <span class="placeholder">[RG do Dependente]</span> e
+            CPF N° <span class="placeholder">[CPF do Dependente]</span>,
+            na qualidade de dependente de <b>${dadosInstituidor.nomeServidor || '________________'}</b>,
+            CPF N° <b>${dadosInstituidor.cpfServidor || '________________'}</b>,
             ex-servidor(a) segurado(a) do Instituto de Previdência dos Servidores Municipais de Itapipoca - ITAPREV, DECLARO, para fins de comprovação de dependência econômica:
         </p>
         <div class="options">
             <label><input type="checkbox"> <b>NÃO POSSUO</b> renda formal de qualquer natureza.</label>
-            <label><input type="checkbox"> <b>POSSUO</b> renda formal no valor mensal de R$ <input type="text" size="10" placeholder="0,00">, oriunda de <input type="text" size="20" placeholder="trabalho/aposentadoria/etc">.</label>
+            <label><input type="checkbox"> <b>POSSUO</b> renda formal no valor mensal de R$ <span class="placeholder">[Valor da Renda]</span>, oriunda de <span class="placeholder">[Fonte da Renda]</span>.</label>
         </div>
         <p>
              Declaro que as informações acima são a expressão da verdade, estando ciente das sanções cíveis, administrativas e criminais previstas em lei para o caso de falsidade.
@@ -3116,7 +3117,7 @@ function gerarAutoDeclaracaoRenda() {
         <p>
             Comprometo-me, ainda, a informar ao ITAPREV qualquer alteração na minha condição de renda.
         </p>
-        <p style="margin-top: 40px;">Itapipoca - CE, ${dataFormatada}.</p>
+        <p style="text-align:left; margin-top: 40px; text-indent: 0;">Itapipoca - CE, ${dataFormatada}.</p>
         <div class="signature-block">
             <div class="signature-line"></div>
             <p>Assinatura do Declarante</p>
@@ -3124,7 +3125,9 @@ function gerarAutoDeclaracaoRenda() {
     </div></body></html>`;
 
     const newWindow = window.open();
-    newWindow.document.open(); newWindow.document.write(htmlConteudo); newWindow.document.close();
+    newWindow.document.open();
+    newWindow.document.write(htmlConteudo);
+    newWindow.document.close();
 }
 
 function gerarDeclaracaoConvivioMarital() {
@@ -3139,36 +3142,37 @@ function gerarDeclaracaoConvivioMarital() {
         body { font-family: Arial, sans-serif; font-size: 12pt; line-height: 1.8; }
         .container { width: 210mm; margin: auto; padding: 2cm; text-align: justify; }
         h2 { text-align: center; font-weight: bold; margin-bottom: 40px; }
-        input[type="text"] { border: none; background-color: #f0f0f0; padding: 3px; font-weight: bold; font-family: inherit; font-size: inherit; }
+        p { text-indent: 50px; }
         .signature-block { margin-top: 60px; text-align: center; }
         .signature-line { border-bottom: 1px solid #000; margin-top: 40px; width: 80%; margin-left: auto; margin-right: auto;}
         .signature-block p { margin: 5px 0 0 0; }
-        .witness-section { margin-top: 60px; }
-        .witness-title { font-weight: bold; text-align: center; margin-bottom: 20px; }
+        .witness-section { margin-top: 80px; }
+        .witness-title { font-weight: bold; text-align: center; margin-bottom: 20px; text-indent: 0; }
+        .placeholder { font-weight: bold; font-style: italic; color: #555; }
     </style></head><body>
     <div class="container">
         <h2>DECLARAÇÃO DE CONVÍVIO MARITAL (UNIÃO ESTÁVEL)</h2>
         <p>
-            Eu, <input type="text" size="30" placeholder="Nome do(a) Declarante">, 
-            portador(a) do RG de N° <input type="text" size="15" placeholder="RG do(a) Declarante"> e 
-            CPF n° <input type="text" size="15" placeholder="CPF do(a) Declarante">, 
-            residente e domiciliado(a) à <input type="text" size="50" placeholder="Endereço Completo">, 
-            declaro expressamente, para todos os fins de direito e sob as penas do Art. 299 do Código Penal (Falsidade Ideológica), que mantinha união estável, pública, contínua e duradoura, com o objetivo de constituição de família, nos termos do Art. 1.723 do Código Civil, com 
-            <b>${dadosInstituidor.nomeServidor || '________________'}</b>, 
-            portador(a) do CPF n° <b>${dadosInstituidor.cpfServidor || '________________'}</b>, 
-            quando do seu falecimento em <input type="text" size="20" placeholder="data do falecimento" value="${formatarDataBR(dadosInstituidor.dataObito) || ''}">.
+            Eu, <span class="placeholder">[Nome do(a) Declarante]</span>,
+            portador(a) do RG de N° <span class="placeholder">[RG do(a) Declarante]</span> e
+            CPF n° <span class="placeholder">[CPF do(a) Declarante]</span>,
+            residente e domiciliado(a) à <span class="placeholder">[Endereço Completo]</span>,
+            declaro expressamente, para todos os fins de direito e sob as penas do Art. 299 do Código Penal (Falsidade Ideológica), que mantinha união estável, pública, contínua e duradoura, com o objetivo de constituição de família, nos termos do Art. 1.723 do Código Civil, com
+            <b>${dadosInstituidor.nomeServidor || '________________'}</b>,
+            portador(a) do CPF n° <b>${dadosInstituidor.cpfServidor || '________________'}</b>,
+            quando do seu falecimento em <b>${formatarDataBR(dadosInstituidor.dataObito) || '[Data do Falecimento]'}</b>.
         </p>
         <p>
             Declaro, ainda, inteira responsabilidade pelas informações contidas neste instrumento, estando ciente de que a omissão ou a apresentação de informações falsas implicará nas medidas administrativas, cíveis e criminais cabíveis.
         </p>
-        <p style="margin-top: 40px;">Itapipoca - CE, ${dataFormatada}.</p>
+        <p style="text-align:left; margin-top: 40px; text-indent: 0;">Itapipoca - CE, ${dataFormatada}.</p>
         <div class="signature-block">
             <div class="signature-line"></div>
             <p>Assinatura do(a) Requerente</p>
         </div>
 
         <div class="witness-section">
-            <div class="witness-title">TESTEMUNHAS</div>
+            <p class="witness-title">TESTEMUNHAS</p>
             <div class="signature-block">
                 <div class="signature-line"></div>
                 <p>Nome: _________________________________________</p>
@@ -3360,6 +3364,7 @@ Object.assign(window, {
 });
 
 window.simulacao = simulacao;
+
 
 
 
