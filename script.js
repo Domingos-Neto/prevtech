@@ -1599,13 +1599,16 @@ function calculateTotalProventos() {
     return t;
 }
 
-function adicionarLinhaDependente(n = '', d = '', p = '', inv = 'Nao', cpf = '') {
+function adicionarLinhaDependente(n = '', d = '', p = '', inv = 'Nao', cpf = '', rg = '', endereco = '', telefone = '') {
     const t = document.getElementById('corpo-tabela-dependentes'),
         l = document.createElement('tr');
-    // ADICIONADO CAMPO PARA O CPF DO DEPENDENTE
     l.innerHTML = `
         <td><input type="text" class="dependente-nome" value="${n}"></td>
+        <td><input type="text" class="dependente-cpf" placeholder="000.000.000-00" value="${cpf}"></td>
         <td><input type="date" class="dependente-dataNasc" value="${d}"></td>
+        <td><input type="text" class="dependente-endereco" placeholder="Rua, Nº, Bairro..." value="${endereco}"></td>
+        <td><input type="text" class="dependente-telefone" placeholder="(00) 00000-0000" value="${telefone}"></td>
+        <td><input type="text" class="dependente-rg" placeholder="Nº do RG" value="${rg}"></td>
         <td>
             <select class="dependente-parentesco">
                 <option ${p==='Cônjuge'?'selected':''}>Cônjuge</option>
@@ -1616,7 +1619,6 @@ function adicionarLinhaDependente(n = '', d = '', p = '', inv = 'Nao', cpf = '')
                 <option ${p==='Pai'?'selected':''}>Pai</option>
             </select>
         </td>
-        <td><input type="text" class="dependente-cpf" placeholder="000.000.000-00" value="${cpf}"></td>
         <td>
             <select class="dependente-invalido">
                 <option value="Nao" ${inv==='Nao'?'selected':''}>Não</option>
@@ -2346,7 +2348,10 @@ function coletarDadosSimulacao() {
         dataNasc: l.querySelector('.dependente-dataNasc').value, 
         parentesco: l.querySelector('.dependente-parentesco').value, 
         invalido: l.querySelector('.dependente-invalido').value,
-        cpf: l.querySelector('.dependente-cpf').value 
+        cpf: l.querySelector('.dependente-cpf').value,
+        rg: l.querySelector('.dependente-rg').value,
+        endereco: l.querySelector('.dependente-endereco').value,
+        telefone: l.querySelector('.dependente-telefone').value
     }));
 
     document.querySelectorAll("#corpo-tabela-tempo-externo tr").forEach(row => dados.periodosExternos.push({ inicio: row.dataset.inicio, fim: row.dataset.fim }));
@@ -2953,12 +2958,12 @@ function gerarReqPensaoMorte() {
         <div class="form-grid">
             <div class="grid-span-2"><label>Nome Completo:<input type="text" value="${requerenteData.nome || ''}"></label></div>
             <div class="grid-span-2" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
-                <label>RG:<input type="text"></label>
+                <label>RG:<input type="text" value="${requerenteData.rg || ''}"></label>
                 <label>CPF:<input type="text" value="${requerenteData.cpf || ''}"></label>
                 <label>Data de Nascimento:<input type="text" value="${formatarDataBR(requerenteData.dataNasc) || ''}"></label>
             </div>
-            <div class="grid-span-2"><label>Endereço Residencial Atualizado:<input type="text"></label></div>
-            <div><label>Telefone:<input type="text"></label></div>
+            <div class="grid-span-2"><label>Endereço Residencial Atualizado:<input type="text" value="${requerenteData.endereco || ''}"></label></div>
+            <div><label>Telefone:<input type="text" value="${requerenteData.telefone || ''}"></label></div>
             <div><label>E-mail:<input type="text"></label></div>
         </div>
 
@@ -3355,6 +3360,7 @@ Object.assign(window, {
 });
 
 window.simulacao = simulacao;
+
 
 
 
