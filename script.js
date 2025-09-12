@@ -1190,51 +1190,96 @@ const extratorFichas = {
     },
 
     processarPDF: () => {
-        if (!extratorFichas.pdfFile) return;
-        const processBtn = document.getElementById("extrator-process-btn");
-        ui.toggleSpinner(processBtn, true);
+    const cpfParaBuscar = document.getElementById("extrator-cpf-input").value.replace(/[^\d]/g, '');
+    if (!cpfParaBuscar) {
+        return ui.showToast("Por favor, digite o CPF do servidor para a busca.", false);
+    }
+    if (!extratorFichas.pdfFile) {
+        return ui.showToast("Por favor, selecione um arquivo PDF.", false);
+    }
 
-        const reader = new FileReader();
-        reader.onload = async function () {
-            const typedArray = new Uint8Array(this.result);
-            try {
-                const pdf = await pdfjsLib.getDocument(typedArray).promise;
-                extratorFichas.extractedData = [];
+    const processBtn = document.getElementById("extrator-process-btn");
+    ui.toggleSpinner(processBtn, true);
 
-                for (let i = 1; i <= pdf.numPages; i++) {
-                    const page = await pdf.getPage(i);
-                    const content = await page.getTextContent();
-                    const text = content.items.map(item => item.str).join(" ");
-                    
-                    const yearMatch = text.match(/Ano:\s*(\d{4})/i) || text.match(/\b(20\d{2})\b/);
-                    const year = yearMatch ? yearMatch[1] : `Página ${i}`;
+    const reader = new FileReader();
+    reader.onload = async function () {
+        const typedArray = new Uint8Array(this.result);
+        try {
+            const pdf = await pdfjsLib.getDocument(typedArray).promise;
+            extratorFichas.extractedData = [];
 
-                    const regex = /(?:TOTAL DE PROVENTOS|REMUNERAÇÃO TOTAL)\s*\(?P?\)?\s*([\d,.\s]+)/i;
-                    const match = text.match(regex);
+            for (let i = 1; i <= pdf.numPages; i++) {
+                const page = await pdf.getPage(i);
+                const content = await page.getTextContent();
+                
+                // Transforma o conteúdo da página em "blocos" por servidor
+                let chunks = [];
+                let currentChunk = [];
+                const startKeywords = ["Nome do empregado/servidor", "FICHA FINANCEIRA INDIVIDUAL"];
 
-                    if (match && match[1]) {
-                        const values = match[1].trim().replace(/\./g, '').replace(/,/g, '.').split(/\s+/).filter(v => v !== "");
+                for (const item of content.items) {
+                    // Se encontrar uma palavra-chave de início e o bloco atual não estiver vazio, salva o bloco anterior
+                    if (startKeywords.some(keyword => item.str.includes(keyword)) && currentChunk.length > 0) {
+                        chunks.push(currentChunk.join(" "));
+                        currentChunk = [];
+                    }
+                    currentChunk.push(item.str);
+                }
+                if (currentChunk.length > 0) {
+                    chunks.push(currentChunk.join(" "));
+                }
 
-                        if (values.length >= 13) {
-                            const reorderedValues = [
-                                values[0], values[7], values[1], values[8], values[2], values[9],
-                                values[3], values[10], values[4], values[11], values[5], values[12], values[6]
-                            ];
-                            extratorFichas.extractedData.push({ year, values: reorderedValues });
+                // Procura o CPF nos blocos de texto
+                for (const chunk of chunks) {
+                    const cpfLimpoNoChunk = chunk.replace(/[^\d]/g, '');
+                    if (cpfLimpoNoChunk.includes(cpfParaBuscar)) {
+                        
+                        const yearMatch = chunk.match(/Ano:\s*(\d{4})/i) || chunk.match(/Ano-Base:\s*(\d{4})/i) || chunk.match(/\b(20\d{2})\b/);
+                        const year = yearMatch ? yearMatch[1] : `Página ${i}`;
+
+                        // Regex para buscar a linha de proventos dentro do bloco do servidor correto
+                        const regex = /(?:TOTAL DE PROVENTOS|REMUNERAÇÃO TOTAL)\s*\(?P?\)?\s*([\d,.\s]+)/i;
+                        const match = chunk.match(regex);
+
+                        if (match && match[1]) {
+                            // Limpa e formata os valores encontrados
+                            const values = match[1].trim().replace(/\./g, '').replace(/,/g, '.').split(/\s+/).filter(v => v !== "");
+                            
+                            // A lógica de reordenar os meses assume um layout específico, mantida do código original
+                            if (values.length >= 12) { // Precisa de pelo menos 12 meses
+                                // A lógica de reordenação original parece ter um padrão específico, vamos mantê-la
+                                // Se o layout for Jan, Fev, Mar... Total, a reordenação precisa ser ajustada.
+                                // Este padrão parece ser para um layout de duas colunas de meses.
+                                const isTwoColumnLayout = chunk.includes("JANEIRO FEVEREIRO");
+                                let finalValues;
+                                if (isTwoColumnLayout) {
+                                    finalValues = [
+                                        values[0], values[7], values[1], values[8], values[2], values[9],
+                                        values[3], values[10], values[4], values[11], values[5], values[6] // Dezembro e Total podem variar
+                                    ];
+                                } else {
+                                     // Assume uma ordem linear simples
+                                     finalValues = values.slice(0, 13);
+                                }
+                                
+                                extratorFichas.extractedData.push({ year, values: finalValues });
+                            }
                         }
+                        break; // Para de procurar em outros blocos da mesma página, pois já encontrou o servidor
                     }
                 }
-            } catch (error) {
-                console.error("Erro ao processar o PDF:", error);
-                ui.showToast("Erro ao processar PDF. Verifique o formato.", false);
-            } finally {
-                extratorFichas.renderizarTabela();
-                document.getElementById("extrator-export-btn").disabled = extratorFichas.extractedData.length === 0;
-                ui.toggleSpinner(processBtn, false);
             }
-        };
-        reader.readAsArrayBuffer(extratorFichas.pdfFile);
-    },
+        } catch (error) {
+            console.error("Erro ao processar o PDF:", error);
+            ui.showToast("Erro ao processar PDF. Verifique o formato.", false);
+        } finally {
+            extratorFichas.renderizarTabela();
+            document.getElementById("extrator-export-btn").disabled = extratorFichas.extractedData.length === 0;
+            ui.toggleSpinner(processBtn, false);
+        }
+    };
+    reader.readAsArrayBuffer(extratorFichas.pdfFile);
+},
 
     renderizarTabela: () => {
         const tableContainer = document.getElementById("extrator-table-container");
@@ -1259,28 +1304,33 @@ const extratorFichas = {
     },
 
     exportarExcel: () => {
-        if (extratorFichas.extractedData.length === 0) return;
-        const exportBtn = document.getElementById("extrator-export-btn");
-        ui.toggleSpinner(exportBtn, true);
-        
-        try {
-            const months = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro", "Total"];
-            const header = ["Ano", ...months];
-            const data = extratorFichas.extractedData.map(row => [row.year, ...row.values]);
+    if (extratorFichas.extractedData.length === 0) return;
+    const exportBtn = document.getElementById("extrator-export-btn");
+    ui.toggleSpinner(exportBtn, true);
+    
+    // NOVO: Pega o CPF para nomear o arquivo
+    const cpfParaBuscar = document.getElementById("extrator-cpf-input").value || "servidor";
+    
+    try {
+        const months = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro", "Total"];
+        const header = ["Ano", ...months];
+        const data = extratorFichas.extractedData.map(row => [row.year, ...row.values]);
 
-            const worksheet = XLSX.utils.aoa_to_sheet([header, ...data]);
-            const workbook = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(workbook, worksheet, "Proventos");
-            XLSX.writeFile(workbook, "fichas_financeiras_extraidas.xlsx");
-            ui.showToast("Arquivo Excel gerado com sucesso!", true);
-        } catch(e) {
-            console.error("Erro ao exportar Excel:", e);
-            ui.showToast("Falha ao gerar o arquivo Excel.", false);
-        } finally {
-            ui.toggleSpinner(exportBtn, false);
-        }
+        const worksheet = XLSX.utils.aoa_to_sheet([header, ...data]);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Proventos");
+        
+        // NOVO: Nome do arquivo personalizado com o CPF
+        XLSX.writeFile(workbook, `proventos_${cpfParaBuscar}.xlsx`);
+        
+        ui.showToast("Arquivo Excel gerado com sucesso!", true);
+    } catch(e) {
+        console.error("Erro ao exportar Excel:", e);
+        ui.showToast("Falha ao gerar o arquivo Excel.", false);
+    } finally {
+        ui.toggleSpinner(exportBtn, false);
     }
-};
+}
 // =================================================================================
 // FIM: NOVO MÓDULO DE EXTRAÇÃO DE FICHAS FINANCEIRAS
 // =================================================================================
@@ -3535,6 +3585,7 @@ Object.assign(window, {
 });
 
 window.simulacao = simulacao;
+
 
 
 
