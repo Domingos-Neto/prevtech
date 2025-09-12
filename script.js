@@ -1215,7 +1215,6 @@ const extratorFichas = {
                 fullText += content.items.map(item => item.str).join(' ') + '\n--- PAGE BREAK ---\n';
             }
 
-            // Regex para encontrar todos os anos no documento (RAIS ou Ficha Financeira)
             const yearRegex = /(?:Ano-Base:|Ano:)\s*(\d{4})|PREFEITURA MUNICIPAL DE ITAPIPOCA[\s\S]*?(\b20\d{2}\b)/g;
             let yearMatches = [...fullText.matchAll(yearRegex)];
             
@@ -1224,8 +1223,7 @@ const extratorFichas = {
                 const nextMatch = yearMatches[i + 1];
 
                 const year = currentMatch[1] || currentMatch[2];
-                // Evita capturar o ano do rodapé da data de emissão
-                if (!year || year === new Date().getFullYear().toString()) continue;
+                if (!year) continue;
 
                 const startIndex = currentMatch.index;
                 const endIndex = nextMatch ? nextMatch.index : fullText.length;
@@ -1236,20 +1234,42 @@ const extratorFichas = {
                     continue;
                 }
                 
-                // MUDANÇA PRINCIPAL: Regex simplificada que não exige quantidade mínima de números
+                // NOVA LÓGICA DE EXTRAÇÃO APRIMORADA
+                let values = [];
+                // 1. Tenta extrair da linha "TOTAL DE PROVENTOS" ou "REMUNERAÇÃO TOTAL" (padrão Ficha Financeira)
                 const proventosMatch = chunk.match(/(?:TOTAL DE PROVENTOS|REMUNERAÇÃO TOTAL)\s*(?:\(P\))?\s*([\d.,\s]+)/i);
 
                 if (proventosMatch && proventosMatch[1]) {
                     const valuesString = proventosMatch[1];
-                    const values = valuesString.trim().replace(/\./g, '').replace(/,/g, '.').split(/\s+/).filter(v => !isNaN(parseFloat(v)) && v.trim() !== '');
-                    
-                    if (values.length > 0) {
-                        extratorFichas.extractedData.push({ year, values: values.slice(0, 13) });
+                    values = valuesString.trim().replace(/\./g, '').replace(/,/g, '.').split(/\s+/).filter(v => !isNaN(parseFloat(v)) && v.trim() !== '');
+                
+                } else if (chunk.includes("RAIS - Relação Anual de Informações Sociais")) {
+                    // 2. Se falhar, aplica a lógica para o formato RAIS
+                    const employeeBlocks = chunk.split(/(?=Cod\.?\sPIS\/PASEP)/); // Divide a página por servidor
+                    const employeeChunk = employeeBlocks.find(block => block.replace(/[^\d]/g, '').includes(cpfParaBuscar));
+
+                    if (employeeChunk) {
+                        const janIndex = employeeChunk.toUpperCase().indexOf("JANEIRO");
+                        if (janIndex !== -1) {
+                            const salaryBlock = employeeChunk.substring(janIndex);
+                            // Regex para encontrar valores monetários (ex: 1.234,56 ou 1234.56)
+                            const numberRegex = /(\b\d{1,3}(?:\.\d{3})*,\d{2}\b|\b\d+[,.]\d{2}\b)/g;
+                            const salaryMatches = [...salaryBlock.matchAll(numberRegex)];
+                            
+                            if (salaryMatches.length >= 12) {
+                                // Pega os 12 primeiros valores encontrados, que correspondem aos meses
+                                values = salaryMatches.slice(0, 12).map(match => match[0].replace(/\./g, '').replace(/,/g, '.'));
+                            }
+                        }
                     }
+                }
+                
+                if (values.length > 0) {
+                    // Adiciona os 12 valores mensais e o total anual (13º valor) se existir
+                    extratorFichas.extractedData.push({ year, values: values.slice(0, 13) });
                 }
             }
             
-            // Garante que não haja anos duplicados, mantendo o primeiro encontrado
             const uniqueYears = {};
             extratorFichas.extractedData = extratorFichas.extractedData.filter(item => {
                 if (!uniqueYears[item.year]) {
@@ -3577,6 +3597,7 @@ Object.assign(window, {
 });
 
 window.simulacao = simulacao;
+
 
 
 
