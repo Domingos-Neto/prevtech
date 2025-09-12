@@ -1209,40 +1209,48 @@ const extratorFichas = {
             extratorFichas.extractedData = [];
             let fullText = '';
 
-            // MUDANÇA 1: Concatena o texto de todas as páginas em uma única string
             for (let i = 1; i <= pdf.numPages; i++) {
                 const page = await pdf.getPage(i);
                 const content = await page.getTextContent();
                 fullText += content.items.map(item => item.str).join(' ');
             }
 
-            // MUDANÇA 2: Procura pelo CPF do servidor no texto completo
-            if (!fullText.replace(/[^\d]/g, '').includes(cpfParaBuscar)) {
-                 ui.showToast("CPF não encontrado no documento PDF.", false);
-            }
+            // <-- INÍCIO DA NOVA LÓGICA -- >
+            // 1. Divide todo o texto em "chunks" começando com "Ano:" ou "Ano-Base:".
+            // O "(?=...)" garante que o "Ano:" seja mantido no início de cada chunk.
+            const chunks = fullText.split(/(?=Ano(?:-Base)?:)/i);
 
-            // MUDANÇA 3: Nova regex mais robusta para encontrar todos os anos e todos os valores
-            // Esta regex procura pelo padrão: Ano: (um ano) ... TOTAL DE PROVENTOS (captura 13 valores numéricos)
-            const regex = /Ano-Base:\s*(\d{4})[\s\S]*?(?:TOTAL DE PROVENTOS|REMUNERAÇÃO TOTAL)\s*([\d,.\s]+(?:\r?\n| |$))/gi;
-            let match;
-            
-            while ((match = regex.exec(fullText)) !== null) {
-                const year = match[1];
-                const valuesString = match[2];
+            for (const chunk of chunks) {
+                if (chunk.trim().length === 0) continue;
 
-                if (year && valuesString) {
-                    // Limpa e extrai os valores numéricos. Garante que pegue exatamente os 13 valores.
-                    const values = valuesString.trim().replace(/\./g, '').replace(/,/g, '.').split(/\s+/).filter(v => !isNaN(parseFloat(v)));
+                // 2. Verifica se o CPF está neste chunk específico
+                const cpfLimpoNoChunk = chunk.replace(/[^\d]/g, '');
+                if (!cpfLimpoNoChunk.includes(cpfParaBuscar)) {
+                    continue; // Se não for do servidor, pula para o próximo ano.
+                }
+
+                // 3. Extrai o ano deste chunk
+                const yearMatch = chunk.match(/Ano(?:-Base)?:\s*(\d{4})/i);
+                const year = yearMatch ? yearMatch[1] : null;
+
+                if (!year) continue;
+
+                // 4. Extrai a linha de proventos dentro deste chunk
+                const valuesMatch = chunk.match(/(?:TOTAL DE PROVENTOS|REMUNERAÇÃO TOTAL)\s*((?:[\d.,]+\s*){12,})/i);
+                
+                if (valuesMatch && valuesMatch[1]) {
+                    // Limpa e formata os valores encontrados
+                    const values = valuesMatch[1].trim().replace(/\./g, '').replace(/,/g, '.').split(/\s+/).filter(v => !isNaN(parseFloat(v)));
                     
-                    if(values.length >= 12) { // Precisa de pelo menos 12 meses
+                    if(values.length >= 12) {
                          extratorFichas.extractedData.push({ year, values: values.slice(0, 13) });
                     }
                 }
             }
-            
-            // Ordena os resultados por ano, já que a extração pode não ser sequencial
-            extratorFichas.extractedData.sort((a, b) => a.year - b.year);
+             // <-- FIM DA NOVA LÓGICA -- >
 
+            // Ordena os resultados por ano para garantir a sequência correta
+            extratorFichas.extractedData.sort((a, b) => parseInt(a.year) - parseInt(b.year));
 
         } catch (error) {
             console.error("Erro ao processar o PDF:", error);
@@ -3560,6 +3568,7 @@ Object.assign(window, {
 });
 
 window.simulacao = simulacao;
+
 
 
 
