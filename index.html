@@ -1143,6 +1143,17 @@
             <i class="ri-file-search-line"></i>
             <span>Extrair Salários de Ficha Financeira</span>
         </h4>
+
+      <p style="font-size:0.9em; margin-top: -5px; margin-bottom: 20px; color: var(--text-secondary-color);">
+        Digite o CPF do servidor, selecione o PDF da ficha financeira e processe para extrair os salários.
+    </p>
+
+    <div class="form-grid" style="margin-bottom: 20px;">
+        <label>CPF do Servidor para Busca:
+            <input type="text" id="extrator-cpf-input" placeholder="000.000.000-00">
+        </label>
+    </div>
+    <div id="extrator-upload-trigger" class="extrator-upload-area">
         <p style="font-size:0.9em; margin-top: -5px; margin-bottom: 20px; color: var(--text-secondary-color);">
             Clique na área abaixo para selecionar o PDF da ficha financeira. A ferramenta irá extrair os valores da linha "TOTAL DE PROVENTOS".
         </p>
@@ -1188,6 +1199,7 @@
 <input type="file" id="carregarProcessoInput" accept=".json" style="display:none;" onchange="gestaoProcessos.carregarProcessoLocal(event)" />
 </body>
 </html>
+
 
 
 
