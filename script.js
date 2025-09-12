@@ -1215,7 +1215,10 @@ const extratorFichas = {
                 fullText += content.items.map(item => item.str).join(' ') + '\n--- PAGE BREAK ---\n';
             }
 
-            const yearRegex = /(?:Ano-Base:|Ano:)\s*(\d{4})|PREFEITURA MUNICIPAL DE ITAPIPOCA[\s\S]*?(\b20\d{2}\b)/g;
+            // CORREÇÃO: Regex de ano mais robusta para encontrar todos os anos,
+            // tratando as variações de cabeçalho (Prefeitura, Instituto, etc.) e espaçamento.
+            const yearRegex = /(?:Ano-Base:|Ano:)\s*(\d{4})|(?:PREFEITURA\s+MUNICIPAL\s+DE\s+ITAPIPOCA|INSTITUTO\s+MUNIC\.?\s+PREVIDENCIA\s+ITAPIPOCA|FICHA\s+FINANCEIRA\s+INDIVIDUAL)[\s\S]*?(\b20\d{2}\b)/g;
+            
             let yearMatches = [...fullText.matchAll(yearRegex)];
             
             for (let i = 0; i < yearMatches.length; i++) {
@@ -1234,30 +1237,27 @@ const extratorFichas = {
                     continue;
                 }
                 
-                // NOVA LÓGICA DE EXTRAÇÃO APRIMORADA
                 let values = [];
-                // 1. Tenta extrair da linha "TOTAL DE PROVENTOS" ou "REMUNERAÇÃO TOTAL" (padrão Ficha Financeira)
-                const proventosMatch = chunk.match(/(?:TOTAL DE PROVENTOS|REMUNERAÇÃO TOTAL)\s*(?:\(P\))?\s*([\d.,\s]+)/i);
+                // Método Primário: Busca por "TOTAL DE PROVENTOS" ou "REMUNERAÇÃO TOTAL"
+                const proventosMatch = chunk.match(/(?:TOTAL DE PROVENTOS|REMUNERAÇÃO\s+TOTAL)\s*(?:\(P\))?\s*([\d.,\s]+)/i);
 
                 if (proventosMatch && proventosMatch[1]) {
                     const valuesString = proventosMatch[1];
                     values = valuesString.trim().replace(/\./g, '').replace(/,/g, '.').split(/\s+/).filter(v => !isNaN(parseFloat(v)) && v.trim() !== '');
                 
                 } else if (chunk.includes("RAIS - Relação Anual de Informações Sociais")) {
-                    // 2. Se falhar, aplica a lógica para o formato RAIS
-                    const employeeBlocks = chunk.split(/(?=Cod\.?\sPIS\/PASEP)/); // Divide a página por servidor
+                    // Método Secundário (Fallback): Lógica para o formato RAIS
+                    const employeeBlocks = chunk.split(/(?=Cod\.?\sPIS\/PASEP)/);
                     const employeeChunk = employeeBlocks.find(block => block.replace(/[^\d]/g, '').includes(cpfParaBuscar));
 
                     if (employeeChunk) {
                         const janIndex = employeeChunk.toUpperCase().indexOf("JANEIRO");
                         if (janIndex !== -1) {
                             const salaryBlock = employeeChunk.substring(janIndex);
-                            // Regex para encontrar valores monetários (ex: 1.234,56 ou 1234.56)
                             const numberRegex = /(\b\d{1,3}(?:\.\d{3})*,\d{2}\b|\b\d+[,.]\d{2}\b)/g;
                             const salaryMatches = [...salaryBlock.matchAll(numberRegex)];
                             
                             if (salaryMatches.length >= 12) {
-                                // Pega os 12 primeiros valores encontrados, que correspondem aos meses
                                 values = salaryMatches.slice(0, 12).map(match => match[0].replace(/\./g, '').replace(/,/g, '.'));
                             }
                         }
@@ -1265,11 +1265,11 @@ const extratorFichas = {
                 }
                 
                 if (values.length > 0) {
-                    // Adiciona os 12 valores mensais e o total anual (13º valor) se existir
                     extratorFichas.extractedData.push({ year, values: values.slice(0, 13) });
                 }
             }
             
+            // Lógica para remover anos duplicados e ordenar
             const uniqueYears = {};
             extratorFichas.extractedData = extratorFichas.extractedData.filter(item => {
                 if (!uniqueYears[item.year]) {
@@ -1278,7 +1278,6 @@ const extratorFichas = {
                 }
                 return false;
             });
-
             extratorFichas.extractedData.sort((a, b) => parseInt(a.year) - parseInt(b.year));
 
         } catch (error) {
@@ -1292,6 +1291,7 @@ const extratorFichas = {
     };
     reader.readAsArrayBuffer(extratorFichas.pdfFile);
 },
+  
     renderizarTabela: () => {
         const tableContainer = document.getElementById("extrator-table-container");
         if (extratorFichas.extractedData.length === 0) {
@@ -3597,6 +3597,7 @@ Object.assign(window, {
 });
 
 window.simulacao = simulacao;
+
 
 
 
