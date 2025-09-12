@@ -1137,46 +1137,24 @@
 </div>
 
   <div id="extrator-modal" class="modal-overlay" style="display:none;">
-    <div class="modal-content" style="max-width: 950px;">
+    <div class="modal-content" style="max-width: 900px;">
         <button class="modal-close" onclick="extratorFichas.fecharModal()">&times;</button>
         <h4 style="margin-top:0; display:flex; align-items:center; gap:8px; font-size: 1.2em;">
             <i class="ri-file-search-line"></i>
             <span>Extrair Salários de Ficha Financeira</span>
         </h4>
         <p style="font-size:0.9em; margin-top: -5px; margin-bottom: 20px; color: var(--text-secondary-color);">
-            Faça o upload do PDF. A ferramenta identificará os servidores e extrairá os valores da linha "TOTAL DE PROVENTOS".
+            Faça o upload do PDF da ficha financeira para extrair os valores do "TOTAL DE PROVENTOS" e exportá-los para o Excel.
         </p>
-
-        <div class="form-grid" style="grid-template-columns: 1fr auto; align-items: flex-end;">
-            <div>
-                <label for="extrator-file-input-trigger">1. Selecionar Arquivo PDF:</label>
-                <div id="extrator-upload-trigger" class="extrator-upload-area" style="padding: 15px;">
-                    <p id="extrator-file-name">Clique aqui para escolher o arquivo</p>
-                </div>
-                <input type="file" id="extrator-file-input" accept="application/pdf">
-            </div>
-            
-            <button id="extrator-process-btn" class="primary" disabled style="height: fit-content; min-width: 150px;">
-                <i class="ri-settings-3-line"></i> Processar
-            </button>
-        </div>
         
-        <hr style="margin: 20px 0;">
-
-        <div class="form-grid" style="grid-template-columns: 1fr auto; align-items: flex-end;">
-            <div>
-                <label for="extrator-servidor-select">2. Selecione o Servidor Encontrado:</label>
-                <select id="extrator-servidor-select" disabled>
-                    <option value="">Aguardando processamento do PDF...</option>
-                </select>
-            </div>
-            <button id="extrator-export-btn" class="success" disabled style="height: fit-content; min-width: 150px;">
-                <i class="ri-file-excel-2-line"></i> Exportar Excel
-            </button>
+        <div style="display: flex; gap: 15px; align-items: center; margin-bottom: 20px;">
+            <input type="file" id="extrator-file-input" accept="application/pdf" style="flex-grow: 1;">
+            <button id="extrator-process-btn" class="secondary" disabled><i class="ri-settings-3-line"></i> Processar PDF</button>
+            <button id="extrator-export-btn" class="primary" disabled><i class="ri-file-excel-2-line"></i> Exportar Excel</button>
         </div>
-        
-        <div id="extrator-table-container" class="tabela-container" style="margin-top: 15px; max-height: 40vh; overflow-y: auto;">
-            <p style="text-align:center;">Nenhum servidor selecionado.</p>
+
+        <div id="extrator-table-container" style="max-height: 50vh; overflow-y: auto;">
+            <p>Nenhum dado processado ainda.</p>
         </div>
     </div>
 </div>
@@ -1220,6 +1198,7 @@
 <input type="file" id="carregarProcessoInput" accept=".json" style="display:none;" onchange="gestaoProcessos.carregarProcessoLocal(event)" />
 </body>
 </html>
+
 
 
 
