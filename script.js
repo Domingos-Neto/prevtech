@@ -1146,34 +1146,23 @@ const gestaoProcessos = {
 };
 
 // =================================================================================
-// INÍCIO: NOVO MÓDULO INTELIGENTE DE EXTRAÇÃO DE FICHAS FINANCEIRAS
+// INÍCIO: NOVO MÓDULO DE EXTRAÇÃO DE FICHAS FINANCEIRAS
 // =================================================================================
 const extratorFichas = {
-    extractedData: [], // Vai armazenar { serverName, year, values }
+    extractedData: [],
     pdfFile: null,
-    
+
     init: () => {
         const fileInput = document.getElementById("extrator-file-input");
         const processBtn = document.getElementById("extrator-process-btn");
         const exportBtn = document.getElementById("extrator-export-btn");
-        const uploadTrigger = document.getElementById("extrator-upload-trigger");
-        const fileNameDisplay = document.getElementById("extrator-file-name");
-        const servidorSelect = document.getElementById("extrator-servidor-select");
-
-        uploadTrigger.addEventListener("click", () => fileInput.click());
 
         fileInput.addEventListener("change", (e) => {
             extratorFichas.pdfFile = e.target.files[0];
             processBtn.disabled = !extratorFichas.pdfFile;
-            fileNameDisplay.textContent = extratorFichas.pdfFile ? `Arquivo: ${extratorFichas.pdfFile.name}` : "Clique aqui para escolher o arquivo";
-            extratorFichas.resetView();
         });
 
         processBtn.addEventListener("click", extratorFichas.processarPDF);
-        servidorSelect.addEventListener("change", (e) => {
-            extratorFichas.renderizarTabela(e.target.value);
-            exportBtn.disabled = !e.target.value;
-        });
         exportBtn.addEventListener("click", extratorFichas.exportarExcel);
     },
 
@@ -1189,105 +1178,67 @@ const extratorFichas = {
         setTimeout(() => modal.style.display = 'none', 300);
     },
 
-    resetView: () => {
-        const servidorSelect = document.getElementById("extrator-servidor-select");
-        const tableContainer = document.getElementById("extrator-table-container");
-        servidorSelect.innerHTML = '<option value="">Aguardando processamento do PDF...</option>';
-        servidorSelect.disabled = true;
-        document.getElementById("extrator-export-btn").disabled = true;
-        tableContainer.innerHTML = '<p style="text-align:center;">Nenhum servidor selecionado.</p>';
-        extratorFichas.extractedData = [];
-    },
-
-    processarPDF: async () => {
+    processarPDF: () => {
         if (!extratorFichas.pdfFile) return;
         const processBtn = document.getElementById("extrator-process-btn");
         ui.toggleSpinner(processBtn, true);
-        extratorFichas.resetView();
 
-        try {
-            const typedArray = new Uint8Array(await extratorFichas.pdfFile.arrayBuffer());
-            const pdf = await pdfjsLib.getDocument(typedArray).promise;
-            let fullText = '';
+        const reader = new FileReader();
+        reader.onload = async function () {
+            const typedArray = new Uint8Array(this.result);
+            try {
+                const pdf = await pdfjsLib.getDocument(typedArray).promise;
+                extratorFichas.extractedData = [];
 
-            for (let i = 1; i <= pdf.numPages; i++) {
-                const page = await pdf.getPage(i);
-                const content = await page.getTextContent();
-                fullText += content.items.map(item => item.str).join(' ');
-            }
+                for (let i = 1; i <= pdf.numPages; i++) {
+                    const page = await pdf.getPage(i);
+                    const content = await page.getTextContent();
+                    const text = content.items.map(item => item.str).join(" ");
+                    
+                    const yearMatch = text.match(/Ano:\s*(\d{4})/i) || text.match(/\b(20\d{2})\b/);
+                    const year = yearMatch ? yearMatch[1] : `Página ${i}`;
 
-            // Divide o texto completo em blocos, um para cada "FICHA FINANCEIRA"
-            const blocos = fullText.split("FICHA FINANCEIRA INDIVIDUAL");
-            blocos.shift(); // Remove o primeiro elemento que é vazio
+                    const regex = /(?:TOTAL DE PROVENTOS|REMUNERAÇÃO TOTAL)\s*\(?P?\)?\s*([\d,.\s]+)/i;
+                    const match = text.match(regex);
 
-            if (blocos.length === 0) {
-                throw new Error("Nenhum registro 'Ficha Financeira Individual' encontrado no PDF.");
-            }
+                    if (match && match[1]) {
+                        const values = match[1].trim().replace(/\./g, '').replace(/,/g, '.').split(/\s+/).filter(v => v !== "");
 
-            for (const bloco of blocos) {
-                const yearMatch = bloco.match(/Ano:\s*(\d{4})/i) || bloco.match(/\b(20\d{2})\b/);
-                const nameMatch = bloco.match(/(?:\d{6}-\d\s*-\s*)([A-Z\sÇÁÉÍÓÚÀÂÊÔÃÕ]+)/);
-                const proventosMatch = bloco.match(/TOTAL DE PROVENTOS\s*\(P\)\s*([\d,.\s]+?)(?=\(D\)|TOTAL DE DESCONTOS)/);
-
-                if (yearMatch && nameMatch && proventosMatch) {
-                    const values = proventosMatch[1].trim().replace(/\./g, '').replace(/,/g, '.').split(/\s+/).filter(v => v);
-                    if (values.length >= 12) { // Pelo menos 12 meses
-                        extratorFichas.extractedData.push({
-                            serverName: nameMatch[1].trim(),
-                            year: yearMatch[1],
-                            values: values.slice(0, 13) // Garante que pegamos no máximo 13 valores (12 meses + total)
-                        });
+                        if (values.length >= 13) {
+                            const reorderedValues = [
+                                values[0], values[7], values[1], values[8], values[2], values[9],
+                                values[3], values[10], values[4], values[11], values[5], values[12], values[6]
+                            ];
+                            extratorFichas.extractedData.push({ year, values: reorderedValues });
+                        }
                     }
                 }
+            } catch (error) {
+                console.error("Erro ao processar o PDF:", error);
+                ui.showToast("Erro ao processar PDF. Verifique o formato.", false);
+            } finally {
+                extratorFichas.renderizarTabela();
+                document.getElementById("extrator-export-btn").disabled = extratorFichas.extractedData.length === 0;
+                ui.toggleSpinner(processBtn, false);
             }
-
-            extratorFichas.popularSelecaoServidores();
-        } catch (error) {
-            console.error("Erro ao processar PDF:", error);
-            ui.showToast(error.message, false);
-            extratorFichas.resetView();
-        } finally {
-            ui.toggleSpinner(processBtn, false);
-        }
+        };
+        reader.readAsArrayBuffer(extratorFichas.pdfFile);
     },
 
-    popularSelecaoServidores: () => {
-        const servidorSelect = document.getElementById("extrator-servidor-select");
-        const nomesUnicos = [...new Set(extratorFichas.extractedData.map(d => d.serverName))];
-
-        if (nomesUnicos.length === 0) {
-            servidorSelect.innerHTML = '<option value="">Nenhum servidor com dados válidos encontrado</option>';
-            ui.showToast("Não foi possível extrair dados no formato esperado.", false);
-            return;
-        }
-
-        servidorSelect.innerHTML = '<option value="">-- Selecione um servidor --</option>';
-        nomesUnicos.sort().forEach(nome => {
-            const option = document.createElement('option');
-            option.value = nome;
-            option.textContent = nome;
-            servidorSelect.appendChild(option);
-        });
-        servidorSelect.disabled = false;
-        ui.showToast(`${nomesUnicos.length} servidor(es) encontrado(s) no documento!`, true);
-    },
-
-    renderizarTabela: (serverName) => {
+    renderizarTabela: () => {
         const tableContainer = document.getElementById("extrator-table-container");
-        if (!serverName) {
-            tableContainer.innerHTML = '<p style="text-align:center;">Nenhum servidor selecionado.</p>';
+        if (extratorFichas.extractedData.length === 0) {
+            tableContainer.innerHTML = "<p>Nenhum dado encontrado no PDF com o formato esperado (procure por 'TOTAL DE PROVENTOS').</p>";
             return;
         }
 
-        const dadosDoServidor = extratorFichas.extractedData.filter(d => d.serverName === serverName).sort((a,b) => a.year - b.year);
-        
         const months = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro", "Total"];
         let html = "<table><thead><tr><th>Ano</th>";
         months.forEach(m => html += `<th>${m}</th>`);
         html += "</tr></thead><tbody>";
 
-        dadosDoServidor.forEach(row => {
-            html += `<tr><td><b>${row.year}</b></td>`;
+        extratorFichas.extractedData.forEach(row => {
+            html += `<tr><td>${row.year}</td>`;
             row.values.forEach(val => html += `<td>${val}</td>`);
             html += "</tr>";
         });
@@ -1297,28 +1248,30 @@ const extratorFichas = {
     },
 
     exportarExcel: () => {
-        const servidorSelect = document.getElementById("extrator-servidor-select");
-        const serverName = servidorSelect.value;
-        if (!serverName) return;
-
-        const dadosDoServidor = extratorFichas.extractedData.filter(d => d.serverName === serverName).sort((a,b) => a.year - b.year);
-        if (dadosDoServidor.length === 0) return;
+        if (extratorFichas.extractedData.length === 0) return;
+        const exportBtn = document.getElementById("extrator-export-btn");
+        ui.toggleSpinner(exportBtn, true);
         
-        const months = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro", "Total"];
-        const header = ["Ano", ...months];
-        const dataRows = dadosDoServidor.map(row => [row.year, ...row.values]);
+        try {
+            const months = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro", "Total"];
+            const header = ["Ano", ...months];
+            const data = extratorFichas.extractedData.map(row => [row.year, ...row.values]);
 
-        const worksheet = XLSX.utils.aoa_to_sheet([header, ...dataRows]);
-        const workbook = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(workbook, worksheet, "Proventos");
-        
-        const fileName = `Ficha_Financeira_${serverName.replace(/\s/g, '_')}.xlsx`;
-        XLSX.writeFile(workbook, fileName);
-        ui.showToast("Arquivo Excel gerado com sucesso!", true);
+            const worksheet = XLSX.utils.aoa_to_sheet([header, ...data]);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Proventos");
+            XLSX.writeFile(workbook, "fichas_financeiras_extraidas.xlsx");
+            ui.showToast("Arquivo Excel gerado com sucesso!", true);
+        } catch(e) {
+            console.error("Erro ao exportar Excel:", e);
+            ui.showToast("Falha ao gerar o arquivo Excel.", false);
+        } finally {
+            ui.toggleSpinner(exportBtn, false);
+        }
     }
 };
 // =================================================================================
-// FIM: NOVO MÓDULO INTELIGENTE DE EXTRAÇÃO DE FICHAS FINANCEIRAS
+// FIM: NOVO MÓDULO DE EXTRAÇÃO DE FICHAS FINANCEIRAS
 // =================================================================================
 
 
@@ -3571,6 +3524,7 @@ Object.assign(window, {
 });
 
 window.simulacao = simulacao;
+
 
 
 
