@@ -1209,16 +1209,14 @@ const extratorFichas = {
             extratorFichas.extractedData = [];
             let fullText = '';
 
-            // 1. Junta o texto de todas as páginas para uma análise global
             for (let i = 1; i <= pdf.numPages; i++) {
                 const page = await pdf.getPage(i);
                 const content = await page.getTextContent();
-                // Adiciona um separador de página para ajudar na análise
                 fullText += content.items.map(item => item.str).join(' ') + '\n--- PAGE BREAK ---\n';
             }
 
-            // 2. Divide o texto em blocos anuais, usando uma regex que busca por "Ano: XXXX" ou um ano solto no cabeçalho
-            const yearRegex = /(?:Ano-Base:|Ano:)\s*(\d{4})|(\b20\d{2}\b)/g;
+            // Regex para encontrar todos os anos no documento (RAIS ou Ficha Financeira)
+            const yearRegex = /(?:Ano-Base:|Ano:)\s*(\d{4})|PREFEITURA MUNICIPAL DE ITAPIPOCA[\s\S]*?(\b20\d{2}\b)/g;
             let yearMatches = [...fullText.matchAll(yearRegex)];
             
             for (let i = 0; i < yearMatches.length; i++) {
@@ -1226,34 +1224,32 @@ const extratorFichas = {
                 const nextMatch = yearMatches[i + 1];
 
                 const year = currentMatch[1] || currentMatch[2];
+                // Evita capturar o ano do rodapé da data de emissão
+                if (!year || year === new Date().getFullYear().toString()) continue;
+
                 const startIndex = currentMatch.index;
                 const endIndex = nextMatch ? nextMatch.index : fullText.length;
                 
                 const chunk = fullText.substring(startIndex, endIndex);
 
-                // 3. Dentro de cada bloco de ano, verifica o CPF
                 if (!chunk.replace(/[^\d]/g, '').includes(cpfParaBuscar)) {
                     continue;
                 }
                 
-                // 4. Procura pela linha de proventos no formato "Ficha Financeira"
-                const proventosMatch = chunk.match(/(?:TOTAL DE PROVENTOS|REMUNERAÇÃO TOTAL)[\s\S]*?((?:[\d.,]+\s*){10,})/i);
+                // MUDANÇA PRINCIPAL: Regex simplificada que não exige quantidade mínima de números
+                const proventosMatch = chunk.match(/(?:TOTAL DE PROVENTOS|REMUNERAÇÃO TOTAL)\s*(?:\(P\))?\s*([\d.,\s]+)/i);
 
                 if (proventosMatch && proventosMatch[1]) {
                     const valuesString = proventosMatch[1];
-                    const values = valuesString.trim().replace(/\./g, '').replace(/,/g, '.').split(/\s+/).filter(v => !isNaN(parseFloat(v)));
+                    const values = valuesString.trim().replace(/\./g, '').replace(/,/g, '.').split(/\s+/).filter(v => !isNaN(parseFloat(v)) && v.trim() !== '');
                     
                     if (values.length > 0) {
-                        // Adiciona zeros para meses faltantes, caso a extração não pegue todos os 12.
-                        while(values.length < 12) {
-                            values.push("0.00");
-                        }
                         extratorFichas.extractedData.push({ year, values: values.slice(0, 13) });
                     }
                 }
             }
             
-            // 5. Garante que não haja anos duplicados, mantendo o primeiro encontrado
+            // Garante que não haja anos duplicados, mantendo o primeiro encontrado
             const uniqueYears = {};
             extratorFichas.extractedData = extratorFichas.extractedData.filter(item => {
                 if (!uniqueYears[item.year]) {
@@ -1263,7 +1259,6 @@ const extratorFichas = {
                 return false;
             });
 
-            // 6. Ordena os resultados por ano
             extratorFichas.extractedData.sort((a, b) => parseInt(a.year) - parseInt(b.year));
 
         } catch (error) {
@@ -3582,6 +3577,7 @@ Object.assign(window, {
 });
 
 window.simulacao = simulacao;
+
 
 
 
