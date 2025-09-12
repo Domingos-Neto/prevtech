@@ -1331,6 +1331,7 @@ const extratorFichas = {
         ui.toggleSpinner(exportBtn, false);
     }
 }
+});
 // =================================================================================
 // FIM: NOVO MÓDULO DE EXTRAÇÃO DE FICHAS FINANCEIRAS
 // =================================================================================
@@ -3585,6 +3586,7 @@ Object.assign(window, {
 });
 
 window.simulacao = simulacao;
+
 
 
 
