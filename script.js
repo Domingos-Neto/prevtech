@@ -1153,29 +1153,18 @@ const extratorFichas = {
     pdfFile: null,
 
     init: () => {
-    const fileInput = document.getElementById("extrator-file-input");
-    const processBtn = document.getElementById("extrator-process-btn");
-    const exportBtn = document.getElementById("extrator-export-btn");
-    const uploadTrigger = document.getElementById("extrator-upload-trigger");
-    const fileNameDisplay = document.getElementById("extrator-file-name");
+        const fileInput = document.getElementById("extrator-file-input");
+        const processBtn = document.getElementById("extrator-process-btn");
+        const exportBtn = document.getElementById("extrator-export-btn");
 
-    // Faz com que a área de upload clique no input de arquivo escondido
-    uploadTrigger.addEventListener("click", () => fileInput.click());
+        fileInput.addEventListener("change", (e) => {
+            extratorFichas.pdfFile = e.target.files[0];
+            processBtn.disabled = !extratorFichas.pdfFile;
+        });
 
-    fileInput.addEventListener("change", (e) => {
-        extratorFichas.pdfFile = e.target.files[0];
-        processBtn.disabled = !extratorFichas.pdfFile;
-        
-        if (extratorFichas.pdfFile) {
-            fileNameDisplay.textContent = `Arquivo selecionado: ${extratorFichas.pdfFile.name}`;
-        } else {
-            fileNameDisplay.textContent = "Nenhum arquivo selecionado.";
-        }
-    });
-
-    processBtn.addEventListener("click", extratorFichas.processarPDF);
-    exportBtn.addEventListener("click", extratorFichas.exportarExcel);
-},
+        processBtn.addEventListener("click", extratorFichas.processarPDF);
+        exportBtn.addEventListener("click", extratorFichas.exportarExcel);
+    },
 
     abrirModal: () => {
         const modal = document.getElementById('extrator-modal');
@@ -3535,6 +3524,7 @@ Object.assign(window, {
 });
 
 window.simulacao = simulacao;
+
 
 
 
