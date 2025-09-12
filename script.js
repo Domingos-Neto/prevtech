@@ -1209,52 +1209,66 @@ const extratorFichas = {
             extratorFichas.extractedData = [];
             let fullText = '';
 
+            // 1. Junta o texto de todas as páginas para uma análise global
             for (let i = 1; i <= pdf.numPages; i++) {
                 const page = await pdf.getPage(i);
                 const content = await page.getTextContent();
-                fullText += content.items.map(item => item.str).join(' ');
+                // Adiciona um separador de página para ajudar na análise
+                fullText += content.items.map(item => item.str).join(' ') + '\n--- PAGE BREAK ---\n';
             }
 
-            // <-- INÍCIO DA NOVA LÓGICA -- >
-            // 1. Divide todo o texto em "chunks" começando com "Ano:" ou "Ano-Base:".
-            // O "(?=...)" garante que o "Ano:" seja mantido no início de cada chunk.
-            const chunks = fullText.split(/(?=Ano(?:-Base)?:)/i);
+            // 2. Divide o texto em blocos anuais, usando uma regex que busca por "Ano: XXXX" ou um ano solto no cabeçalho
+            const yearRegex = /(?:Ano-Base:|Ano:)\s*(\d{4})|(\b20\d{2}\b)/g;
+            let yearMatches = [...fullText.matchAll(yearRegex)];
+            
+            for (let i = 0; i < yearMatches.length; i++) {
+                const currentMatch = yearMatches[i];
+                const nextMatch = yearMatches[i + 1];
 
-            for (const chunk of chunks) {
-                if (chunk.trim().length === 0) continue;
-
-                // 2. Verifica se o CPF está neste chunk específico
-                const cpfLimpoNoChunk = chunk.replace(/[^\d]/g, '');
-                if (!cpfLimpoNoChunk.includes(cpfParaBuscar)) {
-                    continue; // Se não for do servidor, pula para o próximo ano.
-                }
-
-                // 3. Extrai o ano deste chunk
-                const yearMatch = chunk.match(/Ano(?:-Base)?:\s*(\d{4})/i);
-                const year = yearMatch ? yearMatch[1] : null;
-
-                if (!year) continue;
-
-                // 4. Extrai a linha de proventos dentro deste chunk
-                const valuesMatch = chunk.match(/(?:TOTAL DE PROVENTOS|REMUNERAÇÃO TOTAL)\s*((?:[\d.,]+\s*){12,})/i);
+                const year = currentMatch[1] || currentMatch[2];
+                const startIndex = currentMatch.index;
+                const endIndex = nextMatch ? nextMatch.index : fullText.length;
                 
-                if (valuesMatch && valuesMatch[1]) {
-                    // Limpa e formata os valores encontrados
-                    const values = valuesMatch[1].trim().replace(/\./g, '').replace(/,/g, '.').split(/\s+/).filter(v => !isNaN(parseFloat(v)));
+                const chunk = fullText.substring(startIndex, endIndex);
+
+                // 3. Dentro de cada bloco de ano, verifica o CPF
+                if (!chunk.replace(/[^\d]/g, '').includes(cpfParaBuscar)) {
+                    continue;
+                }
+                
+                // 4. Procura pela linha de proventos no formato "Ficha Financeira"
+                const proventosMatch = chunk.match(/(?:TOTAL DE PROVENTOS|REMUNERAÇÃO TOTAL)[\s\S]*?((?:[\d.,]+\s*){10,})/i);
+
+                if (proventosMatch && proventosMatch[1]) {
+                    const valuesString = proventosMatch[1];
+                    const values = valuesString.trim().replace(/\./g, '').replace(/,/g, '.').split(/\s+/).filter(v => !isNaN(parseFloat(v)));
                     
-                    if(values.length >= 12) {
-                         extratorFichas.extractedData.push({ year, values: values.slice(0, 13) });
+                    if (values.length > 0) {
+                        // Adiciona zeros para meses faltantes, caso a extração não pegue todos os 12.
+                        while(values.length < 12) {
+                            values.push("0.00");
+                        }
+                        extratorFichas.extractedData.push({ year, values: values.slice(0, 13) });
                     }
                 }
             }
-             // <-- FIM DA NOVA LÓGICA -- >
+            
+            // 5. Garante que não haja anos duplicados, mantendo o primeiro encontrado
+            const uniqueYears = {};
+            extratorFichas.extractedData = extratorFichas.extractedData.filter(item => {
+                if (!uniqueYears[item.year]) {
+                    uniqueYears[item.year] = true;
+                    return true;
+                }
+                return false;
+            });
 
-            // Ordena os resultados por ano para garantir a sequência correta
+            // 6. Ordena os resultados por ano
             extratorFichas.extractedData.sort((a, b) => parseInt(a.year) - parseInt(b.year));
 
         } catch (error) {
             console.error("Erro ao processar o PDF:", error);
-            ui.showToast("Erro ao processar PDF. Verifique o formato.", false);
+            ui.showToast("Erro ao processar PDF. Verifique o console.", false);
         } finally {
             extratorFichas.renderizarTabela();
             document.getElementById("extrator-export-btn").disabled = extratorFichas.extractedData.length === 0;
@@ -3568,6 +3582,7 @@ Object.assign(window, {
 });
 
 window.simulacao = simulacao;
+
 
 
 
