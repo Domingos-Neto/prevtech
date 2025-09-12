@@ -1375,3 +1375,50 @@ body.dark-mode .nav-tabs .nav-link.active {
   padding-top: 3px;     /* Adiciona um pequeno espaço superior */
   white-space: nowrap;  /* Impede que a mensagem quebre a linha */
 }
+
+/* ================================================= */
+/* INÍCIO: ESTILOS PARA O MODAL DO EXTRATOR DE PDF   */
+/* ================================================= */
+.extrator-upload-area {
+    border: 2px dashed var(--cor-borda, #ccc);
+    border-radius: 8px;
+    padding: 25px;
+    text-align: center;
+    cursor: pointer;
+    background-color: var(--cor-fundo-card, #f9fafb);
+    transition: background-color 0.3s, border-color 0.3s;
+}
+.extrator-upload-area:hover {
+    background-color: var(--cor-fundo, #f4f6f9);
+    border-color: var(--prevtech-azul, #0056b3);
+}
+.extrator-upload-area i {
+    font-size: 2.5rem;
+    color: var(--prevtech-azul, #0056b3);
+    margin-bottom: 10px;
+}
+.extrator-upload-area p {
+    margin: 0;
+    font-weight: 500;
+    color: var(--text-secondary-color, #555);
+}
+#extrator-file-input {
+    display: none; /* O input original fica escondido */
+}
+#extrator-file-name {
+    margin-top: 15px;
+    font-weight: 600;
+    color: var(--cor-sucesso, #28a745);
+    text-align: center;
+}
+.extrator-actions {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid var(--cor-borda, #eee);
+}
+/* ================================================= */
+/* FIM: ESTILOS PARA O MODAL DO EXTRATOR DE PDF      */
+/* ================================================= */
