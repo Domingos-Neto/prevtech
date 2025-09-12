@@ -767,6 +767,7 @@ function setupEventListeners() {
     // Novo listener para importação de CTC
     document.getElementById('arquivoExcelCTC').addEventListener('change', importarCTCExcel);
 }
+    extratorFichas.init();
 
 function openTimeCalcModal() {
     const modal = document.getElementById('time-calc-modal');
@@ -1142,6 +1143,136 @@ const gestaoProcessos = {
         reader.readAsText(file);
     }
 };
+
+// =================================================================================
+// INÍCIO: NOVO MÓDULO DE EXTRAÇÃO DE FICHAS FINANCEIRAS
+// =================================================================================
+const extratorFichas = {
+    extractedData: [],
+    pdfFile: null,
+
+    init: () => {
+        const fileInput = document.getElementById("extrator-file-input");
+        const processBtn = document.getElementById("extrator-process-btn");
+        const exportBtn = document.getElementById("extrator-export-btn");
+
+        fileInput.addEventListener("change", (e) => {
+            extratorFichas.pdfFile = e.target.files[0];
+            processBtn.disabled = !extratorFichas.pdfFile;
+        });
+
+        processBtn.addEventListener("click", extratorFichas.processarPDF);
+        exportBtn.addEventListener("click", extratorFichas.exportarExcel);
+    },
+
+    abrirModal: () => {
+        const modal = document.getElementById('extrator-modal');
+        modal.style.display = 'flex';
+        setTimeout(() => modal.classList.add('show'), 10);
+    },
+
+    fecharModal: () => {
+        const modal = document.getElementById('extrator-modal');
+        modal.classList.remove('show');
+        setTimeout(() => modal.style.display = 'none', 300);
+    },
+
+    processarPDF: () => {
+        if (!extratorFichas.pdfFile) return;
+        const processBtn = document.getElementById("extrator-process-btn");
+        ui.toggleSpinner(processBtn, true);
+
+        const reader = new FileReader();
+        reader.onload = async function () {
+            const typedArray = new Uint8Array(this.result);
+            try {
+                const pdf = await pdfjsLib.getDocument(typedArray).promise;
+                extratorFichas.extractedData = [];
+
+                for (let i = 1; i <= pdf.numPages; i++) {
+                    const page = await pdf.getPage(i);
+                    const content = await page.getTextContent();
+                    const text = content.items.map(item => item.str).join(" ");
+                    
+                    const yearMatch = text.match(/Ano:\s*(\d{4})/i) || text.match(/\b(20\d{2})\b/);
+                    const year = yearMatch ? yearMatch[1] : `Página ${i}`;
+
+                    const regex = /(?:TOTAL DE PROVENTOS|REMUNERAÇÃO TOTAL)\s*\(?P?\)?\s*([\d,.\s]+)/i;
+                    const match = text.match(regex);
+
+                    if (match && match[1]) {
+                        const values = match[1].trim().replace(/\./g, '').replace(/,/g, '.').split(/\s+/).filter(v => v !== "");
+
+                        if (values.length >= 13) {
+                            const reorderedValues = [
+                                values[0], values[7], values[1], values[8], values[2], values[9],
+                                values[3], values[10], values[4], values[11], values[5], values[12], values[6]
+                            ];
+                            extratorFichas.extractedData.push({ year, values: reorderedValues });
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error("Erro ao processar o PDF:", error);
+                ui.showToast("Erro ao processar PDF. Verifique o formato.", false);
+            } finally {
+                extratorFichas.renderizarTabela();
+                document.getElementById("extrator-export-btn").disabled = extratorFichas.extractedData.length === 0;
+                ui.toggleSpinner(processBtn, false);
+            }
+        };
+        reader.readAsArrayBuffer(extratorFichas.pdfFile);
+    },
+
+    renderizarTabela: () => {
+        const tableContainer = document.getElementById("extrator-table-container");
+        if (extratorFichas.extractedData.length === 0) {
+            tableContainer.innerHTML = "<p>Nenhum dado encontrado no PDF com o formato esperado (procure por 'TOTAL DE PROVENTOS').</p>";
+            return;
+        }
+
+        const months = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro", "Total"];
+        let html = "<table><thead><tr><th>Ano</th>";
+        months.forEach(m => html += `<th>${m}</th>`);
+        html += "</tr></thead><tbody>";
+
+        extratorFichas.extractedData.forEach(row => {
+            html += `<tr><td>${row.year}</td>`;
+            row.values.forEach(val => html += `<td>${val}</td>`);
+            html += "</tr>";
+        });
+
+        html += "</tbody></table>";
+        tableContainer.innerHTML = html;
+    },
+
+    exportarExcel: () => {
+        if (extratorFichas.extractedData.length === 0) return;
+        const exportBtn = document.getElementById("extrator-export-btn");
+        ui.toggleSpinner(exportBtn, true);
+        
+        try {
+            const months = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro", "Total"];
+            const header = ["Ano", ...months];
+            const data = extratorFichas.extractedData.map(row => [row.year, ...row.values]);
+
+            const worksheet = XLSX.utils.aoa_to_sheet([header, ...data]);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Proventos");
+            XLSX.writeFile(workbook, "fichas_financeiras_extraidas.xlsx");
+            ui.showToast("Arquivo Excel gerado com sucesso!", true);
+        } catch(e) {
+            console.error("Erro ao exportar Excel:", e);
+            ui.showToast("Falha ao gerar o arquivo Excel.", false);
+        } finally {
+            ui.toggleSpinner(exportBtn, false);
+        }
+    }
+};
+// =================================================================================
+// FIM: NOVO MÓDULO DE EXTRAÇÃO DE FICHAS FINANCEIRAS
+// =================================================================================
+
 
 // MODIFICAÇÃO: Preserva o estado do módulo de processo ao navegar
 function handleNavClick(event, targetView) {
@@ -3387,10 +3518,12 @@ Object.assign(window, {
     cadastro,
     // Novas funções da CTC expostas globalmente
     exportarCTCExcel, importarCTCExcel, 
-    salvarCTCLocal, gestaoProcessos
+    salvarCTCLocal, gestaoProcessos,
+    extratorFichas
 });
 
 window.simulacao = simulacao;
+
 
 
 
