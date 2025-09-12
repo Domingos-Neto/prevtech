@@ -1207,68 +1207,43 @@ const extratorFichas = {
         try {
             const pdf = await pdfjsLib.getDocument(typedArray).promise;
             extratorFichas.extractedData = [];
+            let fullText = '';
 
+            // MUDANÇA 1: Concatena o texto de todas as páginas em uma única string
             for (let i = 1; i <= pdf.numPages; i++) {
                 const page = await pdf.getPage(i);
                 const content = await page.getTextContent();
-                
-                // Transforma o conteúdo da página em "blocos" por servidor
-                let chunks = [];
-                let currentChunk = [];
-                const startKeywords = ["Nome do empregado/servidor", "FICHA FINANCEIRA INDIVIDUAL"];
+                fullText += content.items.map(item => item.str).join(' ');
+            }
 
-                for (const item of content.items) {
-                    // Se encontrar uma palavra-chave de início e o bloco atual não estiver vazio, salva o bloco anterior
-                    if (startKeywords.some(keyword => item.str.includes(keyword)) && currentChunk.length > 0) {
-                        chunks.push(currentChunk.join(" "));
-                        currentChunk = [];
-                    }
-                    currentChunk.push(item.str);
-                }
-                if (currentChunk.length > 0) {
-                    chunks.push(currentChunk.join(" "));
-                }
+            // MUDANÇA 2: Procura pelo CPF do servidor no texto completo
+            if (!fullText.replace(/[^\d]/g, '').includes(cpfParaBuscar)) {
+                 ui.showToast("CPF não encontrado no documento PDF.", false);
+            }
 
-                // Procura o CPF nos blocos de texto
-                for (const chunk of chunks) {
-                    const cpfLimpoNoChunk = chunk.replace(/[^\d]/g, '');
-                    if (cpfLimpoNoChunk.includes(cpfParaBuscar)) {
-                        
-                        const yearMatch = chunk.match(/Ano:\s*(\d{4})/i) || chunk.match(/Ano-Base:\s*(\d{4})/i) || chunk.match(/\b(20\d{2})\b/);
-                        const year = yearMatch ? yearMatch[1] : `Página ${i}`;
+            // MUDANÇA 3: Nova regex mais robusta para encontrar todos os anos e todos os valores
+            // Esta regex procura pelo padrão: Ano: (um ano) ... TOTAL DE PROVENTOS (captura 13 valores numéricos)
+            const regex = /Ano-Base:\s*(\d{4})[\s\S]*?(?:TOTAL DE PROVENTOS|REMUNERAÇÃO TOTAL)\s*([\d,.\s]+(?:\r?\n| |$))/gi;
+            let match;
+            
+            while ((match = regex.exec(fullText)) !== null) {
+                const year = match[1];
+                const valuesString = match[2];
 
-                        // Regex para buscar a linha de proventos dentro do bloco do servidor correto
-                        const regex = /(?:TOTAL DE PROVENTOS|REMUNERAÇÃO TOTAL)\s*\(?P?\)?\s*([\d,.\s]+)/i;
-                        const match = chunk.match(regex);
-
-                        if (match && match[1]) {
-                            // Limpa e formata os valores encontrados
-                            const values = match[1].trim().replace(/\./g, '').replace(/,/g, '.').split(/\s+/).filter(v => v !== "");
-                            
-                            // A lógica de reordenar os meses assume um layout específico, mantida do código original
-                            if (values.length >= 12) { // Precisa de pelo menos 12 meses
-                                // A lógica de reordenação original parece ter um padrão específico, vamos mantê-la
-                                // Se o layout for Jan, Fev, Mar... Total, a reordenação precisa ser ajustada.
-                                // Este padrão parece ser para um layout de duas colunas de meses.
-                                const isTwoColumnLayout = chunk.includes("JANEIRO FEVEREIRO");
-                                let finalValues;
-                                if (isTwoColumnLayout) {
-                                    finalValues = [
-                                        values[0], values[7], values[1], values[8], values[2], values[9],
-                                        values[3], values[10], values[4], values[11], values[5], values[6] // Dezembro e Total podem variar
-                                    ];
-                                } else {
-                                     // Assume uma ordem linear simples
-                                     finalValues = values.slice(0, 13);
-                                }
-                                
-                                extratorFichas.extractedData.push({ year, values: finalValues });
-                            }
-                        }
-                        break; // Para de procurar em outros blocos da mesma página, pois já encontrou o servidor
+                if (year && valuesString) {
+                    // Limpa e extrai os valores numéricos. Garante que pegue exatamente os 13 valores.
+                    const values = valuesString.trim().replace(/\./g, '').replace(/,/g, '.').split(/\s+/).filter(v => !isNaN(parseFloat(v)));
+                    
+                    if(values.length >= 12) { // Precisa de pelo menos 12 meses
+                         extratorFichas.extractedData.push({ year, values: values.slice(0, 13) });
                     }
                 }
             }
+            
+            // Ordena os resultados por ano, já que a extração pode não ser sequencial
+            extratorFichas.extractedData.sort((a, b) => a.year - b.year);
+
+
         } catch (error) {
             console.error("Erro ao processar o PDF:", error);
             ui.showToast("Erro ao processar PDF. Verifique o formato.", false);
@@ -1280,7 +1255,6 @@ const extratorFichas = {
     };
     reader.readAsArrayBuffer(extratorFichas.pdfFile);
 },
-
     renderizarTabela: () => {
         const tableContainer = document.getElementById("extrator-table-container");
         if (extratorFichas.extractedData.length === 0) {
@@ -3586,6 +3560,7 @@ Object.assign(window, {
 });
 
 window.simulacao = simulacao;
+
 
 
 
