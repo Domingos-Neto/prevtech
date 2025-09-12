@@ -766,9 +766,10 @@ function setupEventListeners() {
     
     // Novo listener para importação de CTC
     document.getElementById('arquivoExcelCTC').addEventListener('change', importarCTCExcel);
-}
+    
     extratorFichas.init();
-
+}
+    
 function openTimeCalcModal() {
     const modal = document.getElementById('time-calc-modal');
     modal.style.display = 'flex';
@@ -3523,6 +3524,7 @@ Object.assign(window, {
 });
 
 window.simulacao = simulacao;
+
 
 
 
