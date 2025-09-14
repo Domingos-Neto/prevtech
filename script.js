@@ -384,64 +384,84 @@ const simulacao = {
         return;
     }
 
-    // Se for apenas um arquivo, mantém o comportamento antigo de carregar na tela.
+    // --- Lógica para carregar um ÚNICO arquivo na tela (comportamento original) ---
     if (files.length === 1) {
         const reader = new FileReader();
         reader.onload = (e) => {
             try {
                 const dados = JSON.parse(e.target.result);
-                simulacao.restaurarDados(dados); // Comportamento original
-                ui.showToast(`Simulação "${dados.nome || 'Sem nome'}" carregada na tela!`, true);
+                simulacao.restaurarDados(dados);
             } catch (error) {
                 console.error("Erro ao ler o arquivo JSON:", error);
                 ui.showToast("Erro ao carregar o arquivo. Verifique se é um JSON válido.", false);
             }
+        };
+        reader.onerror = () => {
+             ui.showToast("Não foi possível ler o arquivo selecionado.", false);
         };
         reader.readAsText(files[0]);
         event.target.value = ''; // Limpa o input
         return;
     }
 
-    // Se forem múltiplos arquivos, importa todos para o histórico.
+    // --- Lógica nova e mais robusta para MÚLTIPLOS arquivos ---
     const historicoKey = `historicoSimulacoes_${AppState.usuarioAtual.uid}`;
     const historico = JSON.parse(localStorage.getItem(historicoKey) || "[]");
-    let arquivosCarregados = 0;
-
-    Array.from(files).forEach(file => {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            try {
-                const dados = JSON.parse(e.target.result);
-
-                // Garante que o objeto a ser salvo tenha a estrutura correta para o histórico
-                const novaEntradaHistorico = {
-                    id: crypto.randomUUID(),
-                    nome: dados.nome || file.name.replace('.json', ''), // Usa o nome do arquivo como fallback
-                    dados: dados,
-                    data: new Date().toISOString()
-                };
-                
-                // Adiciona ao início do array do histórico
-                historico.unshift(novaEntradaHistorico);
-                arquivosCarregados++;
-
-            } catch (error) {
-                console.warn(`Falha ao carregar o arquivo ${file.name}:`, error);
-                ui.showToast(`O arquivo "${file.name}" parece ser inválido e foi ignorado.`, false);
-            }
-
-            // Quando o último arquivo for processado, salva tudo e atualiza a UI
-            if (arquivosCarregados === files.length) {
-                localStorage.setItem(historicoKey, JSON.stringify(historico));
-                listarHistorico();
-                atualizarIndicadoresDashboard();
-                ui.showToast(`${arquivosCarregados} simulações foram importadas para o histórico com sucesso!`, true);
-            }
-        };
-        reader.readAsText(file);
+    
+    // Usamos Promise.all para aguardar que todos os arquivos sejam lidos
+    const promises = Array.from(files).map(file => {
+        // Criamos uma promessa para cada arquivo
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const dados = JSON.parse(e.target.result);
+                    // Resolve a promessa com os dados do arquivo se for um JSON válido
+                    resolve(dados); 
+                } catch (error) {
+                    console.warn(`Arquivo "${file.name}" inválido, será ignorado.`, error);
+                    // Resolve com null para sabermos que este arquivo falhou
+                    resolve(null); 
+                }
+            };
+            reader.onerror = () => {
+                console.error(`Erro ao ler o arquivo "${file.name}".`);
+                // Resolve com null em caso de erro de leitura
+                resolve(null);
+            };
+            reader.readAsText(file);
+        });
     });
 
-    event.target.value = ''; // Limpa o input
+    // Espera todas as promessas (leituras de arquivo) terminarem
+    Promise.all(promises).then(resultados => {
+        // Filtramos os resultados para remover os que falharam (retornaram null)
+        const simucoesValidas = resultados.filter(dados => dados !== null);
+
+        if (simucoesValidas.length === 0) {
+            ui.showToast("Nenhum arquivo de simulação válido foi encontrado.", false);
+            return;
+        }
+
+        // Adicionamos os resultados válidos ao histórico
+        simucoesValidas.forEach(dados => {
+            const novaEntradaHistorico = {
+                id: crypto.randomUUID(),
+                nome: dados.nome || 'Simulação Importada', // Usa o nome salvo no arquivo
+                dados: dados,
+                data: new Date().toISOString()
+            };
+            historico.unshift(novaEntradaHistorico);
+        });
+
+        // Salvamos e atualizamos a UI apenas uma vez, no final.
+        localStorage.setItem(historicoKey, JSON.stringify(historico));
+        listarHistorico();
+        atualizarIndicadoresDashboard();
+        ui.showToast(`${simucoesValidas.length} de ${files.length} simulações foram importadas para o histórico!`, true);
+    });
+
+    event.target.value = ''; // Limpa o input para permitir carregar os mesmos arquivos novamente
   },
 
   // INÍCIO: NOVAS FUNÇÕES DE INTEGRAÇÃO COM CADASTRO
@@ -3642,6 +3662,7 @@ Object.assign(window, {
 });
 
 window.simulacao = simulacao;
+
 
 
 
