@@ -377,26 +377,71 @@ const simulacao = {
   },
 
   carregarLocal: (event) => {
-    const file = event.target.files[0];
-    if (!file) return;
+    const files = event.target.files;
+    if (!files || files.length === 0) return;
+    if (!AppState.usuarioAtual) {
+        ui.showToast("Você precisa estar logado para carregar simulações.", false);
+        return;
+    }
 
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      try {
-        const dados = JSON.parse(e.target.result);
-        simulacao.restaurarDados(dados);
-      } catch (error) {
-        console.error("Erro ao ler o arquivo JSON:", error);
-        ui.showToast("Erro ao carregar o arquivo. Verifique se é um JSON válido.", false);
-      } finally {
-          event.target.value = ''; // Limpa o input para permitir carregar o mesmo arquivo novamente
-      }
-    };
-    reader.onerror = () => {
-        ui.showToast("Não foi possível ler o arquivo selecionado.", false);
-        event.target.value = '';
-    };
-    reader.readAsText(file);
+    // Se for apenas um arquivo, mantém o comportamento antigo de carregar na tela.
+    if (files.length === 1) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const dados = JSON.parse(e.target.result);
+                simulacao.restaurarDados(dados); // Comportamento original
+                ui.showToast(`Simulação "${dados.nome || 'Sem nome'}" carregada na tela!`, true);
+            } catch (error) {
+                console.error("Erro ao ler o arquivo JSON:", error);
+                ui.showToast("Erro ao carregar o arquivo. Verifique se é um JSON válido.", false);
+            }
+        };
+        reader.readAsText(files[0]);
+        event.target.value = ''; // Limpa o input
+        return;
+    }
+
+    // Se forem múltiplos arquivos, importa todos para o histórico.
+    const historicoKey = `historicoSimulacoes_${AppState.usuarioAtual.uid}`;
+    const historico = JSON.parse(localStorage.getItem(historicoKey) || "[]");
+    let arquivosCarregados = 0;
+
+    Array.from(files).forEach(file => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const dados = JSON.parse(e.target.result);
+
+                // Garante que o objeto a ser salvo tenha a estrutura correta para o histórico
+                const novaEntradaHistorico = {
+                    id: crypto.randomUUID(),
+                    nome: dados.nome || file.name.replace('.json', ''), // Usa o nome do arquivo como fallback
+                    dados: dados,
+                    data: new Date().toISOString()
+                };
+                
+                // Adiciona ao início do array do histórico
+                historico.unshift(novaEntradaHistorico);
+                arquivosCarregados++;
+
+            } catch (error) {
+                console.warn(`Falha ao carregar o arquivo ${file.name}:`, error);
+                ui.showToast(`O arquivo "${file.name}" parece ser inválido e foi ignorado.`, false);
+            }
+
+            // Quando o último arquivo for processado, salva tudo e atualiza a UI
+            if (arquivosCarregados === files.length) {
+                localStorage.setItem(historicoKey, JSON.stringify(historico));
+                listarHistorico();
+                atualizarIndicadoresDashboard();
+                ui.showToast(`${arquivosCarregados} simulações foram importadas para o histórico com sucesso!`, true);
+            }
+        };
+        reader.readAsText(file);
+    });
+
+    event.target.value = ''; // Limpa o input
   },
 
   // INÍCIO: NOVAS FUNÇÕES DE INTEGRAÇÃO COM CADASTRO
@@ -3597,6 +3642,7 @@ Object.assign(window, {
 });
 
 window.simulacao = simulacao;
+
 
 
 
