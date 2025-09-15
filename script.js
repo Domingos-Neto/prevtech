@@ -3610,6 +3610,89 @@ function exportarCTCExcel(button) {
  */
 // CÓDIGO CORRIGIDO
 
+/**
+ * Coleta todos os dados salvos no localStorage (servidores, simulações, CTCs)
+ * e exporta como um único arquivo Excel com múltiplas planilhas.
+ * @param {HTMLButtonElement} button O botão que acionou a função.
+ */
+function exportarBaseDeDadosCompleta(button) {
+    if (!AppState.usuarioAtual) {
+        return ui.showToast("Você precisa estar logado para exportar os dados.", false);
+    }
+    
+    // Simula um "spinner" se o elemento for um card
+    const originalContent = button.innerHTML;
+    button.innerHTML += ' <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>';
+    button.style.pointerEvents = 'none';
+
+    setTimeout(() => {
+        try {
+            const uid = AppState.usuarioAtual.uid;
+
+            // 1. Coletar dados do localStorage
+            const servidores = JSON.parse(localStorage.getItem('servidores_db') || "[]");
+            const simulacoes = JSON.parse(localStorage.getItem(`historicoSimulacoes_${uid}`) || "[]");
+            const ctcs = JSON.parse(localStorage.getItem(`ctcs_salvas_${uid}`) || "[]");
+
+            // 2. Criar um novo Workbook Excel
+            const wb = XLSX.utils.book_new();
+
+            // 3. Adicionar Planilha de Servidores
+            if (servidores.length > 0) {
+                const wsServidores = XLSX.utils.json_to_sheet(servidores);
+                XLSX.utils.book_append_sheet(wb, wsServidores, "Servidores Cadastrados");
+            }
+
+            // 4. Adicionar Planilha de Simulações (simplificada)
+            if (simulacoes.length > 0) {
+                const dadosSimulacoes = simulacoes.map(s => ({
+                    id: s.id,
+                    nome_simulacao: s.nome,
+                    data_salva: s.data,
+                    nome_servidor: s.dados?.passo1?.nomeServidor,
+                    cpf_servidor: s.dados?.passo1?.cpfServidor,
+                    tipo_beneficio: s.dados?.resultados?.tipo,
+                    valor_beneficio: s.dados?.resultados?.valorBeneficioFinal
+                }));
+                const wsSimulacoes = XLSX.utils.json_to_sheet(dadosSimulacoes);
+                XLSX.utils.book_append_sheet(wb, wsSimulacoes, "Historico de Simulacoes");
+            }
+
+            // 5. Adicionar Planilha de CTCs (simplificada)
+            if (ctcs.length > 0) {
+                const dadosCtcs = ctcs.map(c => ({
+                    id: c.id,
+                    nome_ctc: c.nome,
+                    data_salva: c.data,
+                    nome_servidor: c.dados?.nomeServidor,
+                    cpf_servidor: c.dados?.cpf,
+                    total_periodos: c.dados?.periodos?.length || 0
+                }));
+                const wsCtcs = XLSX.utils.json_to_sheet(dadosCtcs);
+                XLSX.utils.book_append_sheet(wb, wsCtcs, "Historico de CTCs");
+            }
+
+            // 6. Gerar e baixar o arquivo
+            if (wb.SheetNames.length === 0) {
+                 throw new Error("Nenhum dado encontrado para exportar.");
+            }
+
+            XLSX.writeFile(wb, `PREVTECH_Backup_Dados_${new Date().toISOString().slice(0,10)}.xlsx`);
+            ui.showToast("Base de dados exportada com sucesso!", true);
+
+        } catch (error) {
+            console.error("Erro ao exportar base de dados:", error);
+            ui.showToast(error.message || "Falha ao exportar os dados.", false);
+        } finally {
+            // Restaura o estado do botão
+            button.innerHTML = originalContent;
+            button.style.pointerEvents = 'auto';
+        }
+    }, 200);
+}
+
+// FIM DO CÓDIGO
+
 function converterDataParaISO(dataInput) {
     // ... (outras partes da função)
 
@@ -3716,10 +3799,12 @@ Object.assign(window, {
     // Novas funções da CTC expostas globalmente
     exportarCTCExcel, importarCTCExcel, 
     salvarCTCLocal, gestaoProcessos,
-    extratorFichas, carregarCTCLocal
+    extratorFichas, carregarCTCLocal,
+    exportarBaseDeDadosCompleta
 });
 
 window.simulacao = simulacao;
+
 
 
 
