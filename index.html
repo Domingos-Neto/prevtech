@@ -111,6 +111,7 @@
                         <div class="dashboard-card" onclick="handleNavClick(event, 'simulacao')"><i class="ri-add-circle-line"></i><span>Nova Simulação de Benefício</span></div>
                         <div class="dashboard-card" onclick="document.getElementById('carregarSimulacaoInput').click()"><i class="ri-upload-2-line"></i><span>Carregar Simulação</span></div>
                         <div class="dashboard-card" onclick="handleNavClick(event, 'geradorCTC')"><i class="ri-file-text-line"></i><span>Gerar Certidão (CTC)</span></div>
+                        <div class="dashboard-card" onclick="document.getElementById('carregarCTCInput').click()"><i class="ri-upload-cloud-2-line"></i><span>Carregar CTC</span></div>
                         <div class="dashboard-card" onclick="handleNavClick(event, 'telaLegislacao')"><i class="ri-book-open-line"></i><span>Acessar Legislação</span></div>
 
                         <div class="dashboard-card" style="grid-column: 1 / -1; align-items: flex-start; text-align: left;">
@@ -1194,10 +1195,12 @@
 <script type="module" src="script.js"></script>
 
 <input type="file" id="carregarSimulacaoInput" accept=".json" style="display:none;" onchange="simulacao.carregarLocal(event)" multiple />
+<input type="file" id="carregarCTCInput" accept=".json" style="display:none;" onchange="carregarCTCLocal(event)" />
 <input type="file" id="arquivoExcelCTC" accept=".xlsx, .xls" style="display:none;" />
 <input type="file" id="carregarProcessoInput" accept=".json" style="display:none;" onchange="gestaoProcessos.carregarProcessoLocal(event)" />
 </body>
 </html>
+
 
 
 
