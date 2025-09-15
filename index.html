@@ -108,11 +108,19 @@
                     </div>
                     
                     <div class="dashboard-grid">
-                        <div class="dashboard-card" onclick="handleNavClick(event, 'simulacao')"><i class="ri-add-circle-line"></i><span>Nova Simulação de Benefício</span></div>
-                        <div class="dashboard-card" onclick="document.getElementById('carregarSimulacaoInput').click()"><i class="ri-upload-2-line"></i><span>Carregar Simulação</span></div>
-                        <div class="dashboard-card" onclick="handleNavClick(event, 'geradorCTC')"><i class="ri-file-text-line"></i><span>Gerar Certidão (CTC)</span></div>
-                        <div class="dashboard-card" onclick="document.getElementById('carregarCTCInput').click()"><i class="ri-upload-cloud-2-line"></i><span>Carregar CTC</span></div>
-                        <div class="dashboard-card" onclick="handleNavClick(event, 'telaLegislacao')"><i class="ri-book-open-line"></i><span>Acessar Legislação</span></div>
+                    <div class="dashboard-card" onclick="handleNavClick(event, 'simulacao')"><i class="ri-add-circle-line"></i><span>Nova Simulação de Benefício</span></div>
+                    <div class="dashboard-card" onclick="document.getElementById('carregarSimulacaoInput').click()"><i class="ri-upload-2-line"></i><span>Carregar Simulação</span></div>
+                    <div class="dashboard-card" onclick="handleNavClick(event, 'geradorCTC')"><i class="ri-file-text-line"></i><span>Gerar Certidão (CTC)</span></div>
+                    <div class="dashboard-card" onclick="document.getElementById('carregarCTCInput').click()"><i class="ri-upload-cloud-2-line"></i><span>Carregar CTC</span></div>
+
+                    <div class="dashboard-card" onclick="handleNavClick(event, 'telaLegislacao')"><i class="ri-book-open-line"></i><span>Acessar Legislação</span></div>
+
+                    <div class="dashboard-card" onclick="window.open('URL_DA_SUA_CARTILHA.pdf', '_blank')"><i class="ri-book-read-line"></i><span>Cartilha Previdenciária</span></div>
+
+                    <div class="dashboard-card" onclick="exportarBaseDeDadosCompleta(this)"><i class="ri-database-2-line"></i><span>Exportar Base de Dados</span></div>
+
+                    <div class="dashboard-card" onclick="extratorFichas.abrirModal()"><i class="ri-file-search-line"></i><span>Extrair Ficha Financeira</span></div>
+                    </div>
 
                         <div class="dashboard-card" style="grid-column: 1 / -1; align-items: flex-start; text-align: left;">
                             <h4 style="margin-top:0; display:flex; align-items:center; gap:8px; border:none; font-size: 1.1em;">
@@ -1200,6 +1208,7 @@
 <input type="file" id="carregarProcessoInput" accept=".json" style="display:none;" onchange="gestaoProcessos.carregarProcessoLocal(event)" />
 </body>
 </html>
+
 
 
 
