@@ -2743,6 +2743,64 @@ function coletarDadosCTC() {
 /**
  * Salva os dados da CTC em um arquivo JSON no computador do usuário.
  */
+
+/**
+ * Restaura os dados de um objeto CTC para o formulário na tela.
+ * @param {object} dados O objeto contendo os dados da CTC.
+ * @param {string} nomeArquivo O nome do arquivo para exibir no toast.
+ */
+function restaurarDadosCTC(dados, nomeArquivo = 'CTC Carregada') {
+    handleNavClick(null, 'geradorCTC'); // Muda para a tela de CTC
+    setTimeout(() => { // Usa um pequeno atraso para garantir que a tela carregou
+        try {
+            // Preenche os campos de input normais
+            Object.keys(dados).forEach(k => {
+                const el = document.getElementById(`ctc-${k}`);
+                if (el) el.value = dados[k] || '';
+            });
+
+            // Limpa e preenche a tabela de períodos
+            const tabelaCorpo = document.getElementById('corpo-tabela-periodos-ctc');
+            tabelaCorpo.innerHTML = '';
+            if (dados.periodos) {
+                dados.periodos.forEach(p => adicionarLinhaPeriodoCTC(p.inicio, p.fim, p.regime, p.deducoes, p.fonte));
+            }
+            
+            calcularTempoTotalCTC(); // Recalcula o total de dias
+            ui.showToast(`CTC "${nomeArquivo}" carregada com sucesso.`, true);
+
+        } catch (error) {
+            console.error("Erro ao restaurar dados da CTC:", error);
+            ui.showToast("Falha ao carregar dados da CTC. O arquivo pode estar corrompido.", false);
+        }
+    }, 150);
+}
+
+/**
+ * Lê um arquivo JSON de CTC local e chama a função para restaurar os dados.
+ * @param {Event} event O evento do input de arquivo.
+ */
+function carregarCTCLocal(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        try {
+            const dados = JSON.parse(e.target.result);
+            restaurarDadosCTC(dados, file.name); // Chama a função centralizada
+        } catch (error) {
+            console.error("Erro ao ler o arquivo JSON da CTC:", error);
+            ui.showToast("Erro ao carregar o arquivo. Verifique se é um JSON de CTC válido.", false);
+        }
+    };
+    reader.onerror = () => {
+         ui.showToast("Não foi possível ler o arquivo selecionado.", false);
+    };
+    reader.readAsText(file);
+    event.target.value = ''; // Limpa o input para permitir carregar o mesmo arquivo novamente
+}
+
 function salvarCTCLocal() {
     const nomeServidor = document.getElementById('ctc-nomeServidor').value.trim();
     if (!nomeServidor) {
@@ -3658,10 +3716,11 @@ Object.assign(window, {
     // Novas funções da CTC expostas globalmente
     exportarCTCExcel, importarCTCExcel, 
     salvarCTCLocal, gestaoProcessos,
-    extratorFichas
+    extratorFichas, carregarCTCLocal
 });
 
 window.simulacao = simulacao;
+
 
 
 
