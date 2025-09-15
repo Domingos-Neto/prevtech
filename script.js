@@ -2777,28 +2777,82 @@ function restaurarDadosCTC(dados, nomeArquivo = 'CTC Carregada') {
 }
 
 /**
- * Lê um arquivo JSON de CTC local e chama a função para restaurar os dados.
+ * Lê um ou mais arquivos JSON de CTC do computador e os importa para o histórico local.
  * @param {Event} event O evento do input de arquivo.
  */
 function carregarCTCLocal(event) {
-    const file = event.target.files[0];
-    if (!file) return;
+    const files = event.target.files;
+    if (!files || files.length === 0) return;
+    if (!AppState.usuarioAtual) {
+        ui.showToast("Você precisa estar logado para carregar CTCs.", false);
+        return;
+    }
 
-    const reader = new FileReader();
-    reader.onload = (e) => {
-        try {
-            const dados = JSON.parse(e.target.result);
-            restaurarDadosCTC(dados, file.name); // Chama a função centralizada
-        } catch (error) {
-            console.error("Erro ao ler o arquivo JSON da CTC:", error);
-            ui.showToast("Erro ao carregar o arquivo. Verifique se é um JSON de CTC válido.", false);
+    // Chave do localStorage onde as CTCs são salvas
+    const ctcsKey = `ctcs_salvas_${AppState.usuarioAtual.uid}`;
+    const ctcsSalvas = JSON.parse(localStorage.getItem(ctcsKey) || "[]");
+
+    // Usamos Promise.all para aguardar que todos os arquivos sejam lidos de forma assíncrona
+    const promises = Array.from(files).map(file => {
+        return new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const dados = JSON.parse(e.target.result);
+                    // Garante que os dados lidos têm o formato esperado
+                    if (dados && dados.nomeServidor) {
+                        resolve(dados); // Resolve a promessa com os dados válidos
+                    } else {
+                        console.warn(`Arquivo "${file.name}" parece ser inválido e será ignorado.`);
+                        resolve(null); // Arquivo não é uma CTC válida
+                    }
+                } catch (error) {
+                    console.warn(`Arquivo "${file.name}" não é um JSON válido e será ignorado.`, error);
+                    resolve(null); // Falha ao parsear o JSON
+                }
+            };
+            reader.onerror = () => {
+                console.error(`Erro ao ler o arquivo "${file.name}".`);
+                resolve(null); // Erro de leitura
+            };
+            reader.readAsText(file);
+        });
+    });
+
+    // Quando todas as leituras de arquivo terminarem...
+    Promise.all(promises).then(resultados => {
+        // Filtra para pegar apenas os arquivos que foram lidos com sucesso
+        const ctcsValidas = resultados.filter(dados => dados !== null);
+
+        if (ctcsValidas.length === 0) {
+            ui.showToast("Nenhum arquivo de CTC válido foi encontrado para importar.", false);
+            return;
         }
-    };
-    reader.onerror = () => {
-         ui.showToast("Não foi possível ler o arquivo selecionado.", false);
-    };
-    reader.readAsText(file);
-    event.target.value = ''; // Limpa o input para permitir carregar o mesmo arquivo novamente
+
+        // Adiciona cada CTC válida ao início da lista do histórico
+        ctcsValidas.forEach(dados => {
+            const nomeCTC = `CTC de ${dados.nomeServidor || 'Importada'}`;
+            const novaEntradaCTC = {
+                id: crypto.randomUUID(),
+                nome: nomeCTC,
+                dados: dados, // O objeto 'dados' aqui é o conteúdo do arquivo JSON
+                data: new Date().toISOString()
+            };
+            ctcsSalvas.unshift(novaEntradaCTC);
+        });
+
+        // Salva a lista atualizada de volta no localStorage
+        localStorage.setItem(ctcsKey, JSON.stringify(ctcsSalvas));
+        
+        // Atualiza a interface do usuário
+        listarCTCsSalvas(); // Atualiza a lista de CTCs no painel
+        atualizarIndicadoresDashboard(); // Atualiza os KPIs (contadores)
+        
+        ui.showToast(`${ctcsValidas.length} de ${files.length} CTCs foram importadas para o histórico!`, true);
+    });
+
+    // Limpa o input para permitir carregar os mesmos arquivos novamente
+    event.target.value = '';
 }
 
 function salvarCTCLocal() {
@@ -3804,6 +3858,7 @@ Object.assign(window, {
 });
 
 window.simulacao = simulacao;
+
 
 
 
