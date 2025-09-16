@@ -2343,7 +2343,9 @@ async function gerarDocumentoCTC(button) {
             inicio: tr.querySelector('.ctc-inicio').value,
             fim: tr.querySelector('.ctc-fim').value,
             regime: tr.querySelector('.ctc-regime').value,
-            deducoes: parseInt(tr.querySelector('.ctc-deducoes').value) || 0,
+            faltas: parseInt(tr.querySelector('.ctc-faltas').value) || 0,
+            licencas: parseInt(tr.querySelector('.ctc-licencas').value) || 0,
+            outros: parseInt(tr.querySelector('.ctc-outros').value) || 0,
             fonte: tr.querySelector('.ctc-fonte').value,
         }));
 
@@ -2362,7 +2364,7 @@ async function gerarDocumentoCTC(button) {
                 console.warn("Período inválido ou data de início posterior à data fim, pulando:", periodo);
                 continue;
             }
-
+            const totalDeducoesNoPeriodo = periodo.faltas + periodo.licencas + periodo.outros;
             const anoInicio = dataInicioPeriodo.getUTCFullYear();
             const anoFim = dataFimPeriodo.getUTCFullYear();
 
@@ -2375,7 +2377,7 @@ async function gerarDocumentoCTC(button) {
 
                 const tempoBruto = Math.round((dataFimEfetiva - dataInicioEfetiva) / MS_POR_DIA) + 1;
                 
-                const deducaoNesteAno = (ano === anoFim) ? periodo.deducoes : 0;
+                const deducaoNesteAno = (ano === anoFim) ? totalDeducoesNoPeriodo : 0;
                 const tempoLiquido = tempoBruto - deducaoNesteAno;
 
                 if (tempoLiquido > 0) {
@@ -2384,6 +2386,9 @@ async function gerarDocumentoCTC(button) {
                         periodoStr: `${dataInicioEfetiva.toLocaleDateString('pt-BR', {timeZone: 'UTC'})} a ${dataFimEfetiva.toLocaleDateString('pt-BR', {timeZone: 'UTC'})}`,
                         regime: periodo.regime,
                         tempoApurado: tempoBruto,
+                        faltas: (ano === anoFim) ? periodo.faltas : 0,
+                        licencas: (ano === anoFim) ? periodo.licencas : 0,
+                        outros: (ano === anoFim) ? periodo.outros : 0,
                         tempoLiquido: tempoLiquido
                     };
 
@@ -2399,7 +2404,7 @@ async function gerarDocumentoCTC(button) {
       
         const criarTabelaHTML = (titulo, dados, subtotal) => {
             if (dados.length === 0) return '';
-            let rows = dados.map(d => `<tr><td>${d.ano}</td><td>${d.periodoStr.replace(/ a /g, ' à ')}</td><td>${d.regime}</td><td>${d.tempoApurado}</td><td>-</td><td>-</td><td>-</td><td>${d.tempoLiquido}</td></tr>`).join('');
+            let rows = dados.map(d => `<tr><td>${d.ano}</td><td>${d.periodoStr.replace(/ a /g, ' à ')}</td><td>${d.regime}</td><td>${d.tempoApurado}</td><td>${d.faltas || '-'}</td><td>${d.licencas || '-'}</td><td>${d.outros || '-'}</td><td>${d.tempoLiquido}</td></tr>`).join('');
             return `<h4 class="table-title">${titulo}</h4><table><thead><tr><th>Ano</th><th>Período</th><th>Regime</th><th>T. Apurado</th><th>Faltas</th><th>Licenças</th><th>Outros</th><th>T. Líquido</th></tr></thead><tbody>${rows}</tbody><tfoot><tr><td colspan="7" class="subtotal-label">SUBTOTAL</td><td class="subtotal-value">${subtotal}</td></tr></tfoot></table>`;
         };
 
@@ -2920,9 +2925,23 @@ function limparFormularioCTC() {
     calcularTempoTotalCTC();
 }
 
-function adicionarLinhaPeriodoCTC(i = '', f = '', regime = 'RGPS', d = '0', fo = '') {
+function adicionarLinhaPeriodoCTC(i = '', f = '', regime = 'RGPS', faltas = '0', licencas = '0', outros = '0', fo = '') {
     const t = document.getElementById('corpo-tabela-periodos-ctc'), l = document.createElement('tr');
-    l.innerHTML = `<td><input type="date" class="ctc-inicio" onchange="calcularTempoTotalCTC()" value="${i}"></td><td><input type="date" class="ctc-fim" onchange="calcularTempoTotalCTC()" value="${f}"></td><td><select class="ctc-regime"><option value="RGPS" ${regime==='RGPS'?'selected':''}>RGPS</option><option value="RPPS" ${regime==='RPPS'?'selected':''}>RPPS</option></select></td><td><input type="number" class="ctc-deducoes" value="${d}" oninput="calcularTempoTotalCTC()"></td><td><input type="text" class="ctc-fonte" value="${fo}" placeholder="Ex: MUNICÍPIO DE ITAPIPOCA"></td><td><button class="danger btn-tabela" onclick="removerLinhaPeriodoCTC(this)">Remover</button></td>`;
+    // ALTERADO: A estrutura da linha agora inclui os campos faltas, licencas e outros.
+    l.innerHTML = `
+        <td><input type="date" class="ctc-inicio" onchange="calcularTempoTotalCTC()" value="${i}"></td>
+        <td><input type="date" class="ctc-fim" onchange="calcularTempoTotalCTC()" value="${f}"></td>
+        <td>
+            <select class="ctc-regime">
+                <option value="RGPS" ${regime === 'RGPS' ? 'selected' : ''}>RGPS</option>
+                <option value="RPPS" ${regime === 'RPPS' ? 'selected' : ''}>RPPS</option>
+            </select>
+        </td>
+        <td><input type="number" class="ctc-faltas" value="${faltas}" oninput="calcularTempoTotalCTC()"></td>
+        <td><input type="number" class="ctc-licencas" value="${licencas}" oninput="calcularTempoTotalCTC()"></td>
+        <td><input type="number" class="ctc-outros" value="${outros}" oninput="calcularTempoTotalCTC()"></td>
+        <td><input type="text" class="ctc-fonte" value="${fo}" placeholder="Ex: MUNICÍPIO DE ITAPIPOCA"></td>
+        <td><button class="danger btn-tabela" onclick="removerLinhaPeriodoCTC(this)">Remover</button></td>`;
     t.appendChild(l); 
     
     const accordionContent = document.querySelector('#geradorCTC .accordion-content');
@@ -2947,8 +2966,22 @@ function removerLinhaPeriodoCTC(b) {
 function calcularTempoTotalCTC() {
     let tD = 0;
     document.querySelectorAll("#corpo-tabela-periodos-ctc tr").forEach(linha => {
-        const i = linha.querySelector('.ctc-inicio').value, f = linha.querySelector('.ctc-fim').value, d = parseInt(linha.querySelector('.ctc-deducoes').value) || 0;
-        if (i && f) { const inicio = new Date(i + 'T00:00:00Z'), fim = new Date(f + 'T00:00:00Z'); if (fim >= inicio) tD += (Math.ceil(Math.abs(fim - inicio) / 86400000) + 1 - d); }
+        const i = linha.querySelector('.ctc-inicio').value, 
+              f = linha.querySelector('.ctc-fim').value;
+        
+        // NOVO: Captura os valores dos 3 novos campos
+        const faltas = parseInt(linha.querySelector('.ctc-faltas').value) || 0;
+        const licencas = parseInt(linha.querySelector('.ctc-licencas').value) || 0;
+        const outros = parseInt(linha.querySelector('.ctc-outros').value) || 0;
+        const totalDeducoes = faltas + licencas + outros;
+
+        if (i && f) {
+            const inicio = new Date(i + 'T00:00:00Z'), fim = new Date(f + 'T00:00:00Z');
+            if (fim >= inicio) {
+                // ALTERADO: Usa o totalDeducoes no cálculo
+                tD += (Math.ceil(Math.abs(fim - inicio) / 86400000) + 1 - totalDeducoes);
+            }
+        }
     });
     const { anos, meses, dias } = diasParaAnosMesesDias(tD);
     document.getElementById('total-tempo-ctc').innerHTML = `Total: <b>${tD}</b> dias<br><small>(${anos}a, ${meses}m, ${dias}d)</small>`;
@@ -3858,6 +3891,7 @@ Object.assign(window, {
 });
 
 window.simulacao = simulacao;
+
 
 
 
