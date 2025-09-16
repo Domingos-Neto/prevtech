@@ -775,22 +775,24 @@
                         <label>Data do Requerimento: <input type="date" id="ctc-dataRequerimento"></label>
                     </div>
 
-                    <h4 class="accordion-toggle active">Períodos de Contribuição</h4>
-                    <div class="accordion-content" style="max-height: fit-content;">
-                        <table id="tabela-periodos-ctc">
-                            <thead>
-                                <tr>
-                                    <th style="width: 150px;">Data Início</th>
-                                    <th style="width: 150px;">Data Fim</th>
-                                    <th style="width: 120px;">Regime</th>
-                                    <th style="width: 100px;">Deduções (dias)</th>
-                                    <th>Fonte / Observação</th>
-                                    <th style="width: 100px;">Ações</th>
-                                </tr>
-                            </thead>
-                            <tbody id="corpo-tabela-periodos-ctc"></tbody>
-                        </table>
-                        <button type="button" class="primary" onclick="adicionarLinhaPeriodoCTC()">+ Adicionar Período</button>
+                     <h4 class="accordion-toggle active">Períodos de Contribuição</h4>
+                     <div class="accordion-content" style="max-height: fit-content;">
+                     <table id="tabela-periodos-ctc">
+                     <thead>
+                      <tr>
+                      <th style="width: 150px;">Data Início</th>
+                      <th style="width: 150px;">Data Fim</th>
+                      <th style="width: 120px;">Regime</th>
+                      <th style="width: 90px;">Faltas (dias)</th>
+                      <th style="width: 90px;">Licenças (dias)</th>
+                      <th style="width: 90px;">Outros (dias)</th>
+                      <th>Fonte / Observação</th>
+                      <th style="width: 100px;">Ações</th>
+                      </tr>
+                      </thead>
+                       <tbody id="corpo-tabela-periodos-ctc"></tbody>
+                       </table>
+                       <button type="button" class="primary" onclick="adicionarLinhaPeriodoCTC()">+ Adicionar Período</button>
                     </div>
 
                     <h4 id="total-tempo-ctc" style="text-align: right; border-top: 2px solid var(--prevtech-azul-escuro); padding-top: 10px; margin-top:20px;">Total: 0 dias</h4>
@@ -1214,6 +1216,7 @@
 <input type="file" id="carregarProcessoInput" accept=".json" style="display:none;" onchange="gestaoProcessos.carregarProcessoLocal(event)" />
 </body>
 </html>
+
 
 
 
