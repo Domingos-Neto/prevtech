@@ -27,6 +27,21 @@ const firebaseConfig = {
     measurementId: "G-TGXXLZWLLV"
   };
 
+import { 
+  getFirestore, 
+  doc, 
+  setDoc, 
+  getDoc, 
+  collection, 
+  getDocs, 
+  deleteDoc 
+} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
+import {
+  getAuth,
+  // ... resto das importações do Auth
+} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+
 const app = initializeApp(firebaseConfig);
 const analytics = getAnalytics(app);
 const db = getFirestore(app); // Inicializa o Firestore
@@ -155,136 +170,146 @@ const ui = {
 // =================================================================================
 // INÍCIO: NOVO MÓDULO DE GESTÃO CADASTRAL
 // =================================================================================
+// SUBSTITUA O SEU OBJETO 'cadastro' INTEIRO POR ESTE:
 const cadastro = {
-    DB_KEY: 'servidores_db', // Chave para o localStorage
+    // A coleção no Firestore onde os servidores serão salvos.
+    servidoresCollection: collection(db, 'servidores'),
 
-    // Carrega os servidores do localStorage
-    getServidores: () => {
-        return JSON.parse(localStorage.getItem(cadastro.DB_KEY) || '[]');
+    // Salva um servidor novo ou atualiza um existente
+    salvarServidor: async (event) => {
+        event.preventDefault();
+        const id = document.getElementById('servidorId').value || crypto.randomUUID();
+        
+        const servidorData = {
+            id: id,
+            nomeServidor: document.getElementById('form-nomeServidor').value,
+            matriculaServidor: document.getElementById('form-matriculaServidor').value,
+            cpfServidor: document.getElementById('form-cpfServidor').value,
+            // ... colete todos os outros campos do formulário da mesma forma
+            rgServidor: document.getElementById('form-rgServidor').value,
+            enderecoServidor: document.getElementById('form-enderecoServidor').value,
+            telefoneServidor: document.getElementById('form-telefoneServidor').value,
+            emailServidor: document.getElementById('form-emailServidor').value,
+            cargoServidor: document.getElementById('form-cargoServidor').value,
+            cargaHorariaServidor: document.getElementById('form-cargaHorariaServidor').value,
+            lotacaoServidor: document.getElementById('form-lotacaoServidor').value,
+            isMagisterio: document.getElementById('form-isMagisterio').value,
+            dataAdmissao: document.getElementById('form-dataAdmissao').value,
+            dataNascimento: document.getElementById('form-dataNascimento').value,
+            sexo: document.getElementById('form-sexo').value,
+        };
+
+        try {
+            // Cria uma referência para o documento usando o 'id'
+            const servidorDocRef = doc(db, 'servidores', id);
+            // Salva os dados. O setDoc cria o documento se não existir, ou sobrescreve se já existir.
+            await setDoc(servidorDocRef, servidorData);
+            
+            cadastro.renderTabela(); // Atualiza a tabela na tela
+            cadastro.fecharModal();
+            ui.showToast(`Servidor salvo com sucesso no Firestore!`, true);
+        } catch (error) {
+            console.error("Erro ao salvar servidor no Firestore: ", error);
+            ui.showToast("Erro ao salvar. Verifique o console.", false);
+        }
     },
 
-    // Salva a lista de servidores no localStorage
-    saveServidores: (servidores) => {
-        localStorage.setItem(cadastro.DB_KEY, JSON.stringify(servidores));
-    },
-
-    // Renderiza a tabela de servidores na tela
-    renderTabela: () => {
-        const servidores = cadastro.getServidores();
+    // Renderiza a tabela de servidores a partir do Firestore
+    renderTabela: async () => {
         const corpoTabela = document.getElementById('corpoTabelaServidores');
         const msgNenhum = document.getElementById('nenhumServidor');
-        corpoTabela.innerHTML = '';
+        corpoTabela.innerHTML = ''; // Limpa a tabela
 
-        if (servidores.length === 0) {
-            msgNenhum.style.display = 'block';
-            return;
+        try {
+            const querySnapshot = await getDocs(cadastro.servidoresCollection);
+            const servidores = [];
+            querySnapshot.forEach((doc) => {
+                servidores.push(doc.data());
+            });
+
+            if (servidores.length === 0) {
+                msgNenhum.style.display = 'block';
+                return;
+            }
+            msgNenhum.style.display = 'none';
+
+            servidores.sort((a, b) => a.nomeServidor.localeCompare(b.nomeServidor)); // Ordena por nome
+
+            servidores.forEach(s => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${s.nomeServidor || ''}</td>
+                    <td>${s.matriculaServidor || ''}</td>
+                    <td>${s.cpfServidor || ''}</td>
+                    <td>${s.cargoServidor || ''}</td>
+                    <td>
+                        <button class="secondary btn-tabela" onclick="cadastro.editarServidor('${s.id}')" title="Editar"><i class="ri-pencil-line"></i></button>
+                        <button class="danger btn-tabela" onclick="cadastro.deletarServidor('${s.id}')" title="Excluir"><i class="ri-delete-bin-line"></i></button>
+                    </td>
+                `;
+                corpoTabela.appendChild(tr);
+            });
+        } catch (error) {
+            console.error("Erro ao buscar servidores do Firestore: ", error);
+            ui.showToast("Erro ao carregar dados. Verifique o console.", false);
         }
-        msgNenhum.style.display = 'none';
+    },
+    
+    // Preenche o modal com dados de um servidor para edição
+    editarServidor: async (id) => {
+        try {
+            const servidorDocRef = doc(db, 'servidores', id);
+            const docSnap = await getDoc(servidorDocRef);
 
-        servidores.forEach(s => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td>${s.nomeServidor || ''}</td>
-                <td>${s.matriculaServidor || ''}</td>
-                <td>${s.cpfServidor || ''}</td>
-                <td>${s.cargoServidor || ''}</td>
-                <td>
-                    <button class="secondary btn-tabela" onclick="cadastro.editarServidor('${s.id}')" title="Editar"><i class="ri-pencil-line"></i></button>
-                    <button class="danger btn-tabela" onclick="cadastro.deletarServidor('${s.id}')" title="Excluir"><i class="ri-delete-bin-line"></i></button>
-                </td>
-            `;
-            corpoTabela.appendChild(tr);
-        });
+            if (docSnap.exists()) {
+                const servidor = docSnap.data();
+                cadastro.abrirModal();
+                document.getElementById('modalTituloServidor').innerText = 'Editar Servidor';
+                document.getElementById('servidorId').value = servidor.id;
+                
+                // Preenche o formulário
+                for (const key in servidor) {
+                    const el = document.getElementById(`form-${key}`);
+                    if (el) el.value = servidor[key];
+                }
+            } else {
+                ui.showToast("Servidor não encontrado no banco de dados.", false);
+            }
+        } catch (error) {
+            console.error("Erro ao buscar servidor para edição: ", error);
+        }
+    },
+    
+    // Deleta um servidor do Firestore
+    deletarServidor: async (id) => {
+        if (!confirm('Tem certeza que deseja excluir este servidor do banco de dados? Esta ação não pode ser desfeita.')) return;
+        
+        try {
+            await deleteDoc(doc(db, "servidores", id));
+            cadastro.renderTabela();
+            ui.showToast('Servidor excluído do Firestore.', true);
+        } catch (error) {
+            console.error("Erro ao deletar servidor: ", error);
+            ui.showToast("Erro ao excluir. Verifique o console.", false);
+        }
     },
 
-    // Abre o modal para adicionar ou editar
+    // Funções que não precisam de alteração (abrir/fechar modal, filtrar tabela)
     abrirModal: () => {
         document.getElementById('formServidor').reset();
         document.getElementById('servidorId').value = '';
         document.getElementById('modalTituloServidor').innerText = 'Adicionar Novo Servidor';
-        const modal = document.getElementById('modalServidor');
-        modal.style.display = 'flex';
-        setTimeout(() => modal.classList.add('show'), 10);
+        document.getElementById('modalServidor').style.display = 'flex';
     },
 
-    // Fecha o modal
     fecharModal: () => {
-        const modal = document.getElementById('modalServidor');
-        modal.classList.remove('show');
-        setTimeout(() => modal.style.display = 'none', 300);
+        document.getElementById('modalServidor').style.display = 'none';
     },
 
-    // Salva um servidor novo ou atualiza um existente
-    salvarServidor: (event) => {
-    event.preventDefault();
-    const id = document.getElementById('servidorId').value;
-    const servidores = cadastro.getServidores();
-
-    const servidorData = {
-        id: id || crypto.randomUUID(),
-        nomeServidor: document.getElementById('form-nomeServidor').value,
-        matriculaServidor: document.getElementById('form-matriculaServidor').value,
-        cpfServidor: document.getElementById('form-cpfServidor').value,
-        rgServidor: document.getElementById('form-rgServidor').value,
-        enderecoServidor: document.getElementById('form-enderecoServidor').value,
-        telefoneServidor: document.getElementById('form-telefoneServidor').value,
-        emailServidor: document.getElementById('form-emailServidor').value,
-        cargoServidor: document.getElementById('form-cargoServidor').value,
-        cargaHorariaServidor: document.getElementById('form-cargaHorariaServidor').value,
-        lotacaoServidor: document.getElementById('form-lotacaoServidor').value,
-        isMagisterio: document.getElementById('form-isMagisterio').value,
-        dataAdmissao: document.getElementById('form-dataAdmissao').value,
-        dataNascimento: document.getElementById('form-dataNascimento').value,
-        sexo: document.getElementById('form-sexo').value,
-    };
-
-    if (id) { // Editando
-        const index = servidores.findIndex(s => s.id === id);
-        servidores[index] = servidorData;
-    } else { // Adicionando
-        servidores.unshift(servidorData);
-    }
-
-    cadastro.saveServidores(servidores);
-    cadastro.renderTabela();
-    cadastro.fecharModal();
-    ui.showToast(`Servidor ${id ? 'atualizado' : 'salvo'} com sucesso!`, true);
-},
-
-    // Preenche o modal com dados de um servidor para edição
-    editarServidor: (id) => {
-        const servidores = cadastro.getServidores();
-        const servidor = servidores.find(s => s.id === id);
-        if (!servidor) return;
-
-        cadastro.abrirModal();
-        document.getElementById('modalTituloServidor').innerText = 'Editar Servidor';
-        document.getElementById('servidorId').value = servidor.id;
-        
-        // Preenche o formulário
-        for (const key in servidor) {
-            const el = document.getElementById(`form-${key}`);
-            if (el) el.value = servidor[key];
-        }
-    },
-
-    // Deleta um servidor
-    deletarServidor: (id) => {
-        if (!confirm('Tem certeza que deseja excluir este servidor? Esta ação não pode ser desfeita.')) return;
-        let servidores = cadastro.getServidores();
-        servidores = servidores.filter(s => s.id !== id);
-        cadastro.saveServidores(servidores);
-        cadastro.renderTabela();
-        ui.showToast('Servidor excluído.', true);
-    },
-
-    // Filtra a tabela de servidores
     filtrarServidores: () => {
         const filtro = document.getElementById('buscaServidor').value.toLowerCase();
-        const linhas = document.querySelectorAll('#corpoTabelaServidores tr');
-        linhas.forEach(linha => {
-            const textoLinha = linha.innerText.toLowerCase();
-            linha.style.display = textoLinha.includes(filtro) ? '' : 'none';
+        document.querySelectorAll('#corpoTabelaServidores tr').forEach(linha => {
+            linha.style.display = linha.innerText.toLowerCase().includes(filtro) ? '' : 'none';
         });
     }
 };
@@ -3891,6 +3916,7 @@ Object.assign(window, {
 });
 
 window.simulacao = simulacao;
+
 
 
 
