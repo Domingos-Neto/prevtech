@@ -12,6 +12,24 @@ import {
   signOut
 } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
 
+import { 
+  getFirestore, 
+  doc, 
+  setDoc, 
+  getDoc, 
+  collection, 
+  getDocs, 
+  deleteDoc 
+} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
+import {
+  getAuth,
+  GoogleAuthProvider,
+  signInWithPopup,
+  onAuthStateChanged,
+  signOut
+} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+
 // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!! ALERTA DE SEGURANÇA !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 // SUAS CHAVES NUNCA DEVEM SER EXPOSTAS DIRETAMENTE NO CÓDIGO.
 // 1. No Console do Google Cloud, restrinja o uso desta API Key para o domínio do seu site.
@@ -26,21 +44,6 @@ const firebaseConfig = {
     appId: "1:340278196378:web:7b7dc882fb63781a40c723",
     measurementId: "G-TGXXLZWLLV"
   };
-
-import { 
-  getFirestore, 
-  doc, 
-  setDoc, 
-  getDoc, 
-  collection, 
-  getDocs, 
-  deleteDoc 
-} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
-
-import {
-  getAuth,
-  // ... resto das importações do Auth
-} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
 
 const app = initializeApp(firebaseConfig);
 const analytics = getAnalytics(app);
@@ -3916,6 +3919,7 @@ Object.assign(window, {
 });
 
 window.simulacao = simulacao;
+
 
 
 
