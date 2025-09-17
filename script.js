@@ -21,14 +21,6 @@ import {
   deleteDoc 
 } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 
-import {
-  getAuth,
-  GoogleAuthProvider,
-  signInWithPopup,
-  onAuthStateChanged,
-  signOut
-} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
-
 // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!! ALERTA DE SEGURANÇA !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 // SUAS CHAVES NUNCA DEVEM SER EXPOSTAS DIRETAMENTE NO CÓDIGO.
 // 1. No Console do Google Cloud, restrinja o uso desta API Key para o domínio do seu site.
@@ -3918,6 +3910,7 @@ Object.assign(window, {
 });
 
 window.simulacao = simulacao;
+
 
 
 
