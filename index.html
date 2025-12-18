@@ -1215,15 +1215,35 @@
 <input type="file" id="arquivoExcelCTC" accept=".xlsx, .xls" style="display:none;" />
 <input type="file" id="carregarProcessoInput" accept=".json" style="display:none;" onchange="gestaoProcessos.carregarProcessoLocal(event)" />
 
-  <!-- Chamar a IA PREVTECH -->
-<iframe 
-  src="https://domingos-neto.github.io/prevtech-ai/" 
-  style="position:fixed; bottom:0; right:0; width:450px; height:850px; border:none; z-index:99999; pointer-events:none;"
-  onload="this.style.pointerEvents='auto'"
-></iframe>
+ <!-- CÓDIGO INTELIGENTE DA IA PREVTECH -->
+<div id="prevtech-ai-container" style="position:fixed; bottom:0; right:0; width:100px; height:200px; z-index:99999; transition: all 0.3s ease;">
+  <iframe 
+    id="prevtech-ai-iframe"
+    src="https://domingos-neto.github.io/prevtech-ai/" 
+    style="width:100%; height:100%; border:none;"
+    allow="clipboard-read; clipboard-write"
+  ></iframe>
+</div>
+
+<script>
+  window.addEventListener('message', function(event) {
+    const container = document.getElementById('prevtech-ai-container');
+    // Se a IA avisar que abriu, expandimos o container
+    if (event.data === 'prevtech-ai-open') {
+      container.style.width = '450px';
+      container.style.height = '850px';
+    } 
+    // Se a IA avisar que fechou, voltamos ao tamanho apenas do botão
+    else if (event.data === 'prevtech-ai-close') {
+      container.style.width = '100px';
+      container.style.height = '200px';
+    }
+  });
+</script>
   
 </body>
 </html>
+
 
 
 
