@@ -1422,3 +1422,18 @@ body.dark-mode .nav-tabs .nav-link.active {
 /* ================================================= */
 /* FIM: ESTILOS PARA O MODAL DO EXTRATOR DE PDF      */
 /* ================================================= */
+
+/* Estilização Customizada para o Container da IA PREVTECH */
+#prevtech-ai-container {
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+    border: 2px solid var(--prevtech-azul-escuro);
+    border-radius: 12px;
+    background-color: var(--cor-superficie);
+    overflow: hidden;
+}
+
+/* Efeito de hover no botão da IA */
+#prevtech-ai-container:hover {
+    transform: scale(1.05);
+    border-color: var(--prevtech-laranja);
+}
