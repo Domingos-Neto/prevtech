@@ -1230,21 +1230,28 @@
     const container = document.getElementById('prevtech-ai-container');
     if (!container) return;
     
-    // Quando a IA avisa que o chat abriu, o container cresce
-    if (event.data === 'prevtech-ai-open') {
-      container.style.width = '420px';
-      container.style.height = '680px';
-    } 
-    // Quando fecha, ele volta a ser apenas o tamanho do botão (70px)
-    else if (event.data === 'prevtech-ai-close') {
-      container.style.width = '70px';
-      container.style.height = '70px';
+    // 1. Controle de Tamanho (Aberto vs Fechado)
+    if (event.data.type === 'chat_state') {
+      if (event.data.status === 'open') {
+        container.style.width = '380px';
+        container.style.height = '600px';
+      } else {
+        container.style.width = '70px';
+        container.style.height = '70px';
+      }
+    }
+
+    // 2. Integração de Funções (Exemplo: IA pede para abrir simulador)
+    if (event.data.action === 'open_simulador') {
+        // Chamando a sua função nativa do script.js
+        document.querySelector('[data-tab="simulacao"]').click();
     }
   });
 </script>
   
 </body>
 </html>
+
 
 
 
