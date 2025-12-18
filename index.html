@@ -1214,8 +1214,17 @@
 <input type="file" id="carregarCTCInput" accept=".json" style="display:none;" onchange="carregarCTCLocal(event)" multiple />
 <input type="file" id="arquivoExcelCTC" accept=".xlsx, .xls" style="display:none;" />
 <input type="file" id="carregarProcessoInput" accept=".json" style="display:none;" onchange="gestaoProcessos.carregarProcessoLocal(event)" />
+
+  <!-- Chamar a IA PREVTECH -->
+<iframe 
+  src="URL_DA_SUA_IA_HOSPEDADA" 
+  style="position:fixed; bottom:0; right:0; width:450px; height:850px; border:none; z-index:99999; pointer-events:none;"
+  onload="this.style.pointerEvents='auto'"
+></iframe>
+  
 </body>
 </html>
+
 
 
 
