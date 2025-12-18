@@ -3911,6 +3911,28 @@ Object.assign(window, {
 
 window.simulacao = simulacao;
 
+// Função para a IA PREVTECH ler os dados atuais do sistema
+function capturarDadosParaIA() {
+    const dados = {
+        servidor: {
+            nome: document.getElementById('nomeServidor')?.value || 'Não informado',
+            dataNascimento: document.getElementById('dataNascimento')?.value,
+            dataAdmissao: document.getElementById('dataAdmissao')?.value,
+            sexo: document.getElementById('sexo')?.value
+        },
+        calculos: {
+            totalMedia: document.getElementById('resultadoMedia')?.innerText || '0,00',
+            tempoContribuicao: document.getElementById('tempoTotal')?.innerText || '0'
+        }
+    };
+    
+    // Envia os dados para o Iframe da IA
+    const iframe = document.getElementById('prevtech-ai-iframe');
+    iframe.contentWindow.postMessage({
+        type: 'CONTEXTO_SISTEMA',
+        payload: dados
+    }, '*');
+}
 
 
 
