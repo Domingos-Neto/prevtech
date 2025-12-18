@@ -1437,3 +1437,15 @@ body.dark-mode .nav-tabs .nav-link.active {
     transform: scale(1.05);
     border-color: var(--prevtech-laranja);
 }
+
+/* Ajuste para o Widget da IA */
+#prevtech-ai-container {
+    background-color: #ffffff;
+    pointer-events: auto;
+}
+
+/* Efeito ao passar o mouse quando fechado */
+#prevtech-ai-container:not([style*="width: 380px"]):hover {
+    transform: translateY(-5px);
+    cursor: pointer;
+}
