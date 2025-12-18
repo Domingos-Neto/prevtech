@@ -1209,27 +1209,6 @@
     </div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
-<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.min.js"></script>
-<script>pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.worker.min.js";</script>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-
-<script type="module" src="script.js"></script>
-
-<input type="file" id="carregarSimulacaoInput" accept=".json" style="display:none;" onchange="simulacao.carregarLocal(event)" multiple />
-<input type="file" id="carregarCTCInput" accept=".json" style="display:none;" onchange="carregarCTCLocal(event)" multiple />
-<input type="file" id="arquivoExcelCTC" accept=".xlsx, .xls" style="display:none;" />
-<input type="file" id="carregarProcessoInput" accept=".json" style="display:none;" onchange="gestaoProcessos.carregarProcessoLocal(event)" />
-
-<!-- IA PREVTECH - POSIÇÃO ESQUERDA (EVITA CONFLITOS COM WHATSAPP) -->
 <div id="prevtech-ai-container" style="position:fixed; bottom:20px; left:110px; width:70px; height:70px; z-index:99999; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); border-radius: 16px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.2); border: 2px solid #0a2559; background: white;">
   <iframe 
     id="prevtech-ai-iframe"
@@ -1240,13 +1219,12 @@
 </div>
 
 <script>
-  // 1. INJEÇÃO AUTOMÁTICA DO BOTÃO NO LAYOUT
-  document.addEventListener("DOMContentLoaded", function() {
-    // Procura o botão de calcular média para colocar o da IA ao lado
+  // 1. INJEÇÃO AUTOMÁTICA: O sistema procura o lugar do botão e coloca-o lá sozinho
+  function injetarBotaoIA() {
     const btnCalcular = document.querySelector('button[onclick="calcularBeneficio()"]');
-    
-    if (btnCalcular) {
+    if (btnCalcular && !document.getElementById('btn-analise-ia')) {
       const btnIA = document.createElement("button");
+      btnIA.id = 'btn-analise-ia';
       btnIA.type = "button";
       btnIA.className = "btn-prevtech-primario";
       btnIA.style.backgroundColor = "#0a2559";
@@ -1255,18 +1233,18 @@
       btnIA.style.marginLeft = "10px";
       btnIA.innerHTML = '<i class="bi bi-robot"></i> Analisar com IA';
       btnIA.onclick = analisarComIA;
-      
-      // Insere o botão da IA logo após o botão de calcular
       btnCalcular.parentNode.insertBefore(btnIA, btnCalcular.nextSibling);
     }
-  });
+  }
 
-  // 2. LÓGICA DE COMUNICAÇÃO COM O CHATBOT
+  // Executa a injeção ao carregar e também quando mudar de aba
+  window.onload = injetarBotaoIA;
+  document.addEventListener('click', () => setTimeout(injetarBotaoIA, 100));
+
+  // 2. COMUNICAÇÃO COM O CHAT (ABRIR/FECHAR)
   window.addEventListener('message', function(event) {
     const container = document.getElementById('prevtech-ai-container');
-    if (!container) return;
-    
-    if (event.data.type === 'chat_state' || event.data.type === 'resize' || event.data.expanded === true) {
+    if (event.data.type === 'chat_state' || event.data.expanded === true) {
       if (event.data.status === 'open' || event.data.expanded === true) {
         container.style.width = '380px';
         container.style.height = '600px';
@@ -1277,28 +1255,21 @@
     }
   });
 
-  // 3. FUNÇÃO DE ANÁLISE DE DADOS
+  // 3. FUNÇÃO DE ANÁLISE PREVIDENCIÁRIA
   function analisarComIA() {
     const container = document.getElementById('prevtech-ai-container');
     const iframe = document.getElementById('prevtech-ai-iframe');
-    
-    // Abre o chat
     container.style.width = '380px';
     container.style.height = '600px';
 
-    // Captura os dados da simulação
     const dados = {
         servidor: document.getElementById('nomeServidor')?.value || 'Não identificado',
         media: document.getElementById('resultadoMedia')?.innerText || 'R$ 0,00',
         tempo: document.getElementById('tempoTotal')?.innerText || '0 anos'
     };
 
-    // Envia para a PREVTECH IA
     setTimeout(() => {
-        iframe.contentWindow.postMessage({
-            type: 'ANALISE_SOLICITADA',
-            payload: dados
-        }, '*');
+        iframe.contentWindow.postMessage({ type: 'ANALISE_SOLICITADA', payload: dados }, '*');
     }, 500);
   }
 </script>
@@ -1309,6 +1280,7 @@
 <script type="module" src="script.js"></script>
 </body>
 </html>
+
 
 
 
