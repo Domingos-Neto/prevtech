@@ -1216,11 +1216,11 @@
 <input type="file" id="carregarProcessoInput" accept=".json" style="display:none;" onchange="gestaoProcessos.carregarProcessoLocal(event)" />
 
 <!-- IA PREVTECH - POSIÇÃO ESQUERDA (EVITA CONFLITOS COM WHATSAPP) -->
-<div id="prevtech-ai-container" style="position:fixed; bottom:20px; left:20px; width:70px; height:70px; z-index:99999; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); border-radius: 16px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.2); border: 1px solid var(--prevtech-azul-escuro);">
+<div id="prevtech-ai-container" style="position:fixed; bottom:20px; left:110px; width:70px; height:70px; z-index:99999; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); border-radius: 16px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
   <iframe 
     id="prevtech-ai-iframe"
     src="https://domingos-neto.github.io/prevtech-ai/" 
-    style="width:100%; height:100%; border:none; background: white;"
+    style="width:100%; height:100%; border:none; background: transparent;"
     allow="clipboard-read; clipboard-write"
   ></iframe>
 </div>
@@ -1230,9 +1230,9 @@
     const container = document.getElementById('prevtech-ai-container');
     if (!container) return;
     
-    // 1. Controle de Tamanho (Aberto vs Fechado)
-    if (event.data.type === 'chat_state') {
-      if (event.data.status === 'open') {
+    // Escuta o evento de redimensionamento vindo da IA
+    if (event.data.type === 'chat_state' || event.data.type === 'resize') {
+      if (event.data.status === 'open' || event.data.expanded === true) {
         container.style.width = '380px';
         container.style.height = '600px';
       } else {
@@ -1240,17 +1240,11 @@
         container.style.height = '70px';
       }
     }
-
-    // 2. Integração de Funções (Exemplo: IA pede para abrir simulador)
-    if (event.data.action === 'open_simulador') {
-        // Chamando a sua função nativa do script.js
-        document.querySelector('[data-tab="simulacao"]').click();
-    }
   });
 </script>
-  
 </body>
 </html>
+
 
 
 
