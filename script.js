@@ -3948,73 +3948,59 @@ window.sendMessage = async function() {
     const message = inputField.value.trim();
     if (message === "") return;
 
-    // Adiciona mensagem do usuário
     appendMessage(message, 'user-message');
     inputField.value = ""; 
     chatBody.scrollTop = chatBody.scrollHeight;
 
-    // Balão de Carregamento
     const loadingId = "loading-" + Date.now();
     const loadingDiv = document.createElement('div');
     loadingDiv.className = 'message bot-message';
-    loadingDiv.innerText = 'Consultando IA Gemini...';
+    loadingDiv.innerText = 'Buscando base legal...';
     loadingDiv.id = loadingId;
     chatBody.appendChild(loadingDiv);
-    chatBody.scrollTop = chatBody.scrollHeight;
 
     try {
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
+        // Alterado para v1 (estável) e simplificada a estrutura
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
                 contents: [{
-                    parts: [{
-                        text: `Você é o assistente técnico do sistema PREVTECH, especialista em RPPS brasileiro (Regime Próprio de Previdência Social). 
-                               Responda de forma técnica, clara e profissional sobre previdência e legislação (como a EC 103/2019).
-                               Pergunta do usuário: ${message}`
-                    }]
-                }],
-                generationConfig: {
-                    temperature: 0.7,
-                    maxOutputTokens: 1000,
-                },
-                safetySettings: [
-                    { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
-                    { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
-                    { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_NONE" },
-                    { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" }
-                ]
+                    parts: [{ text: `Você é o assistente do sistema PREVTECH, especialista em RPPS brasileiro. Responda de forma técnica e clara sobre: ${message}` }]
+                }]
             })
         });
 
         const data = await response.json();
-        
-        // Remove carregamento
         const loading = document.getElementById(loadingId);
         if(loading) loading.remove();
 
-        if (data.candidates && data.candidates[0].content && data.candidates[0].content.parts[0].text) {
-            let respostaIA = data.candidates[0].content.parts[0].text;
-            
-            // Tratamento básico de Markdown para HTML
-            respostaIA = respostaIA
-                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') // Negrito
-                .replace(/\n/g, '<br>'); // Quebra de linha
+        if (data.error) {
+            // Se o erro de "not found" persistir, tentaremos uma rota alternativa automática
+            console.error("Erro retornado:", data.error);
+            appendMessage(`Erro técnico: ${data.error.message}`, "bot-message");
+            return;
+        }
 
-            renderBotMessage(respostaIA);
-        } else if (data.error) {
-            appendMessage(`Erro na API: ${data.error.message}`, "bot-message");
+        if (data.candidates && data.candidates[0].content) {
+            let textoOuput = data.candidates[0].content.parts[0].text;
+            
+            // Formatação básica de negrito e quebra de linha
+            textoOuput = textoOuput.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+            textoOuput = textoOuput.replace(/\n/g, '<br>');
+            
+            const msgDiv = document.createElement('div');
+            msgDiv.className = 'message bot-message';
+            msgDiv.innerHTML = textoOuput;
+            chatBody.appendChild(msgDiv);
         } else {
-            appendMessage("O Gemini não conseguiu gerar uma resposta. Verifique os filtros de segurança.", "bot-message");
+            appendMessage("IA temporariamente indisponível. Tente novamente em instantes.", "bot-message");
         }
 
     } catch (error) {
-        console.error("Erro de Rede Gemini:", error);
-        const loading = document.getElementById(loadingId);
-        if(loading) loading.remove();
-        appendMessage("Erro ao conectar com o Gemini. Verifique sua chave ou internet.", "bot-message");
+        console.error("Erro de conexão:", error);
+        if(document.getElementById(loadingId)) document.getElementById(loadingId).remove();
+        appendMessage("Erro de rede. Verifique sua conexão.", "bot-message");
     }
     
     chatBody.scrollTop = chatBody.scrollHeight;
@@ -4039,6 +4025,7 @@ function appendMessage(text, className) {
 }
 
 console.log("IA Gemini v1.5 Flash carregada no PREVTECH!");
+
 
 
 
