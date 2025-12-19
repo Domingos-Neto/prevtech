@@ -3911,18 +3911,16 @@ Object.assign(window, {
 
 window.simulacao = simulacao;
 
-/* --- CÓDIGO DA IA PREVTECH (VERSÃO INTEGRADA OPENAI) --- */
+/* --- CÓDIGO DA IA PREVTECH (VERSÃO GOOGLE GEMINI FREE) --- */
 
-// 1. Configurações da API
-const OPENAI_API_KEY = "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";
+// 1. Sua Chave do Gemini (Cole aqui)
+const GEMINI_API_KEY = "AIzaSyCMw6q9UdqCg2NwHgtK3H7IgP-wpvM3-x8";
 
 // 2. Função Global para Abrir/Fechar Chat
 window.toggleChat = function() {
     const chatWindow = document.getElementById('ia-chat-window');
     if (!chatWindow) return;
-
     chatWindow.classList.toggle('hidden');
-    
     if (!chatWindow.classList.contains('hidden')) {
         setTimeout(() => {
             const input = document.getElementById('user-input');
@@ -3938,7 +3936,7 @@ window.handleEnter = function(event) {
     }
 };
 
-// 4. Envio de Mensagem para OpenAI
+// 4. Envio de Mensagem para Gemini
 window.sendMessage = async function() {
     const inputField = document.getElementById('user-input');
     const chatBody = document.getElementById('chat-body');
@@ -3957,28 +3955,26 @@ window.sendMessage = async function() {
     const loadingId = "loading-" + Date.now();
     const loadingDiv = document.createElement('div');
     loadingDiv.className = 'message bot-message';
-    loadingDiv.innerText = 'Consultando legislação RPPS...';
+    loadingDiv.innerText = 'Consultando IA Gemini...';
     loadingDiv.id = loadingId;
     chatBody.appendChild(loadingDiv);
     chatBody.scrollTop = chatBody.scrollHeight;
 
     try {
-        const response = await fetch("https://api.openai.com/v1/chat/completions", {
+        // Chamada para a API do Gemini (Modelo 1.5 Flash - Gratuito e Rápido)
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
             method: "POST",
             headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${OPENAI_API_KEY}`
+                "Content-Type": "application/json"
             },
             body: JSON.stringify({
-                model: "gpt-3.5-turbo",
-                messages: [
-                    { 
-                        role: "system", 
-                        content: "Você é o assistente técnico do sistema PREVTECH. Você é especialista em RPPS (Regime Próprio de Previdência Social) brasileiro. Responda de forma clara sobre a EC 103/2019, regras de transição, integralidade e paridade. Se não souber algo técnico, sugira consultar a base de legislação do sistema." 
-                    },
-                    { role: "user", content: message }
-                ],
-                temperature: 0.5
+                contents: [{
+                    parts: [{
+                        text: `Você é o assistente técnico do sistema PREVTECH, especialista em RPPS brasileiro. 
+                               Responda de forma técnica e clara sobre previdência. 
+                               Pergunta do usuário: ${message}`
+                    }]
+                }]
             })
         });
 
@@ -3988,20 +3984,19 @@ window.sendMessage = async function() {
         const loading = document.getElementById(loadingId);
         if(loading) loading.remove();
 
-        if (data.error) {
-            // Caso a OpenAI retorne um erro específico (ex: chave inválida ou falta de saldo)
-            console.error("Erro da OpenAI:", data.error.message);
-            appendMessage("Erro na API: " + data.error.message, "bot-message");
-        } else if (data.choices && data.choices[0]) {
-            const respostaIA = data.choices[0].message.content;
+        if (data.candidates && data.candidates[0].content.parts[0].text) {
+            const respostaIA = data.candidates[0].content.parts[0].text;
             appendMessage(respostaIA, 'bot-message');
+        } else {
+            console.error("Resposta inesperada:", data);
+            appendMessage("O Gemini recebeu o pedido, mas não conseguiu gerar o texto. Verifique o console.", "bot-message");
         }
 
     } catch (error) {
-        console.error("Erro de Rede:", error);
+        console.error("Erro de Rede Gemini:", error);
         const loading = document.getElementById(loadingId);
         if(loading) loading.remove();
-        appendMessage("Erro de conexão. Verifique se sua chave tem saldo ou se o domínio está bloqueado.", "bot-message");
+        appendMessage("Erro ao conectar com o Gemini. Verifique sua chave ou internet.", "bot-message");
     }
     
     chatBody.scrollTop = chatBody.scrollHeight;
@@ -4016,7 +4011,8 @@ function appendMessage(text, className) {
     chatBody.appendChild(messageDiv);
 }
 
-console.log("IA PREVTECH v1.0 carregada.");
+console.log("IA Gemini carregada no PREVTECH!");
+
 
 
 
