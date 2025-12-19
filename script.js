@@ -3911,16 +3911,18 @@ Object.assign(window, {
 
 window.simulacao = simulacao;
 
-/* --- CÓDIGO DA IA PREVTECH (VERSÃO GOOGLE GEMINI FREE) --- */
+/* --- CÓDIGO DA IA PREVTECH (VERSÃO GOOGLE GEMINI FREE ATUALIZADA) --- */
 
-// 1. Sua Chave do Gemini (Cole aqui)
+// 1. Sua Chave do Gemini
 const GEMINI_API_KEY = "AIzaSyCMw6q9UdqCg2NwHgtK3H7IgP-wpvM3-x8";
 
 // 2. Função Global para Abrir/Fechar Chat
 window.toggleChat = function() {
     const chatWindow = document.getElementById('ia-chat-window');
     if (!chatWindow) return;
+    
     chatWindow.classList.toggle('hidden');
+    
     if (!chatWindow.classList.contains('hidden')) {
         setTimeout(() => {
             const input = document.getElementById('user-input');
@@ -3936,7 +3938,7 @@ window.handleEnter = function(event) {
     }
 };
 
-// 4. Envio de Mensagem para Gemini
+// 4. Envio de Mensagem para Gemini com Tratamento de Segurança
 window.sendMessage = async function() {
     const inputField = document.getElementById('user-input');
     const chatBody = document.getElementById('chat-body');
@@ -3961,7 +3963,6 @@ window.sendMessage = async function() {
     chatBody.scrollTop = chatBody.scrollHeight;
 
     try {
-        // Chamada para a API do Gemini (Modelo 1.5 Flash - Gratuito e Rápido)
         const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
             method: "POST",
             headers: {
@@ -3970,11 +3971,21 @@ window.sendMessage = async function() {
             body: JSON.stringify({
                 contents: [{
                     parts: [{
-                        text: `Você é o assistente técnico do sistema PREVTECH, especialista em RPPS brasileiro. 
-                               Responda de forma técnica e clara sobre previdência. 
+                        text: `Você é o assistente técnico do sistema PREVTECH, especialista em RPPS brasileiro (Regime Próprio de Previdência Social). 
+                               Responda de forma técnica, clara e profissional sobre previdência e legislação (como a EC 103/2019).
                                Pergunta do usuário: ${message}`
                     }]
-                }]
+                }],
+                generationConfig: {
+                    temperature: 0.7,
+                    maxOutputTokens: 1000,
+                },
+                safetySettings: [
+                    { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
+                    { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
+                    { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_NONE" },
+                    { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" }
+                ]
             })
         });
 
@@ -3984,12 +3995,19 @@ window.sendMessage = async function() {
         const loading = document.getElementById(loadingId);
         if(loading) loading.remove();
 
-        if (data.candidates && data.candidates[0].content.parts[0].text) {
-            const respostaIA = data.candidates[0].content.parts[0].text;
-            appendMessage(respostaIA, 'bot-message');
+        if (data.candidates && data.candidates[0].content && data.candidates[0].content.parts[0].text) {
+            let respostaIA = data.candidates[0].content.parts[0].text;
+            
+            // Tratamento básico de Markdown para HTML
+            respostaIA = respostaIA
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') // Negrito
+                .replace(/\n/g, '<br>'); // Quebra de linha
+
+            renderBotMessage(respostaIA);
+        } else if (data.error) {
+            appendMessage(`Erro na API: ${data.error.message}`, "bot-message");
         } else {
-            console.error("Resposta inesperada:", data);
-            appendMessage("O Gemini recebeu o pedido, mas não conseguiu gerar o texto. Verifique o console.", "bot-message");
+            appendMessage("O Gemini não conseguiu gerar uma resposta. Verifique os filtros de segurança.", "bot-message");
         }
 
     } catch (error) {
@@ -4002,7 +4020,16 @@ window.sendMessage = async function() {
     chatBody.scrollTop = chatBody.scrollHeight;
 };
 
-// Função Auxiliar de Renderização
+// Função para renderizar mensagens com HTML (para negrito e quebras de linha)
+function renderBotMessage(html) {
+    const chatBody = document.getElementById('chat-body');
+    const messageDiv = document.createElement('div');
+    messageDiv.className = 'message bot-message';
+    messageDiv.innerHTML = html;
+    chatBody.appendChild(messageDiv);
+}
+
+// Função Auxiliar de Renderização Simples
 function appendMessage(text, className) {
     const chatBody = document.getElementById('chat-body');
     const messageDiv = document.createElement('div');
@@ -4011,7 +4038,8 @@ function appendMessage(text, className) {
     chatBody.appendChild(messageDiv);
 }
 
-console.log("IA Gemini carregada no PREVTECH!");
+console.log("IA Gemini v1.5 Flash carregada no PREVTECH!");
+
 
 
 
