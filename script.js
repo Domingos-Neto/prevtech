@@ -3911,34 +3911,13 @@ Object.assign(window, {
 
 window.simulacao = simulacao;
 
-/* --- CÓDIGO DA IA PREVTECH (VERSÃO GOOGLE GEMINI FREE ATUALIZADA) --- */
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
-// 1. Sua Chave do Gemini
-const GEMINI_API_KEY = "AIzaSyCMw6q9UdqCg2NwHgtK3H7IgP-wpvM3-x8";
+// 1. Sua Chave de API
+const API_KEY = "AIzaSyCMw6q9UdqCg2NwHgtK3H7IgP-wpvM3-x8";
+const genAI = new GoogleGenerativeAI(API_KEY);
 
-// 2. Função Global para Abrir/Fechar Chat
-window.toggleChat = function() {
-    const chatWindow = document.getElementById('ia-chat-window');
-    if (!chatWindow) return;
-    
-    chatWindow.classList.toggle('hidden');
-    
-    if (!chatWindow.classList.contains('hidden')) {
-        setTimeout(() => {
-            const input = document.getElementById('user-input');
-            if(input) input.focus();
-        }, 100);
-    }
-};
-
-// 3. Detectar Tecla Enter
-window.handleEnter = function(event) {
-    if (event.key === 'Enter') {
-        window.sendMessage();
-    }
-};
-
-// 4. Envio de Mensagem para Gemini com Tratamento de Segurança
+// 2. Função de Enviar Mensagem (Atualizada)
 window.sendMessage = async function() {
     const inputField = document.getElementById('user-input');
     const chatBody = document.getElementById('chat-body');
@@ -3948,66 +3927,48 @@ window.sendMessage = async function() {
     const message = inputField.value.trim();
     if (message === "") return;
 
+    // Interface: Mensagem do usuário
     appendMessage(message, 'user-message');
     inputField.value = ""; 
     chatBody.scrollTop = chatBody.scrollHeight;
 
+    // Interface: Carregamento
     const loadingId = "loading-" + Date.now();
     const loadingDiv = document.createElement('div');
     loadingDiv.className = 'message bot-message';
-    loadingDiv.innerText = 'Buscando base legal RPPS...';
+    loadingDiv.innerText = 'Consultando especialista RPPS...';
     loadingDiv.id = loadingId;
     chatBody.appendChild(loadingDiv);
     chatBody.scrollTop = chatBody.scrollHeight;
 
     try {
-        // Mudança estratégica: v1beta + gemini-1.5-flash-latest
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${GEMINI_API_KEY}`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                contents: [{
-                    parts: [{ text: `Você é o assistente técnico do sistema PREVTECH, focado em RPPS. Responda de forma profissional: ${message}` }]
-                }]
-            })
-        });
+        // Usando a biblioteca oficial para evitar erro 404 de URL
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+        
+        const prompt = `Você é o assistente do PREVTECH. Especialista em RPPS brasileiro. Responda de forma curta e técnica: ${message}`;
+        
+        const result = await model.generateContent(prompt);
+        const response = await result.response;
+        const text = response.text();
 
-        const data = await response.json();
-        const loading = document.getElementById(loadingId);
-        if(loading) loading.remove();
-
-        if (data.error) {
-            // Se o erro persistir, o problema pode ser a ativação da API no Google Cloud
-            console.error("Erro detalhado:", data.error);
-            appendMessage(`Erro técnico (${data.error.code}): ${data.error.message}`, "bot-message");
-            return;
-        }
-
-        if (data.candidates && data.candidates[0].content) {
-            let textoOuput = data.candidates[0].content.parts[0].text;
-            
-            // Formatação para negrito e quebra de linha
-            textoOuput = textoOuput.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-            textoOuput = textoOuput.replace(/\n/g, '<br>');
-            
-            const msgDiv = document.createElement('div');
-            msgDiv.className = 'message bot-message';
-            msgDiv.innerHTML = textoOuput;
-            chatBody.appendChild(msgDiv);
-        } else {
-            appendMessage("IA não conseguiu processar. Tente reformular a pergunta.", "bot-message");
-        }
+        // Remove carregamento e exibe resposta
+        document.getElementById(loadingId).remove();
+        
+        // Formata negritos e quebras de linha
+        const formattedText = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
+        
+        renderBotMessage(formattedText);
 
     } catch (error) {
-        console.error("Erro de rede:", error);
-        if(document.getElementById(loadingId)) document.getElementById(loadingId).remove();
-        appendMessage("Erro de conexão. Verifique sua internet.", "bot-message");
+        console.error("Erro detalhado:", error);
+        document.getElementById(loadingId).remove();
+        appendMessage("Erro ao processar: Certifique-se de que sua API Key está ativa no Google AI Studio.", "bot-message");
     }
     
     chatBody.scrollTop = chatBody.scrollHeight;
 };
 
-// Função para renderizar mensagens com HTML (para negrito e quebras de linha)
+// Funções de suporte
 function renderBotMessage(html) {
     const chatBody = document.getElementById('chat-body');
     const messageDiv = document.createElement('div');
@@ -4016,7 +3977,6 @@ function renderBotMessage(html) {
     chatBody.appendChild(messageDiv);
 }
 
-// Função Auxiliar de Renderização Simples
 function appendMessage(text, className) {
     const chatBody = document.getElementById('chat-body');
     const messageDiv = document.createElement('div');
@@ -4025,7 +3985,11 @@ function appendMessage(text, className) {
     chatBody.appendChild(messageDiv);
 }
 
-console.log("IA Gemini v1.5 Flash carregada no PREVTECH!");
+// Manter a função de toggle global
+window.toggleChat = function() {
+    const chatWindow = document.getElementById('ia-chat-window');
+    if (chatWindow) chatWindow.classList.toggle('hidden');
+};
 
 
 
