@@ -1214,8 +1214,31 @@
 <input type="file" id="carregarCTCInput" accept=".json" style="display:none;" onchange="carregarCTCLocal(event)" multiple />
 <input type="file" id="arquivoExcelCTC" accept=".xlsx, .xls" style="display:none;" />
 <input type="file" id="carregarProcessoInput" accept=".json" style="display:none;" onchange="gestaoProcessos.carregarProcessoLocal(event)" />
+
+<div id="ia-widget-container">
+    <button id="ia-toggle-btn" onclick="toggleChat()">
+        <img src="https://cdn-icons-png.flaticon.com/512/4712/4712027.png" alt="IA" width="30" height="30">
+        </button>
+
+    <div id="ia-chat-window" class="hidden">
+        <div class="chat-header">
+            <span>🤖 IA PrevTech</span>
+            <button onclick="toggleChat()" class="close-btn">&times;</button>
+        </div>
+        <div class="chat-body" id="chat-body">
+            <div class="message bot-message">
+                Olá! Sou a IA do PrevTech. Como posso ajudar na gestão previdenciária hoje?
+            </div>
+        </div>
+        <div class="chat-footer">
+            <input type="text" id="user-input" placeholder="Digite sua dúvida..." onkeypress="handleEnter(event)">
+            <button onclick="sendMessage()">➤</button>
+        </div>
+    </div>
+</div>
 </body>
 </html>
+
 
 
 
