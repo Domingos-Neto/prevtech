@@ -1426,7 +1426,7 @@ body.dark-mode .nav-tabs .nav-link.active {
 /* Container do Widget */
 #ia-widget-container {
     position: fixed;
-    bottom: 90px; /* Um pouco acima do botão do WhatsApp se houver */
+    bottom: 160px; /* Aumentei de 90px para 160px para subir acima da calculadora */
     right: 20px;
     z-index: 9999;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -1553,3 +1553,4 @@ body.dark-mode .nav-tabs .nav-link.active {
     border-radius: 50%;
     cursor: pointer;
 }
+
