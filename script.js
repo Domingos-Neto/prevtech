@@ -3911,9 +3911,12 @@ Object.assign(window, {
 
 window.simulacao = simulacao;
 
-/* --- CÓDIGO DA IA (Versão Corrigida e Blindada) --- */
+/* --- CÓDIGO DA IA (Versão Final com Integração OpenAI) --- */
 
-// 1. Garantir que a função seja Global usando 'window'
+// 1. Configurações da API
+const OPENAI_API_KEY = "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";
+
+// 2. Garantir que a função seja Global usando 'window'
 window.toggleChat = function() {
     const chatWindow = document.getElementById('ia-chat-window');
     
@@ -3924,7 +3927,6 @@ window.toggleChat = function() {
 
     chatWindow.classList.toggle('hidden');
     
-    // Foca no input ao abrir
     if (!chatWindow.classList.contains('hidden')) {
         setTimeout(() => {
             const input = document.getElementById('user-input');
@@ -3933,15 +3935,15 @@ window.toggleChat = function() {
     }
 };
 
-// 2. Função de detectar Enter (também global)
+// 3. Função de detectar Enter
 window.handleEnter = function(event) {
     if (event.key === 'Enter') {
-        sendMessage();
+        window.sendMessage();
     }
 };
 
-// 3. Função de enviar mensagem
-window.sendMessage = function() {
+// 4. Função principal de envio e integração com OpenAI
+window.sendMessage = async function() {
     const inputField = document.getElementById('user-input');
     const chatBody = document.getElementById('chat-body');
 
@@ -3950,33 +3952,63 @@ window.sendMessage = function() {
     const message = inputField.value.trim();
     if (message === "") return;
 
-    // Adiciona mensagem do usuário
+    // Adiciona mensagem do usuário na tela
     appendMessage(message, 'user-message');
     inputField.value = ""; 
-
-    // Scroll automático
     chatBody.scrollTop = chatBody.scrollHeight;
 
-    // Simula "Digitando..."
+    // Adiciona balão de "Pensando..."
     const loadingDiv = document.createElement('div');
     loadingDiv.className = 'message bot-message';
-    loadingDiv.innerText = 'Digitando...';
+    loadingDiv.innerText = 'Consultando legislação...';
     loadingDiv.id = 'loading-msg';
     chatBody.appendChild(loadingDiv);
+    chatBody.scrollTop = chatBody.scrollHeight;
 
-    // Resposta simulada (depois substituiremos pela IA real)
-    setTimeout(() => {
+    try {
+        const response = await fetch("https://api.openai.com/v1/chat/completions", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${OPENAI_API_KEY}`
+            },
+            body: JSON.stringify({
+                model: "gpt-3.5-turbo",
+                messages: [
+                    { 
+                        role: "system", 
+                        content: "Você é o assistente do PREVTECH, especialista em RPPS (Regime Próprio de Previdência Social). Responda com base na legislação brasileira (EC 103/2019 e leis correlatas). Seja prestativo e profissional." 
+                    },
+                    { role: "user", content: message }
+                ],
+                temperature: 0.7
+            })
+        });
+
+        const data = await response.json();
+        
+        // Remove indicador de carregamento
         const loading = document.getElementById('loading-msg');
         if(loading) loading.remove();
 
-        let resposta = "Olá! Sou a IA do PREVTECH. Em breve estarei integrada para responder sobre legislação e cálculos.";
-        
-        appendMessage(resposta, 'bot-message');
-        chatBody.scrollTop = chatBody.scrollHeight;
-    }, 1000);
+        if (data.choices && data.choices[0]) {
+            const respostaIA = data.choices[0].message.content;
+            appendMessage(respostaIA, 'bot-message');
+        } else {
+            appendMessage("Ops, tive um problema ao processar sua dúvida. Tente novamente.", "bot-message");
+        }
+
+    } catch (error) {
+        console.error("Erro na chamada da API:", error);
+        const loading = document.getElementById('loading-msg');
+        if(loading) loading.remove();
+        appendMessage("Erro de conexão. Verifique sua chave de API ou conexão com a internet.", "bot-message");
+    }
+    
+    chatBody.scrollTop = chatBody.scrollHeight;
 };
 
-// Função auxiliar interna
+// Função auxiliar interna para renderizar mensagens
 function appendMessage(text, className) {
     const chatBody = document.getElementById('chat-body');
     const messageDiv = document.createElement('div');
@@ -3985,7 +4017,8 @@ function appendMessage(text, className) {
     chatBody.appendChild(messageDiv);
 }
 
-console.log("Sistema de IA carregado com sucesso!");
+console.log("Inteligência Artificial PREVTECH conectada com sucesso!");
+
 
 
 
