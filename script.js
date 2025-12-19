@@ -3914,11 +3914,17 @@ window.simulacao = simulacao;
 // Função para abrir/fechar o chat
 function toggleChat() {
     const chatWindow = document.getElementById('ia-chat-window');
-    chatWindow.classList.toggle('hidden');
-    
-    // Foca no input ao abrir
-    if (!chatWindow.classList.contains('hidden')) {
-        document.getElementById('user-input').focus();
+    // Verifica se o elemento existe antes de tentar acessar a lista de classes
+    if (chatWindow) {
+        chatWindow.classList.toggle('hidden');
+        
+        // Foca no input ao abrir
+        if (!chatWindow.classList.contains('hidden')) {
+            const input = document.getElementById('user-input');
+            if(input) input.focus();
+        }
+    } else {
+        console.error("Elemento 'ia-chat-window' não encontrado no HTML");
     }
 }
 
@@ -3929,56 +3935,36 @@ function handleEnter(event) {
     }
 }
 
-// Enviar mensagem
+// Enviar mensagem (Simulação)
 async function sendMessage() {
     const inputField = document.getElementById('user-input');
-    const message = inputField.value.trim();
     const chatBody = document.getElementById('chat-body');
+    
+    if (!inputField || !chatBody) return; // Segurança contra erros
+
+    const message = inputField.value.trim();
 
     if (message === "") return;
 
-    // 1. Adicionar mensagem do usuário na tela
+    // Adicionar mensagem do usuário
     appendMessage(message, 'user-message');
-    inputField.value = ""; // Limpar input
+    inputField.value = ""; 
 
-    // Scroll para baixo
     chatBody.scrollTop = chatBody.scrollHeight;
 
-    // 2. Mostrar "Digitando..." (Opcional, dá um efeito legal)
-    const loadingDiv = document.createElement('div');
-    loadingDiv.className = 'message bot-message';
-    loadingDiv.innerText = 'Digitando...';
-    loadingDiv.id = 'loading-msg';
-    chatBody.appendChild(loadingDiv);
-
-    // ---------------------------------------------------------
-    // INTEGRAÇÃO COM IA (SIMULAÇÃO)
-    // Aqui você substituirá por uma chamada real à API (OpenAI/Gemini)
-    // ---------------------------------------------------------
-    
+    // Simulando resposta...
     setTimeout(() => {
-        // Remover o "Digitando..."
-        const loading = document.getElementById('loading-msg');
-        if(loading) loading.remove();
-
-        // Lógica simples para demonstração (substitua pela IA real depois)
-        let respostaIA = "Desculpe, ainda estou aprendendo sobre o RPPS.";
-        
-        if(message.toLowerCase().includes("previdencia") || message.toLowerCase().includes("rpps")) {
-            respostaIA = "O RPPS (Regime Próprio de Previdência Social) assegura os benefícios previdenciários dos servidores públicos titulares de cargo efetivo.";
-        } else if (message.toLowerCase().includes("calculadora")) {
-            respostaIA = "Você pode acessar a calculadora no botão flutuante ao lado para realizar simulações de aposentadoria.";
-        }
-
+        let respostaIA = "Olá! Sou a IA do PREVTECH. Em breve estarei conectada para tirar dúvidas sobre RPPS.";
         appendMessage(respostaIA, 'bot-message');
         chatBody.scrollTop = chatBody.scrollHeight;
-
-    }, 1500); // Delay de 1.5s para simular pensamento
+    }, 1000);
 }
 
-// Função auxiliar para criar o HTML da mensagem
+// Função auxiliar
 function appendMessage(text, className) {
     const chatBody = document.getElementById('chat-body');
+    if (!chatBody) return;
+    
     const messageDiv = document.createElement('div');
     messageDiv.className = `message ${className}`;
     messageDiv.innerText = text;
