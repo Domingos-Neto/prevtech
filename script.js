@@ -3911,66 +3911,81 @@ Object.assign(window, {
 
 window.simulacao = simulacao;
 
-// Função para abrir/fechar o chat
-function toggleChat() {
+/* --- CÓDIGO DA IA (Versão Corrigida e Blindada) --- */
+
+// 1. Garantir que a função seja Global usando 'window'
+window.toggleChat = function() {
     const chatWindow = document.getElementById('ia-chat-window');
-    // Verifica se o elemento existe antes de tentar acessar a lista de classes
-    if (chatWindow) {
-        chatWindow.classList.toggle('hidden');
-        
-        // Foca no input ao abrir
-        if (!chatWindow.classList.contains('hidden')) {
+    
+    if (!chatWindow) {
+        console.error("ERRO: Janela do chat não encontrada no HTML.");
+        return;
+    }
+
+    chatWindow.classList.toggle('hidden');
+    
+    // Foca no input ao abrir
+    if (!chatWindow.classList.contains('hidden')) {
+        setTimeout(() => {
             const input = document.getElementById('user-input');
             if(input) input.focus();
-        }
-    } else {
-        console.error("Elemento 'ia-chat-window' não encontrado no HTML");
+        }, 100);
     }
-}
+};
 
-// Detectar tecla Enter
-function handleEnter(event) {
+// 2. Função de detectar Enter (também global)
+window.handleEnter = function(event) {
     if (event.key === 'Enter') {
         sendMessage();
     }
-}
+};
 
-// Enviar mensagem (Simulação)
-async function sendMessage() {
+// 3. Função de enviar mensagem
+window.sendMessage = function() {
     const inputField = document.getElementById('user-input');
     const chatBody = document.getElementById('chat-body');
-    
-    if (!inputField || !chatBody) return; // Segurança contra erros
+
+    if (!inputField || !chatBody) return;
 
     const message = inputField.value.trim();
-
     if (message === "") return;
 
-    // Adicionar mensagem do usuário
+    // Adiciona mensagem do usuário
     appendMessage(message, 'user-message');
     inputField.value = ""; 
 
+    // Scroll automático
     chatBody.scrollTop = chatBody.scrollHeight;
 
-    // Simulando resposta...
+    // Simula "Digitando..."
+    const loadingDiv = document.createElement('div');
+    loadingDiv.className = 'message bot-message';
+    loadingDiv.innerText = 'Digitando...';
+    loadingDiv.id = 'loading-msg';
+    chatBody.appendChild(loadingDiv);
+
+    // Resposta simulada (depois substituiremos pela IA real)
     setTimeout(() => {
-        let respostaIA = "Olá! Sou a IA do PREVTECH. Em breve estarei conectada para tirar dúvidas sobre RPPS.";
-        appendMessage(respostaIA, 'bot-message');
+        const loading = document.getElementById('loading-msg');
+        if(loading) loading.remove();
+
+        let resposta = "Olá! Sou a IA do PREVTECH. Em breve estarei integrada para responder sobre legislação e cálculos.";
+        
+        appendMessage(resposta, 'bot-message');
         chatBody.scrollTop = chatBody.scrollHeight;
     }, 1000);
-}
+};
 
-// Função auxiliar
+// Função auxiliar interna
 function appendMessage(text, className) {
     const chatBody = document.getElementById('chat-body');
-    if (!chatBody) return;
-    
     const messageDiv = document.createElement('div');
     messageDiv.className = `message ${className}`;
     messageDiv.innerText = text;
     chatBody.appendChild(messageDiv);
 }
 
+console.log("Sistema de IA carregado com sucesso!");
 
 
 
