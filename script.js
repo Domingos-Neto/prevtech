@@ -3955,18 +3955,19 @@ window.sendMessage = async function() {
     const loadingId = "loading-" + Date.now();
     const loadingDiv = document.createElement('div');
     loadingDiv.className = 'message bot-message';
-    loadingDiv.innerText = 'Buscando base legal...';
+    loadingDiv.innerText = 'Buscando base legal RPPS...';
     loadingDiv.id = loadingId;
     chatBody.appendChild(loadingDiv);
+    chatBody.scrollTop = chatBody.scrollHeight;
 
     try {
-        // Alterado para v1 (estável) e simplificada a estrutura
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
+        // Mudança estratégica: v1beta + gemini-1.5-flash-latest
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${GEMINI_API_KEY}`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
                 contents: [{
-                    parts: [{ text: `Você é o assistente do sistema PREVTECH, especialista em RPPS brasileiro. Responda de forma técnica e clara sobre: ${message}` }]
+                    parts: [{ text: `Você é o assistente técnico do sistema PREVTECH, focado em RPPS. Responda de forma profissional: ${message}` }]
                 }]
             })
         });
@@ -3976,16 +3977,16 @@ window.sendMessage = async function() {
         if(loading) loading.remove();
 
         if (data.error) {
-            // Se o erro de "not found" persistir, tentaremos uma rota alternativa automática
-            console.error("Erro retornado:", data.error);
-            appendMessage(`Erro técnico: ${data.error.message}`, "bot-message");
+            // Se o erro persistir, o problema pode ser a ativação da API no Google Cloud
+            console.error("Erro detalhado:", data.error);
+            appendMessage(`Erro técnico (${data.error.code}): ${data.error.message}`, "bot-message");
             return;
         }
 
         if (data.candidates && data.candidates[0].content) {
             let textoOuput = data.candidates[0].content.parts[0].text;
             
-            // Formatação básica de negrito e quebra de linha
+            // Formatação para negrito e quebra de linha
             textoOuput = textoOuput.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
             textoOuput = textoOuput.replace(/\n/g, '<br>');
             
@@ -3994,13 +3995,13 @@ window.sendMessage = async function() {
             msgDiv.innerHTML = textoOuput;
             chatBody.appendChild(msgDiv);
         } else {
-            appendMessage("IA temporariamente indisponível. Tente novamente em instantes.", "bot-message");
+            appendMessage("IA não conseguiu processar. Tente reformular a pergunta.", "bot-message");
         }
 
     } catch (error) {
-        console.error("Erro de conexão:", error);
+        console.error("Erro de rede:", error);
         if(document.getElementById(loadingId)) document.getElementById(loadingId).remove();
-        appendMessage("Erro de rede. Verifique sua conexão.", "bot-message");
+        appendMessage("Erro de conexão. Verifique sua internet.", "bot-message");
     }
     
     chatBody.scrollTop = chatBody.scrollHeight;
@@ -4025,6 +4026,7 @@ function appendMessage(text, className) {
 }
 
 console.log("IA Gemini v1.5 Flash carregada no PREVTECH!");
+
 
 
 
