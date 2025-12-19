@@ -1214,73 +1214,8 @@
 <input type="file" id="carregarCTCInput" accept=".json" style="display:none;" onchange="carregarCTCLocal(event)" multiple />
 <input type="file" id="arquivoExcelCTC" accept=".xlsx, .xls" style="display:none;" />
 <input type="file" id="carregarProcessoInput" accept=".json" style="display:none;" onchange="gestaoProcessos.carregarProcessoLocal(event)" />
-
-<!-- IA PREVTECH - POSIÇÃO ESQUERDA (EVITA CONFLITOS COM WHATSAPP) -->
-<div id="prevtech-ai-container" style="position:fixed; bottom:20px; left:110px; width:70px; height:70px; z-index:99999; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); border-radius: 16px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.2); border: 2px solid var(--prevtech-azul-escuro); background: white;">
-  <iframe 
-    id="prevtech-ai-iframe"
-    src="https://domingos-neto.github.io/prevtech-ai/" 
-    style="width:100%; height:100%; border:none;"
-    allow="clipboard-read; clipboard-write"
-  ></iframe>
-</div>
-
-<script>
-  // Escuta as mensagens da IA para abrir/fechar o chat
-  window.addEventListener('message', function(event) {
-    const container = document.getElementById('prevtech-ai-container');
-    if (!container) return;
-    
-    // Se a IA enviar um sinal de 'chat_state' ou 'resize'
-    if (event.data.type === 'chat_state' || event.data.type === 'resize' || event.data.expanded === true) {
-      if (event.data.status === 'open' || event.data.expanded === true) {
-        container.style.width = '380px';
-        container.style.height = '600px';
-      } else {
-        container.style.width = '70px';
-        container.style.height = '70px';
-      }
-    }
-  });
-
-  // Função para o botão "Analisar com IA" que vamos colocar na aba de simulação
-  function analisarComIA() {
-    const container = document.getElementById('prevtech-ai-container');
-    const iframe = document.getElementById('prevtech-ai-iframe');
-    
-    // 1. Abre o chat
-    container.style.width = '380px';
-    container.style.height = '600px';
-
-    // 2. Coleta dados da tela (Nome, Média e Tempo)
-    const dados = {
-        servidor: document.getElementById('nomeServidor')?.value || 'Não identificado',
-        media: document.getElementById('resultadoMedia')?.innerText || 'R$ 0,00',
-        tempo: document.getElementById('tempoTotal')?.innerText || '0 anos'
-    };
-
-    // 3. Envia para a IA
-    setTimeout(() => {
-        iframe.contentWindow.postMessage({
-            type: 'ANALISE_SOLICITADA',
-            payload: dados
-        }, '*');
-        alert("A IA PREVTECH recebeu os dados de " + dados.servidor + " e está analisando!");
-    }, 500);
-  }
-</script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
 
 
 
